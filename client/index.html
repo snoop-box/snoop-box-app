@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Snoop Box</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      text-align: center;
+      background: #111;
+      color: white;
+    }
+
+    .screen { display: none; padding: 20px; }
+    .active { display: block; }
+
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      margin: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #ff0055;
+      color: white;
+    }
+
+    #camera-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    video, canvas {
+      width: 300px;
+      border-radius: 10px;
+    }
+
+    #canvas { display: none; }
+
+    #frame {
+      position: absolute;
+      top: 0; left: 0;
+      width: 300px;
+      pointer-events: none;
+    }
+
+    #countdown {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 70px;
+      display: none;
+    }
+
+    #timer { font-size: 22px; color: #00ffaa; }
+    #feedback { font-size: 30px; margin-top: 10px; }
+  </style>
+</head>
+
+<body>
+
+<!-- INICIO -->
+<div id="screen1" class="screen active">
+  <h2>🎉 Bienvenido</h2>
+  <p>Jugá y sumá puntos para tu mesa</p>
+
+  <select id="mesa">
+    <option>Mesa 1</option>
+    <option>Mesa 2</option>
+    <option>Mesa 3</option>
+  </select>
+
+  <br><br>
+  <button onclick="startTrivia()">Empezar 🎮</button>
+</div>
+
+<!-- TRIVIA -->
+<div id="screenTrivia" class="screen">
+  <div id="timer"></div>
+  <h2 id="question"></h2>
+  <div id="answers"></div>
+  <div id="feedback"></div>
+</div>
+
+<!-- CAMARA -->
+<div id="screenCamera" class="screen">
+  <h2>📸 Sacá tu foto</h2>
+
+  <div id="camera-container">
+    <video id="video" autoplay></video>
+    <canvas id="canvas"></canvas>
+    <img id="frame" src="assets/frame.png">
+    <div id="countdown"></div>
+  </div>
+
+  <br><br>
+
+  <button onclick="startCountdown()">📸 Sacar Foto</button>
+  <button onclick="retakePhoto()">🔄 Repetir</button>
+  <button onclick="uploadPhoto()">✅ Confirmar</button>
+</div>
+
+<!-- FINAL -->
+<div id="screenFinal" class="screen">
+  <h2>🎯 ¡Listo!</h2>
+  <p>Sumaste puntos para tu mesa</p>
+  <p>👉 Acercate a la cabina para seguir sumando</p>
+  <canvas id="qr"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+<script>
+// ====================
+// BANCO DE PREGUNTAS (EDITABLE)
+// ====================
+const allQuestions = [
+  { q: "¿Color UNO es...?", options: ["DJ", "Foto y video", "Catering"], correct: 1 },
+  { q: "¿Qué desbloqueás?", options: ["Nada", "Una foto", "Un premio"], correct: 1 },
+  { q: "¿Dónde imprimís?", options: ["En casa", "Cabina", "Celular"], correct: 1 },
+  { q: "¿Qué suma puntos?", options: ["Trivia", "Bailar", "Comer"], correct: 0 },
+  { q: "¿Qué estás usando?", options: ["Snoop Box", "Taxi", "Drone"], correct: 0 },
+  { q: "¿Cuántas fotos podés sacar?", options: ["1", "Varias", "Ninguna"], correct: 1 },
+  { q: "¿Qué hay en la cabina?", options: ["Impresora", "Heladera", "DJ"], correct: 0 },
+  { q: "¿Para qué sirve el QR?", options: ["Nada", "Ver clima", "Imprimir"], correct: 2 },
+  { q: "¿Qué elegís?", options: ["Mesa", "Taxi", "Hotel"], correct: 0 },
+  { q: "¿Qué ganás?", options: ["Puntos", "Sueño", "Nada"], correct: 0 }
+];
+
+// elegimos 3 random
+let questions = [];
+function pickRandomQuestions() {
+  const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
+  questions = shuffled.slice(0, 3);
+}
+
+// ====================
+let currentQuestion = 0;
+let score = 0;
+let timeLeft = 10;
+let timerInterval;
+
+const okSound = new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3");
+const wrongSound = new Audio("https://www.soundjay.com/buttons/sounds/button-10.mp3");
+
+// ====================
+// TRIVIA
+// ====================
+function startTrivia() {
+  pickRandomQuestions();
+  currentQuestion = 0;
+  score = 0;
+
+  document.getElementById("screen1").classList.remove("active");
+  document.getElementById("screenTrivia").classList.add("active");
+
+  showQuestion();
+}
+
+function showQuestion() {
+  const q = questions[currentQuestion];
+
+  document.getElementById("question").innerText = q.q;
+  document.getElementById("feedback").innerText = "";
+
+  const answersDiv = document.getElementById("answers");
+  answersDiv.innerHTML = "";
+
+  q.options.forEach((opt, index) => {
+    const btn = document.createElement("button");
+    btn.innerText = opt;
+    btn.onclick = () => checkAnswer(index);
+    answersDiv.appendChild(btn);
+  });
+
+  startTimer();
+}
+
+function startTimer() {
+  timeLeft = 10;
+  document.getElementById("timer").innerText = "⏱️ " + timeLeft;
+
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    document.getElementById("timer").innerText = "⏱️ " + timeLeft;
+
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      showFeedback(false);
+    }
+  }, 1000);
+}
+
+function checkAnswer(index) {
+  clearInterval(timerInterval);
+  const correct = questions[currentQuestion].correct;
+
+  if (index === correct) {
+    score++;
+    showFeedback(true);
+  } else {
+    showFeedback(false);
+  }
+}
+
+function showFeedback(isCorrect) {
+  const feedback = document.getElementById("feedback");
+
+  if (isCorrect) {
+    okSound.play();
+    feedback.innerHTML = "✔️ Sumaste 1 punto!!";
+  } else {
+    wrongSound.play();
+    feedback.innerHTML = "❌";
+  }
+
+  setTimeout(() => {
+    currentQuestion++;
+
+    if (currentQuestion < questions.length) {
+      showQuestion();
+    } else {
+      endTrivia();
+    }
+  }, 1200);
+}
+
+async function endTrivia() {
+  const mesa = document.getElementById("mesa").value;
+
+  // enviar puntos al servidor
+  await fetch("http://localhost:3000/score", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mesa, puntos: score })
+  });
+
+  document.getElementById("screenTrivia").classList.remove("active");
+  document.getElementById("screenCamera").classList.add("active");
+}
+
+// ====================
+// CAMARA
+// ====================
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const countdownEl = document.getElementById("countdown");
+
+navigator.mediaDevices.getUserMedia({ video: true })
+  .then(stream => video.srcObject = stream);
+
+function startCountdown() {
+  let count = 3;
+  countdownEl.style.display = "block";
+
+  const interval = setInterval(() => {
+    countdownEl.innerText = count;
+    count--;
+
+    if (count < 0) {
+      clearInterval(interval);
+      countdownEl.style.display = "none";
+      takePhoto();
+    }
+  }, 1000);
+}
+
+function takePhoto() {
+  const ctx = canvas.getContext("2d");
+  const frame = document.getElementById("frame");
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  ctx.drawImage(video, 0, 0);
+  ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+
+  video.style.display = "none";
+  canvas.style.display = "block";
+}
+
+function retakePhoto() {
+  canvas.style.display = "none";
+  video.style.display = "block";
+}
+
+async function uploadPhoto() {
+  const mesa = document.getElementById("mesa").value;
+
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", 0.9));
+
+  const formData = new FormData();
+  formData.append("photo", blob);
+  formData.append("mesa", mesa);
+
+  const res = await fetch("http://localhost:3000/upload", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json();
+  const url = `http://localhost:3000/photo/${data.id}`;
+
+  QRCode.toCanvas(document.getElementById("qr"), url);
+
+  document.getElementById("screenCamera").classList.remove("active");
+  document.getElementById("screenFinal").classList.add("active");
+}
+</script>
+
+</body>
+</html>

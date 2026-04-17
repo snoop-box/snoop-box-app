@@ -1,0 +1,17 @@
+{
+  "name": "snoop-box-server",
+  "version": "1.0.0",
+  "description": "Servidor Snoop Box - fotos, trivia y ranking",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^9.0.0"
+  }
+}
