@@ -59,7 +59,7 @@ app.use(express.static(clientPath));
 
 // 🏠 Ruta raíz SIEMPRE responde
 app.get("/", (req, res) => {
-  res.sendFile(path.join(clientPath, "index.html"));
+  res.send("SNOOP BOX SERVER FUNCIONANDO 🚀");
 });
 
 // 🔄 fallback (muy importante en producción)
