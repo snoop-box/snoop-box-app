@@ -1,88 +1,63 @@
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
 
 const app = express();
-
 app.use(cors());
-app.use(express.json());
-app.use("/uploads", express.static("uploads"));
+app.use(express.json({ limit: "10mb" }));
 
-// ====================
-// STORAGE FOTOS
-// ====================
+// 📁 Carpeta uploads
+const uploadDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
+
+// 📦 Multer config
 const storage = multer.diskStorage({
-  destination: "uploads/",
-  filename: (req, file, cb) => {
-    const id = uuidv4();
-    cb(null, id + ".jpg");
-  }
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => cb(null, uuidv4() + ".jpg")
 });
-
 const upload = multer({ storage });
 
-// ====================
-// BASE DE DATOS SIMPLE
-// ====================
-let database = {};
+// 📊 Ranking simple en memoria
 let ranking = {};
 
-// ====================
-// SUBIR FOTO
-// ====================
+// 📤 Subir foto
 app.post("/upload", upload.single("photo"), (req, res) => {
-  const id = req.file.filename.split(".")[0];
-  const mesa = req.body.mesa;
-
-  database[id] = {
-    mesa,
-    file: req.file.filename
-  };
-
-  res.json({ id });
+  const fileUrl = `/uploads/${req.file.filename}`;
+  res.json({ url: fileUrl });
 });
 
-// ====================
-// OBTENER FOTO (DATA)
-// ====================
-app.get("/photo/:id", (req, res) => {
-  const data = database[req.params.id];
-
-  if (!data) {
-    return res.status(404).send("No existe");
-  }
-
-  res.json(data);
-});
-
-// ====================
-// SUMAR PUNTOS
-// ====================
+// 📈 Sumar puntos
 app.post("/score", (req, res) => {
-  const { mesa, puntos } = req.body;
-
-  if (!ranking[mesa]) {
-    ranking[mesa] = 0;
-  }
-
-  ranking[mesa] += puntos;
-
-  console.log("Ranking actualizado:", ranking);
-
-  res.json({ ok: true });
+  const { mesa } = req.body;
+  if (!ranking[mesa]) ranking[mesa] = 0;
+  ranking[mesa]++;
+  res.json({ mesa, puntos: ranking[mesa] });
 });
 
-// ====================
-// VER RANKING
-// ====================
+// 📋 Obtener ranking
 app.get("/ranking", (req, res) => {
   res.json(ranking);
 });
 
-// ====================
-// INICIAR SERVIDOR
-// ====================
-app.listen(3000, () => {
-  console.log("🚀 Servidor corriendo en puerto 3000");
+// 📂 Servir imágenes
+app.use("/uploads", express.static(uploadDir));
+
+// 🌐 SERVIR FRONTEND
+app.use(express.static(path.join(__dirname, "../client")));
+
+// 🏠 Ruta principal
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/index.html"));
+});
+
+// 🚀 PUERTO
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log("🚀 Servidor corriendo en puerto", PORT);
 });
