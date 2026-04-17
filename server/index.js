@@ -22,11 +22,14 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// 📊 Ranking simple en memoria
+// 📊 Ranking en memoria
 let ranking = {};
 
 // 📤 Subir foto
 app.post("/upload", upload.single("photo"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "No file" });
+  }
   const fileUrl = `/uploads/${req.file.filename}`;
   res.json({ url: fileUrl });
 });
@@ -34,25 +37,34 @@ app.post("/upload", upload.single("photo"), (req, res) => {
 // 📈 Sumar puntos
 app.post("/score", (req, res) => {
   const { mesa } = req.body;
+  if (!mesa) return res.status(400).json({ error: "Mesa requerida" });
+
   if (!ranking[mesa]) ranking[mesa] = 0;
   ranking[mesa]++;
   res.json({ mesa, puntos: ranking[mesa] });
 });
 
-// 📋 Obtener ranking
+// 📋 Ranking
 app.get("/ranking", (req, res) => {
   res.json(ranking);
 });
 
-// 📂 Servir imágenes
+// 📂 Servir uploads
 app.use("/uploads", express.static(uploadDir));
 
-// 🌐 SERVIR FRONTEND
-app.use(express.static(path.join(__dirname, "../client")));
+// 🌐 SERVIR FRONTEND (RUTA SEGURA)
+const clientPath = path.resolve(__dirname, "../client");
 
-// 🏠 Ruta principal
+app.use(express.static(clientPath));
+
+// 🏠 Ruta raíz SIEMPRE responde
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../client/index.html"));
+  res.sendFile(path.join(clientPath, "index.html"));
+});
+
+// 🔄 fallback (muy importante en producción)
+app.get("*", (req, res) => {
+  res.sendFile(path.join(clientPath, "index.html"));
 });
 
 // 🚀 PUERTO
