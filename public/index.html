@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Snoop Box</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 * { box-sizing: border-box; }
@@ -28,7 +28,6 @@ input, select, button {
   width: 100%;
   border-radius: 10px;
   border: none;
-  font-size: 16px;
 }
 
 button {
@@ -41,12 +40,15 @@ button {
 img {
   width: 100%;
   border-radius: 10px;
-  margin-top: 10px;
 }
 
-.big-button {
-  font-size: 18px;
-  padding: 18px;
+.card {
+  margin-bottom: 15px;
+}
+
+.info {
+  font-size: 14px;
+  opacity: 0.7;
 }
 </style>
 </head>
@@ -62,16 +64,10 @@ img {
 <input id="name" placeholder="Apodo">
 
 <select id="table">
-  <option value="">Seleccionar mesa</option>
-  <option>1</option>
-  <option>2</option>
-  <option>3</option>
-  <option>4</option>
-  <option>5</option>
-  <option>6</option>
-  <option>7</option>
-  <option>8</option>
-  <option>9</option>
+  <option value="">Mesa</option>
+  <option>1</option><option>2</option><option>3</option>
+  <option>4</option><option>5</option><option>6</option>
+  <option>7</option><option>8</option><option>9</option>
   <option>10</option>
 </select>
 
@@ -82,27 +78,21 @@ img {
 <div id="menu" class="hidden">
 <h3 id="welcome"></h3>
 
-<button class="big-button" onclick="show('upload')">📸 Sacar foto</button>
-<button class="big-button" onclick="show('gallery')">🖼 Ver fotos</button>
+<button onclick="show('upload')">📸 Sacar foto</button>
+<button onclick="show('gallery')">🖼 Ver fotos</button>
 </div>
 
-<!-- SUBIR FOTO -->
+<!-- UPLOAD -->
 <div id="upload" class="hidden">
-<h3>Sacar foto</h3>
-
 <input type="file" id="file" accept="image/*" capture="environment" style="display:none" onchange="previewImage()">
-
-<button class="big-button" onclick="openCamera()">📸 Abrir cámara</button>
-
-<div id="previewContainer"></div>
-
+<button onclick="openCamera()">📸 Abrir cámara</button>
+<div id="preview"></div>
 <button onclick="sendPhoto()">Subir</button>
 <button onclick="back()">Volver</button>
 </div>
 
 <!-- GALERIA -->
 <div id="gallery" class="hidden">
-<h3>Galería</h3>
 <div id="photos"></div>
 <button onclick="back()">Volver</button>
 </div>
@@ -111,12 +101,13 @@ img {
 
 <script>
 let user = {};
+const eventId = "evento1"; // 🔥 después lo hacemos dinámico
 
 function enterApp() {
   const name = document.getElementById("name").value;
   const table = document.getElementById("table").value;
 
-  if (!name || !table) return alert("Completá todos los datos");
+  if (!name || !table) return alert("Completá");
 
   user = { name, table };
 
@@ -150,12 +141,8 @@ function previewImage() {
   const reader = new FileReader();
 
   reader.onload = function(e) {
-    const img = document.createElement("img");
-    img.src = e.target.result;
-
-    const container = document.getElementById("previewContainer");
-    container.innerHTML = "";
-    container.appendChild(img);
+    document.getElementById("preview").innerHTML =
+      "<img src='" + e.target.result + "'>";
   };
 
   reader.readAsDataURL(file);
@@ -167,29 +154,38 @@ async function sendPhoto() {
 
   const formData = new FormData();
   formData.append("photo", file);
+  formData.append("name", user.name);
+  formData.append("table", user.table);
+  formData.append("event", eventId);
 
   await fetch("/upload", {
     method: "POST",
     body: formData
   });
 
-  document.getElementById("previewContainer").innerHTML = "";
+  document.getElementById("preview").innerHTML = "";
   document.getElementById("file").value = "";
 
   back();
 }
 
 async function loadGallery() {
-  const res = await fetch("/photos");
+  const res = await fetch("/photos/" + eventId);
   const data = await res.json();
 
   const container = document.getElementById("photos");
   container.innerHTML = "";
 
-  data.forEach(url => {
-    const img = document.createElement("img");
-    img.src = url;
-    container.appendChild(img);
+  data.reverse().forEach(p => {
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <img src="/uploads/${p.file}">
+      <div class="info">${p.name} - Mesa ${p.table}</div>
+    `;
+
+    container.appendChild(div);
   });
 }
 </script>

@@ -6,12 +6,20 @@ const fs = require("fs");
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+app.use(express.json());
+
 // Carpeta uploads
 const uploadPath = path.join(__dirname, "uploads");
-
-// Crear carpeta si no existe
 if (!fs.existsSync(uploadPath)) {
   fs.mkdirSync(uploadPath);
+}
+
+// Archivo base de datos simple
+const dbFile = path.join(__dirname, "db.json");
+
+// Crear db si no existe
+if (!fs.existsSync(dbFile)) {
+  fs.writeFileSync(dbFile, JSON.stringify([]));
 }
 
 // Configuración multer
@@ -25,32 +33,40 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
 // Servir frontend
 app.use(express.static(path.join(__dirname, "public")));
-
-// Servir imágenes
 app.use("/uploads", express.static(uploadPath));
 
-// Subir imagen
+// SUBIR FOTO
 app.post("/upload", upload.single("photo"), (req, res) => {
-  res.json({ success: true, file: req.file.filename });
+  const { name, table, event } = req.body;
+
+  const newPhoto = {
+    file: req.file.filename,
+    name,
+    table,
+    event,
+    date: Date.now()
+  };
+
+  const db = JSON.parse(fs.readFileSync(dbFile));
+  db.push(newPhoto);
+  fs.writeFileSync(dbFile, JSON.stringify(db, null, 2));
+
+  res.json({ success: true });
 });
 
-// Obtener galería
-app.get("/photos", (req, res) => {
-  fs.readdir(uploadPath, (err, files) => {
-    if (err) return res.json([]);
+// OBTENER GALERIA POR EVENTO
+app.get("/photos/:event", (req, res) => {
+  const event = req.params.event;
 
-    const urls = files.map(file => "/uploads/" + file);
-    res.json(urls);
-  });
-});
+  const db = JSON.parse(fs.readFileSync(dbFile));
 
-// Home
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  const filtered = db.filter(p => p.event === event);
+
+  res.json(filtered);
 });
 
 app.listen(PORT, () => {
