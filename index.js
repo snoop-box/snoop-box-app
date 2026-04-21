@@ -10,26 +10,32 @@ const PORT = process.env.PORT || 8080;
 
 app.use(express.json());
 
-// 🔥 CONFIG CLOUDINARY DESDE VARIABLES
+// 🔥 CONFIG CLOUDINARY (usa variables de Railway)
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// 🔥 STORAGE CLOUDINARY
+// 🔥 STORAGE CON EVENTO
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: async (req, file) => ({
-    folder: "snoopbox/" + (req.body.event || "default"),
-    format: "jpg",
-    public_id: Date.now()
-  })
+  params: async (req, file) => {
+    const event = req.body?.event || "default";
+
+    console.log("EVENTO EN STORAGE:", event);
+
+    return {
+      folder: "snoopbox/" + event,
+      format: "jpg",
+      public_id: Date.now()
+    };
+  }
 });
 
 const upload = multer({ storage });
 
-// DB SIMPLE (temporal por ahora)
+// DB SIMPLE (temporal)
 const dbFile = path.join(__dirname, "db.json");
 if (!fs.existsSync(dbFile)) {
   fs.writeFileSync(dbFile, JSON.stringify([]));
@@ -43,7 +49,7 @@ app.post("/upload", upload.single("photo"), (req, res) => {
   const { name, table, event } = req.body;
 
   const newPhoto = {
-    url: req.file.path, // URL cloudinary
+    url: req.file.path,
     name,
     table,
     event,

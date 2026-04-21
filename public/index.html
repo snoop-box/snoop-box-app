@@ -43,7 +43,6 @@ button {
 
 img {
   width: 100%;
-  height: auto;
   border-radius: 10px;
 }
 
@@ -52,11 +51,6 @@ img {
   opacity: 0.7;
   margin-top: 4px;
 }
-
-/* evita desbordes raros en celulares viejos */
-body, html {
-  overflow-x: hidden;
-}
 </style>
 </head>
 
@@ -64,6 +58,7 @@ body, html {
 
 <div class="container">
 
+<!-- LOGIN -->
 <div id="login">
 <h3>Ingresar</h3>
 <input id="name" placeholder="Apodo">
@@ -79,25 +74,34 @@ body, html {
 <button onclick="enterApp()">Entrar</button>
 </div>
 
+<!-- MENU -->
 <div id="menu" class="hidden">
 <h4 id="welcome"></h4>
 <button onclick="show('upload')">📸 Sacar foto</button>
 <button onclick="show('gallery')">🖼 Ver fotos</button>
+<button onclick="show('trivia')">🧠 Trivia</button>
 </div>
 
+<!-- UPLOAD -->
 <div id="upload" class="hidden">
 <input type="file" id="file" accept="image/*" capture="environment" style="display:none" onchange="previewImage()">
-
 <button onclick="openCamera()">📸 Abrir cámara</button>
-
 <div id="preview"></div>
-
 <button onclick="sendPhoto()">Subir</button>
 <button onclick="back()">Volver</button>
 </div>
 
+<!-- GALERIA -->
 <div id="gallery" class="hidden">
 <div id="photos"></div>
+<button onclick="back()">Volver</button>
+</div>
+
+<!-- TRIVIA -->
+<div id="trivia" class="hidden">
+<h3>Trivia</h3>
+<div id="question"></div>
+<div id="answers"></div>
 <button onclick="back()">Volver</button>
 </div>
 
@@ -105,6 +109,7 @@ body, html {
 
 <script>
 
+// EVENTO DESDE URL
 function getEventId() {
   const params = new URLSearchParams(window.location.search);
   return params.get("event") || "default";
@@ -133,11 +138,13 @@ function show(sec) {
   document.getElementById(sec).classList.remove("hidden");
 
   if (sec === "gallery") loadGallery();
+  if (sec === "trivia") loadTrivia();
 }
 
 function back() {
   upload.classList.add("hidden");
   gallery.classList.add("hidden");
+  trivia.classList.add("hidden");
   menu.classList.remove("hidden");
 }
 
@@ -150,12 +157,10 @@ function previewImage() {
   if (!file) return;
 
   const reader = new FileReader();
-
-  reader.onload = function(e) {
+  reader.onload = e => {
     document.getElementById("preview").innerHTML =
       "<img src='" + e.target.result + "'>";
   };
-
   reader.readAsDataURL(file);
 }
 
@@ -202,6 +207,45 @@ async function loadGallery() {
     `;
 
     container.appendChild(div);
+  });
+}
+
+// TRIVIA
+const questions = [
+  {
+    q: "¿Dónde se conocieron?",
+    a: ["Escuela", "Trabajo", "Fiesta"],
+    correct: 1
+  },
+  {
+    q: "¿Quién dio el primer beso?",
+    a: ["Él", "Ella", "Ambos"],
+    correct: 0
+  },
+  {
+    q: "¿Destino favorito?",
+    a: ["Playa", "Montaña", "Europa"],
+    correct: 2
+  }
+];
+
+function loadTrivia() {
+  const random = questions[Math.floor(Math.random() * questions.length)];
+
+  document.getElementById("question").innerText = random.q;
+
+  const answersDiv = document.getElementById("answers");
+  answersDiv.innerHTML = "";
+
+  random.a.forEach((ans, i) => {
+    const btn = document.createElement("button");
+    btn.innerText = ans;
+
+    btn.onclick = () => {
+      alert(i === random.correct ? "Correcto!" : "Incorrecto");
+    };
+
+    answersDiv.appendChild(btn);
   });
 }
 
