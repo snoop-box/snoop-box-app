@@ -1,38 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snoop Box</title>
 
-/* ================= SONIDOS ================= */
-const sounds = {
-  click: new Audio("/sounds/click.mp3"),
-  camera: new Audio("/sounds/camera.mp3"),
-  success: new Audio("/sounds/success.mp3"),
-  error: new Audio("/sounds/error.mp3")
-};
-
-function playSound(type) {
-  if (!sounds[type]) return;
-  sounds[type].pause();
-  sounds[type].currentTime = 0;
-  sounds[type].play().catch(()=>{});
+<style>
+body {
+  margin:0;
+  font-family: Arial;
+  background:#111;
+  color:white;
+  text-align:center;
 }
 
-/* ================= VARIABLES ================= */
-const eventId = new URLSearchParams(location.search).get("event") || "default";
+#login, #app {
+  padding:20px;
+}
 
-let user = {};
-let previewFile = null;
+input, select, button {
+  width:90%;
+  padding:15px;
+  margin:10px;
+  font-size:18px;
+  border-radius:10px;
+  border:none;
+}
 
-/* 🔥 FIX CLAVE: REFERENCIAS DOM */
+button {
+  background:#00c853;
+  color:white;
+}
+
+.menu button {
+  background:#2962ff;
+}
+
+#preview {
+  width:90%;
+  margin-top:10px;
+  border-radius:10px;
+}
+
+.option {
+  display:block;
+  margin:10px;
+  padding:15px;
+  background:#333;
+  border-radius:10px;
+}
+
+.correct { background:green; }
+.wrong { background:red; }
+
+#gallery img {
+  width:100%;
+  margin-top:10px;
+  border-radius:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="login">
+  <h2>Ingresar</h2>
+  <input id="name" placeholder="Tu apodo">
+
+  <select id="table">
+    <option value="">Seleccionar mesa</option>
+    <option>1</option><option>2</option><option>3</option>
+    <option>4</option><option>5</option><option>6</option>
+    <option>7</option><option>8</option><option>9</option>
+    <option>10</option>
+  </select>
+
+  <button id="btnLogin">Entrar</button>
+</div>
+
+<div id="app" style="display:none">
+
+  <h3 id="welcome"></h3>
+
+  <div class="menu">
+    <button id="btnPhoto">📸 Foto</button>
+    <button id="btnGallery">🖼 Galería</button>
+    <button id="btnTrivia">🧠 Trivia</button>
+  </div>
+
+  <div id="photo" style="display:none">
+    <input type="file" accept="image/*" capture="environment" id="camera">
+    <img id="preview">
+    <button id="btnUpload">Subir Foto</button>
+  </div>
+
+  <div id="gallery" style="display:none"></div>
+
+  <div id="trivia" style="display:none">
+    <h3 id="question"></h3>
+    <div id="options"></div>
+  </div>
+
+  <div id="ranking"></div>
+
+</div>
+
+<script>
+
+/* ===== ELEMENTOS ===== */
 const loginDiv = document.getElementById("login");
 const app = document.getElementById("app");
 const welcome = document.getElementById("welcome");
+
+const btnLogin = document.getElementById("btnLogin");
+const btnPhoto = document.getElementById("btnPhoto");
+const btnGallery = document.getElementById("btnGallery");
+const btnTrivia = document.getElementById("btnTrivia");
+
 const camera = document.getElementById("camera");
 const preview = document.getElementById("preview");
+const btnUpload = document.getElementById("btnUpload");
+
 const gallery = document.getElementById("gallery");
 const question = document.getElementById("question");
 const options = document.getElementById("options");
 const ranking = document.getElementById("ranking");
 
-/* ================= LOGIN ================= */
-function login() {
+/* ===== VARIABLES ===== */
+const eventId = new URLSearchParams(location.search).get("event") || "default";
+let user = {};
+let previewFile = null;
+
+/* ===== LOGIN ===== */
+btnLogin.onclick = () => {
   const name = document.getElementById("name").value;
   const table = document.getElementById("table").value;
 
@@ -41,31 +141,27 @@ function login() {
     return;
   }
 
-  playSound("click");
-
   user = { name, table };
 
   loginDiv.style.display = "none";
   app.style.display = "block";
 
   welcome.innerText = `Hola ${name} (Mesa ${table})`;
-}
+};
 
-/* ================= MENU ================= */
+/* ===== MENU ===== */
 function showSection(id) {
-  playSound("click");
-
   ["photo","gallery","trivia"].forEach(s=>{
     document.getElementById(s).style.display="none";
   });
-
   document.getElementById(id).style.display="block";
-
-  if (id === "gallery") loadGallery();
-  if (id === "trivia") loadTrivia();
 }
 
-/* ================= FOTO ================= */
+btnPhoto.onclick = ()=>showSection("photo");
+btnGallery.onclick = ()=>{ showSection("gallery"); loadGallery(); };
+btnTrivia.onclick = ()=>{ showSection("trivia"); loadTrivia(); };
+
+/* ===== FOTO ===== */
 camera.onchange = (e)=>{
   previewFile = e.target.files[0];
 
@@ -74,14 +170,10 @@ camera.onchange = (e)=>{
     preview.src = e.target.result;
   };
   reader.readAsDataURL(previewFile);
-
-  playSound("camera");
 };
 
-async function uploadPhoto() {
+btnUpload.onclick = async () => {
   if (!previewFile) return;
-
-  playSound("click");
 
   const formData = new FormData();
   formData.append("photo", previewFile);
@@ -96,11 +188,9 @@ async function uploadPhoto() {
 
   preview.src = "";
   camera.value = "";
+};
 
-  showSection("photo");
-}
-
-/* ================= GALERIA ================= */
+/* ===== GALERIA ===== */
 async function loadGallery() {
   const res = await fetch("/photos/" + eventId);
   const data = await res.json();
@@ -115,17 +205,13 @@ async function loadGallery() {
   });
 }
 
-/* ================= TRIVIA ================= */
-let answered = false;
-
+/* ===== TRIVIA ===== */
 const questions = [
   { q:"¿De qué color era el vestido?", o:["Rojo","Azul","Blanco"], a:2 },
   { q:"¿Cuántos años cumple?", o:["30","40","50"], a:2 }
 ];
 
 function loadTrivia() {
-
-  answered = false;
 
   const q = questions[Math.floor(Math.random()*questions.length)];
 
@@ -138,25 +224,19 @@ function loadTrivia() {
     btn.innerText = opt;
 
     btn.onclick = ()=>{
-      if (answered) return;
-
       if (i === q.a) {
         btn.classList.add("correct");
-        playSound("success");
         addPoints(10);
       } else {
         btn.classList.add("wrong");
-        playSound("error");
       }
-
-      answered = true;
     };
 
     options.appendChild(btn);
   });
 }
 
-/* ================= RANKING ================= */
+/* ===== RANKING ===== */
 async function loadRanking() {
   const res = await fetch("/ranking/" + eventId);
   const data = await res.json();
@@ -184,5 +264,9 @@ async function addPoints(points) {
   loadRanking();
 }
 
-/* ================= INIT ================= */
 setInterval(loadRanking, 5000);
+
+</script>
+
+</body>
+</html>
