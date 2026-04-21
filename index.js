@@ -10,28 +10,26 @@ const PORT = process.env.PORT || 8080;
 
 app.use(express.json());
 
-// 🔥 CONFIGURAR CLOUDINARY
+// 🔥 CONFIG CLOUDINARY DESDE VARIABLES
 cloudinary.config({
-  cloud_name: "TU_CLOUD_NAME",
-  api_key: "TU_API_KEY",
-  api_secret: "TU_API_SECRET"
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// 🔥 STORAGE EN CLOUDINARY
+// 🔥 STORAGE CLOUDINARY
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: async (req, file) => {
-    return {
-      folder: "snoopbox/" + (req.body.event || "default"),
-      format: "jpg",
-      public_id: Date.now()
-    };
-  }
+  params: async (req, file) => ({
+    folder: "snoopbox/" + (req.body.event || "default"),
+    format: "jpg",
+    public_id: Date.now()
+  })
 });
 
 const upload = multer({ storage });
 
-// DB simple
+// DB SIMPLE (temporal por ahora)
 const dbFile = path.join(__dirname, "db.json");
 if (!fs.existsSync(dbFile)) {
   fs.writeFileSync(dbFile, JSON.stringify([]));
@@ -45,7 +43,7 @@ app.post("/upload", upload.single("photo"), (req, res) => {
   const { name, table, event } = req.body;
 
   const newPhoto = {
-    url: req.file.path, // 🔥 URL CLOUDINARY
+    url: req.file.path, // URL cloudinary
     name,
     table,
     event,
@@ -59,7 +57,7 @@ app.post("/upload", upload.single("photo"), (req, res) => {
   res.json({ success: true });
 });
 
-// OBTENER GALERIA
+// GALERIA
 app.get("/photos/:event", (req, res) => {
   const event = req.params.event;
 
