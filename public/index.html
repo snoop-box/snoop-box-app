@@ -3,23 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <title>Snoop Box</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <style>
+* {
+  box-sizing: border-box;
+}
+
 body {
   background: #111;
   color: white;
   font-family: Arial;
   text-align: center;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  max-width: 400px;
+  margin: auto;
 }
 
 input, button {
   padding: 15px;
-  margin: 10px;
-  width: 80%;
-  max-width: 300px;
+  margin: 8px 0;
+  width: 100%;
   border-radius: 10px;
   border: none;
+  font-size: 16px;
 }
 
 button {
@@ -32,33 +43,46 @@ button {
 }
 
 img {
-  width: 90%;
-  max-width: 400px;
-  margin: 10px;
+  width: 100%;
   border-radius: 10px;
+  margin-top: 10px;
+}
+
+/* Botón tipo grande */
+.big-button {
+  font-size: 18px;
+  padding: 18px;
 }
 </style>
 </head>
 
 <body>
 
+<div class="container">
+
+<!-- LOGIN -->
 <div id="login">
-<h1>Ingresar</h1>
+<h2>Ingresar</h2>
 <input id="name" placeholder="Apodo">
 <input id="table" placeholder="Mesa">
 <button onclick="enterApp()">Entrar</button>
 </div>
 
+<!-- MENU -->
 <div id="menu" class="hidden">
-<h2 id="welcome"></h2>
-<button onclick="show('upload')">📸 Subir</button>
-<button onclick="show('gallery')">🖼 Galería</button>
+<h3 id="welcome"></h3>
+
+<button class="big-button" onclick="show('upload')">📸 Sacar foto</button>
+<button class="big-button" onclick="show('gallery')">🖼 Ver fotos</button>
 </div>
 
+<!-- SUBIR FOTO -->
 <div id="upload" class="hidden">
-<h2>Subir foto</h2>
+<h3>Sacar foto</h3>
 
-<input type="file" id="file" accept="image/*" capture="environment" onchange="previewImage()">
+<input type="file" id="file" accept="image/*" capture="environment" style="display:none" onchange="previewImage()">
+
+<button class="big-button" onclick="openCamera()">📸 Abrir cámara</button>
 
 <div id="previewContainer"></div>
 
@@ -66,10 +90,13 @@ img {
 <button onclick="back()">Volver</button>
 </div>
 
+<!-- GALERIA -->
 <div id="gallery" class="hidden">
-<h2>Galería</h2>
+<h3>Galería</h3>
 <div id="photos"></div>
 <button onclick="back()">Volver</button>
+</div>
+
 </div>
 
 <script>
@@ -102,6 +129,11 @@ function back() {
   menu.classList.remove("hidden");
 }
 
+// Abrir cámara desde botón
+function openCamera() {
+  document.getElementById("file").click();
+}
+
 function previewImage() {
   const file = document.getElementById("file").files[0];
   if (!file) return;
@@ -122,7 +154,7 @@ function previewImage() {
 
 async function sendPhoto() {
   const file = document.getElementById("file").files[0];
-  if (!file) return alert("Elegí foto");
+  if (!file) return;
 
   const formData = new FormData();
   formData.append("photo", file);
@@ -132,13 +164,11 @@ async function sendPhoto() {
     body: formData
   });
 
-  alert("Subida!");
-
-  // limpiar preview
+  // limpiar
   document.getElementById("previewContainer").innerHTML = "";
   document.getElementById("file").value = "";
 
-  // volver al menú automáticamente
+  // volver directo al menú
   back();
 }
 
