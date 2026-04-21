@@ -1,118 +1,131 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Snoop Box</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Snoop Box</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      background: #111;
-      color: white;
-      font-family: Arial;
-      text-align: center;
-      padding: 20px;
-    }
+<style>
+body {
+  background: #111;
+  color: white;
+  font-family: Arial;
+  text-align: center;
+}
 
-    input, button {
-      padding: 15px;
-      margin: 10px;
-      width: 80%;
-      max-width: 300px;
-      border-radius: 10px;
-      border: none;
-      font-size: 16px;
-    }
+input, button {
+  padding: 15px;
+  margin: 10px;
+  width: 80%;
+  max-width: 300px;
+  border-radius: 10px;
+  border: none;
+}
 
-    button {
-      background: #ff0055;
-      color: white;
-    }
+button {
+  background: #ff0055;
+  color: white;
+}
 
-    .hidden {
-      display: none;
-    }
-  </style>
+.hidden {
+  display: none;
+}
+
+img {
+  width: 100%;
+  max-width: 200px;
+  margin: 10px;
+}
+</style>
 </head>
 
 <body>
 
-  <!-- LOGIN -->
-  <div id="login">
-    <h1>Ingresar al evento</h1>
+<div id="login">
+<h1>Ingresar</h1>
+<input id="name" placeholder="Apodo">
+<input id="table" placeholder="Mesa">
+<button onclick="enterApp()">Entrar</button>
+</div>
 
-    <input type="text" id="name" placeholder="Tu apodo">
-    <input type="number" id="table" placeholder="Número de mesa">
+<div id="menu" class="hidden">
+<h2 id="welcome"></h2>
+<button onclick="show('upload')">📸 Subir</button>
+<button onclick="show('gallery')">🖼 Galería</button>
+</div>
 
-    <br>
-    <button onclick="enterApp()">Entrar</button>
-  </div>
+<div id="upload" class="hidden">
+<h2>Subir foto</h2>
+<input type="file" id="file">
+<button onclick="sendPhoto()">Subir</button>
+<button onclick="back()">Volver</button>
+</div>
 
-  <!-- MENU -->
-  <div id="menu" class="hidden">
-    <h1 id="welcome"></h1>
+<div id="gallery" class="hidden">
+<h2>Galería</h2>
+<div id="photos"></div>
+<button onclick="back()">Volver</button>
+</div>
 
-    <button onclick="showSection('upload')">📸 Subir foto</button>
-    <button onclick="showSection('trivia')">🎮 Trivia</button>
-    <button onclick="showSection('gallery')">🖼 Galería</button>
-  </div>
+<script>
+let user = {};
 
-  <!-- SUBIR FOTO -->
-  <div id="upload" class="hidden">
-    <h1>Subir foto</h1>
-    <input type="file" accept="image/*">
-    <br>
-    <button onclick="back()">Volver</button>
-  </div>
+function enterApp() {
+  const name = document.getElementById("name").value;
+  const table = document.getElementById("table").value;
 
-  <!-- TRIVIA -->
-  <div id="trivia" class="hidden">
-    <h1>Trivia</h1>
-    <p>Próximamente...</p>
-    <button onclick="back()">Volver</button>
-  </div>
+  if (!name || !table) return alert("Completá");
 
-  <!-- GALERIA -->
-  <div id="gallery" class="hidden">
-    <h1>Galería</h1>
-    <p>Próximamente...</p>
-    <button onclick="back()">Volver</button>
-  </div>
+  user = { name, table };
 
-  <script>
-    let user = {};
+  login.classList.add("hidden");
+  menu.classList.remove("hidden");
 
-    function enterApp() {
-      const name = document.getElementById("name").value;
-      const table = document.getElementById("table").value;
+  welcome.innerText = name + " - Mesa " + table;
+}
 
-      if (!name || !table) {
-        alert("Completá los datos");
-        return;
-      }
+function show(sec) {
+  menu.classList.add("hidden");
+  document.getElementById(sec).classList.remove("hidden");
 
-      user = { name, table };
+  if (sec === "gallery") loadGallery();
+}
 
-      document.getElementById("login").classList.add("hidden");
-      document.getElementById("menu").classList.remove("hidden");
+function back() {
+  upload.classList.add("hidden");
+  gallery.classList.add("hidden");
+  menu.classList.remove("hidden");
+}
 
-      document.getElementById("welcome").innerText =
-        "Hola " + name + " (Mesa " + table + ")";
-    }
+async function sendPhoto() {
+  const file = document.getElementById("file").files[0];
+  if (!file) return alert("Elegí foto");
 
-    function showSection(section) {
-      document.getElementById("menu").classList.add("hidden");
-      document.getElementById(section).classList.remove("hidden");
-    }
+  const formData = new FormData();
+  formData.append("photo", file);
 
-    function back() {
-      document.getElementById("upload").classList.add("hidden");
-      document.getElementById("trivia").classList.add("hidden");
-      document.getElementById("gallery").classList.add("hidden");
+  await fetch("/upload", {
+    method: "POST",
+    body: formData
+  });
 
-      document.getElementById("menu").classList.remove("hidden");
-    }
-  </script>
+  alert("Subida!");
+}
+
+async function loadGallery() {
+  const res = await fetch("/photos");
+  const data = await res.json();
+
+  const container = document.getElementById("photos");
+  container.innerHTML = "";
+
+  data.forEach(url => {
+    const img = document.createElement("img");
+    img.src = url;
+    container.appendChild(img);
+  });
+}
+</script>
 
 </body>
 </html>
