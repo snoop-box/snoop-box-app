@@ -56,7 +56,10 @@ img {
 
 <div id="upload" class="hidden">
 <h2>Subir foto</h2>
-<input type="file" id="file">
+
+<!-- ESTE ES EL CAMBIO CLAVE -->
+<input type="file" id="file" accept="image/*" capture="environment">
+
 <button onclick="sendPhoto()">Subir</button>
 <button onclick="back()">Volver</button>
 </div>
