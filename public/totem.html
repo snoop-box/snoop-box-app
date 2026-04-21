@@ -13,18 +13,30 @@ body {
   color: white;
 }
 
+/* GRID */
 #grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px,1fr));
-  gap: 5px;
-  padding: 5px;
+  grid-template-columns: repeat(auto-fill, minmax(140px,1fr));
+  gap: 6px;
+  padding: 6px;
 }
 
-img {
+.card {
+  text-align: center;
+}
+
+.card img {
   width: 100%;
-  height: 150px;
+  height: 140px;
   object-fit: cover;
   cursor: pointer;
+  border-radius: 8px;
+}
+
+.name {
+  font-size: 12px;
+  margin-top: 3px;
+  opacity: 0.8;
 }
 
 /* MODAL */
@@ -34,28 +46,45 @@ img {
   left:0;
   width:100%;
   height:100%;
-  background: rgba(0,0,0,0.9);
+  background: rgba(0,0,0,0.95);
   display:none;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
 }
 
-#modal img {
-  max-width: 90%;
-  max-height: 70%;
+/* MARCO */
+.frame {
+  position: relative;
+  width: 300px;
+  height: 450px;
 }
 
+.frame img.photo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+.frame img.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+/* BOTONES */
 .buttons {
   margin-top: 20px;
 }
 
 button {
-  padding: 15px 30px;
+  padding: 15px 25px;
   margin: 10px;
   font-size: 18px;
-  border: none;
   border-radius: 10px;
+  border: none;
 }
 
 .ok { background: green; color:white; }
@@ -69,10 +98,14 @@ button {
 <div id="grid"></div>
 
 <div id="modal">
-  <img id="modalImg">
+  <div class="frame">
+    <img id="modalPhoto" class="photo">
+    <img src="frame.png" class="overlay">
+  </div>
+
   <div class="buttons">
     <button class="ok" onclick="printPhoto()">✔ Imprimir</button>
-    <button class="no" onclick="closeModal()">❌ Cancelar</button>
+    <button class="no" onclick="closeModal()">❌ Seguir buscando</button>
   </div>
 </div>
 
@@ -81,22 +114,35 @@ button {
 const eventId = new URLSearchParams(location.search).get("event") || "default";
 
 let selectedPhoto = null;
+let slideshowIndex = 0;
+let photosData = [];
+let userInteracting = false;
 
 // CARGAR FOTOS
 async function loadPhotos() {
   const res = await fetch("/photos/" + eventId);
   const data = await res.json();
 
+  photosData = data.reverse();
+
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
 
-  data.reverse().forEach(p => {
-    const img = document.createElement("img");
-    img.src = p.url;
+  photosData.forEach(p => {
+    const div = document.createElement("div");
+    div.className = "card";
 
-    img.onclick = () => openModal(p.url);
+    div.innerHTML = `
+      <img src="${p.url}">
+      <div class="name">${p.name}</div>
+    `;
 
-    grid.appendChild(img);
+    div.onclick = () => {
+      userInteracting = true;
+      openModal(p.url);
+    };
+
+    grid.appendChild(div);
   });
 }
 
@@ -104,7 +150,7 @@ async function loadPhotos() {
 function openModal(url) {
   selectedPhoto = url;
   document.getElementById("modal").style.display = "flex";
-  document.getElementById("modalImg").src = url;
+  document.getElementById("modalPhoto").src = url;
 }
 
 function closeModal() {
@@ -113,13 +159,15 @@ function closeModal() {
 
 // IMPRIMIR
 function printPhoto() {
+
   const win = window.open("");
 
   win.document.write(`
     <html>
-    <body style="margin:0; display:flex; justify-content:center; align-items:center; height:100vh; background:white;">
-      <div style="border:20px solid black; padding:10px;">
-        <img src="${selectedPhoto}" style="width:400px;">
+    <body style="margin:0; display:flex; justify-content:center; align-items:center; height:100vh;">
+      <div style="position:relative; width:600px; height:900px;">
+        <img src="${selectedPhoto}" style="position:absolute; width:100%;">
+        <img src="frame.png" style="position:absolute; width:100%;">
       </div>
     </body>
     </html>
@@ -131,11 +179,28 @@ function printPhoto() {
   closeModal();
 }
 
-// AUTO REFRESH
-setInterval(loadPhotos, 3000);
+// SLIDESHOW
+function startSlideshow() {
+  setInterval(() => {
+    if (userInteracting) return;
+    if (photosData.length === 0) return;
+
+    slideshowIndex++;
+    if (slideshowIndex >= photosData.length) slideshowIndex = 0;
+
+    openModal(photosData[slideshowIndex].url);
+
+    setTimeout(() => {
+      closeModal();
+    }, 2000);
+
+  }, 3000);
+}
 
 // INIT
 loadPhotos();
+setInterval(loadPhotos, 4000);
+startSlideshow();
 
 </script>
 
