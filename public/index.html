@@ -185,7 +185,7 @@ async function loadGallery() {
     div.className = "card";
 
     div.innerHTML = `
-      <img src="/uploads/${p.file}">
+      <img src="${p.url}">
       <div class="info">${p.name} - Mesa ${p.table}</div>
     `;
 

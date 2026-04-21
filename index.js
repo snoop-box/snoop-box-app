@@ -1,6 +1,8 @@
 const express = require("express");
 const path = require("path");
 const multer = require("multer");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
 
 const app = express();
@@ -8,43 +10,42 @@ const PORT = process.env.PORT || 8080;
 
 app.use(express.json());
 
-// Carpeta uploads
-const uploadPath = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadPath)) {
-  fs.mkdirSync(uploadPath);
-}
+// 🔥 CONFIGURAR CLOUDINARY
+cloudinary.config({
+  cloud_name: "TU_CLOUD_NAME",
+  api_key: "TU_API_KEY",
+  api_secret: "TU_API_SECRET"
+});
 
-// Archivo base de datos simple
-const dbFile = path.join(__dirname, "db.json");
-
-// Crear db si no existe
-if (!fs.existsSync(dbFile)) {
-  fs.writeFileSync(dbFile, JSON.stringify([]));
-}
-
-// Configuración multer
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadPath);
-  },
-  filename: function (req, file, cb) {
-    const uniqueName = Date.now() + "-" + file.originalname;
-    cb(null, uniqueName);
+// 🔥 STORAGE EN CLOUDINARY
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => {
+    return {
+      folder: "snoopbox/" + (req.body.event || "default"),
+      format: "jpg",
+      public_id: Date.now()
+    };
   }
 });
 
 const upload = multer({ storage });
 
-// Servir frontend
+// DB simple
+const dbFile = path.join(__dirname, "db.json");
+if (!fs.existsSync(dbFile)) {
+  fs.writeFileSync(dbFile, JSON.stringify([]));
+}
+
+// FRONTEND
 app.use(express.static(path.join(__dirname, "public")));
-app.use("/uploads", express.static(uploadPath));
 
 // SUBIR FOTO
 app.post("/upload", upload.single("photo"), (req, res) => {
   const { name, table, event } = req.body;
 
   const newPhoto = {
-    file: req.file.filename,
+    url: req.file.path, // 🔥 URL CLOUDINARY
     name,
     table,
     event,
@@ -58,12 +59,11 @@ app.post("/upload", upload.single("photo"), (req, res) => {
   res.json({ success: true });
 });
 
-// OBTENER GALERIA POR EVENTO
+// OBTENER GALERIA
 app.get("/photos/:event", (req, res) => {
   const event = req.params.event;
 
   const db = JSON.parse(fs.readFileSync(dbFile));
-
   const filtered = db.filter(p => p.event === event);
 
   res.json(filtered);
