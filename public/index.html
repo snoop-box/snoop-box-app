@@ -210,7 +210,10 @@ async function loadGallery() {
   });
 }
 
+// =====================
 // TRIVIA
+// =====================
+
 const questions = [
   {
     q: "¿Dónde se conocieron?",
@@ -242,7 +245,25 @@ function loadTrivia() {
     btn.innerText = ans;
 
     btn.onclick = () => {
-      alert(i === random.correct ? "Correcto!" : "Incorrecto");
+
+      // bloquear todos los botones
+      const buttons = document.querySelectorAll("#answers button");
+      buttons.forEach(b => b.disabled = true);
+
+      const result = document.createElement("div");
+
+      if (i === random.correct) {
+        result.innerHTML = "✔️ Correcto";
+        result.style.color = "#00ff88";
+      } else {
+        result.innerHTML = "❌ Incorrecto";
+        result.style.color = "#ff4444";
+      }
+
+      result.style.marginTop = "10px";
+      result.style.fontSize = "18px";
+
+      document.getElementById("answers").appendChild(result);
     };
 
     answersDiv.appendChild(btn);
