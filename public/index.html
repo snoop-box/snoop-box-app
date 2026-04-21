@@ -6,13 +6,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-* { box-sizing: border-box; }
-
 body {
   background: #111;
   color: white;
   font-family: Arial;
-  margin: 0;
   padding: 10px;
 }
 
@@ -21,13 +18,12 @@ body {
   margin: auto;
 }
 
-input, select, button {
+button, input, select {
+  width: 100%;
   padding: 14px;
   margin: 6px 0;
-  width: 100%;
   border-radius: 10px;
   border: none;
-  font-size: 16px;
 }
 
 button {
@@ -35,21 +31,13 @@ button {
   color: white;
 }
 
-.hidden { display: none; }
+.hidden { display:none; }
 
-.card {
-  margin-bottom: 12px;
-}
+img { width:100%; border-radius:10px; }
 
-img {
-  width: 100%;
-  border-radius: 10px;
-}
-
-.info {
-  font-size: 13px;
-  opacity: 0.7;
-  margin-top: 4px;
+.rank {
+  padding:10px;
+  border-bottom:1px solid #333;
 }
 </style>
 </head>
@@ -58,11 +46,8 @@ img {
 
 <div class="container">
 
-<!-- LOGIN -->
 <div id="login">
-<h3>Ingresar</h3>
 <input id="name" placeholder="Apodo">
-
 <select id="table">
 <option value="">Mesa</option>
 <option>1</option><option>2</option><option>3</option>
@@ -70,38 +55,39 @@ img {
 <option>7</option><option>8</option><option>9</option>
 <option>10</option>
 </select>
-
 <button onclick="enterApp()">Entrar</button>
 </div>
 
-<!-- MENU -->
 <div id="menu" class="hidden">
-<h4 id="welcome"></h4>
-<button onclick="show('upload')">📸 Sacar foto</button>
-<button onclick="show('gallery')">🖼 Ver fotos</button>
+<h3 id="welcome"></h3>
+<button onclick="show('upload')">📸 Foto</button>
+<button onclick="show('gallery')">🖼 Galería</button>
 <button onclick="show('trivia')">🧠 Trivia</button>
+<button onclick="show('ranking')">🏆 Ranking</button>
 </div>
 
-<!-- UPLOAD -->
 <div id="upload" class="hidden">
 <input type="file" id="file" accept="image/*" capture="environment" style="display:none" onchange="previewImage()">
-<button onclick="openCamera()">📸 Abrir cámara</button>
+<button onclick="openCamera()">📸 Cámara</button>
 <div id="preview"></div>
 <button onclick="sendPhoto()">Subir</button>
 <button onclick="back()">Volver</button>
 </div>
 
-<!-- GALERIA -->
 <div id="gallery" class="hidden">
 <div id="photos"></div>
 <button onclick="back()">Volver</button>
 </div>
 
-<!-- TRIVIA -->
 <div id="trivia" class="hidden">
-<h3>Trivia</h3>
-<div id="question"></div>
+<h3 id="question"></h3>
 <div id="answers"></div>
+<button onclick="back()">Volver</button>
+</div>
+
+<div id="ranking" class="hidden">
+<h3>Ranking</h3>
+<div id="rankList"></div>
 <button onclick="back()">Volver</button>
 </div>
 
@@ -109,164 +95,127 @@ img {
 
 <script>
 
-// EVENTO DESDE URL
-function getEventId() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("event") || "default";
-}
-
-const eventId = getEventId();
-
+const eventId = new URLSearchParams(location.search).get("event") || "default";
 let user = {};
 
 function enterApp() {
-  const name = document.getElementById("name").value;
-  const table = document.getElementById("table").value;
-
-  if (!name || !table) return alert("Completá");
-
-  user = { name, table };
-
+  user.name = name.value;
+  user.table = table.value;
+  if (!user.name || !user.table) return;
   login.classList.add("hidden");
   menu.classList.remove("hidden");
-
-  welcome.innerText = name + " - Mesa " + table;
+  welcome.innerText = user.name + " - Mesa " + user.table;
 }
 
 function show(sec) {
   menu.classList.add("hidden");
   document.getElementById(sec).classList.remove("hidden");
 
-  if (sec === "gallery") loadGallery();
-  if (sec === "trivia") loadTrivia();
+  if (sec=="gallery") loadGallery();
+  if (sec=="trivia") loadTrivia();
+  if (sec=="ranking") loadRanking();
 }
 
 function back() {
   upload.classList.add("hidden");
   gallery.classList.add("hidden");
   trivia.classList.add("hidden");
+  ranking.classList.add("hidden");
   menu.classList.remove("hidden");
 }
 
 function openCamera() {
-  document.getElementById("file").click();
+  file.click();
 }
 
 function previewImage() {
-  const file = document.getElementById("file").files[0];
-  if (!file) return;
-
   const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById("preview").innerHTML =
-      "<img src='" + e.target.result + "'>";
-  };
-  reader.readAsDataURL(file);
+  reader.onload = e => preview.innerHTML = "<img src='"+e.target.result+"'>";
+  reader.readAsDataURL(file.files[0]);
 }
 
 async function sendPhoto() {
-  const file = document.getElementById("file").files[0];
-  if (!file) return;
+  const fd = new FormData();
+  fd.append("photo", file.files[0]);
+  fd.append("name", user.name);
+  fd.append("table", user.table);
+  fd.append("event", eventId);
 
-  const formData = new FormData();
-  formData.append("photo", file);
-  formData.append("name", user.name);
-  formData.append("table", user.table);
-  formData.append("event", eventId);
+  await fetch("/upload", { method:"POST", body:fd });
 
-  await fetch("/upload", {
-    method: "POST",
-    body: formData
-  });
-
-  document.getElementById("preview").innerHTML = "";
-  document.getElementById("file").value = "";
-
+  preview.innerHTML="";
+  file.value="";
   back();
 }
 
 async function loadGallery() {
-  const res = await fetch("/photos/" + eventId);
+  const res = await fetch("/photos/"+eventId);
   const data = await res.json();
 
-  const container = document.getElementById("photos");
-  container.innerHTML = "";
-
-  if (data.length === 0) {
-    container.innerHTML = "<p>No hay fotos todavía</p>";
-    return;
-  }
-
-  data.reverse().forEach(p => {
-    const div = document.createElement("div");
-    div.className = "card";
-
-    div.innerHTML = `
-      <img src="${p.url}">
-      <div class="info">${p.name} - Mesa ${p.table}</div>
-    `;
-
-    container.appendChild(div);
+  photos.innerHTML="";
+  data.reverse().forEach(p=>{
+    photos.innerHTML += `
+      <div>
+        <img src="${p.url}">
+        <small>${p.name} - Mesa ${p.table}</small>
+      </div>`;
   });
 }
 
-// =====================
 // TRIVIA
-// =====================
-
 const questions = [
-  {
-    q: "¿Dónde se conocieron?",
-    a: ["Escuela", "Trabajo", "Fiesta"],
-    correct: 1
-  },
-  {
-    q: "¿Quién dio el primer beso?",
-    a: ["Él", "Ella", "Ambos"],
-    correct: 0
-  },
-  {
-    q: "¿Destino favorito?",
-    a: ["Playa", "Montaña", "Europa"],
-    correct: 2
-  }
+{q:"¿Dónde se conocieron?",a:["Escuela","Trabajo","Fiesta"],c:1},
+{q:"¿Quién dio el primer beso?",a:["Él","Ella","Ambos"],c:0},
+{q:"¿Destino favorito?",a:["Playa","Montaña","Europa"],c:2}
 ];
 
 function loadTrivia() {
-  const random = questions[Math.floor(Math.random() * questions.length)];
+  const q = questions[Math.floor(Math.random()*questions.length)];
+  question.innerText = q.q;
+  answers.innerHTML="";
 
-  document.getElementById("question").innerText = random.q;
+  q.a.forEach((txt,i)=>{
+    const b=document.createElement("button");
+    b.innerText=txt;
 
-  const answersDiv = document.getElementById("answers");
-  answersDiv.innerHTML = "";
+    b.onclick=async ()=>{
+      document.querySelectorAll("#answers button").forEach(x=>x.disabled=true);
 
-  random.a.forEach((ans, i) => {
-    const btn = document.createElement("button");
-    btn.innerText = ans;
+      const correct = i===q.c;
 
-    btn.onclick = () => {
+      const res=document.createElement("div");
+      res.innerText = correct ? "✔️" : "❌";
+      res.style.fontSize="30px";
+      res.style.marginTop="10px";
+      answers.appendChild(res);
 
-      // bloquear todos los botones
-      const buttons = document.querySelectorAll("#answers button");
-      buttons.forEach(b => b.disabled = true);
-
-      const result = document.createElement("div");
-
-      if (i === random.correct) {
-        result.innerHTML = "✔️ Correcto";
-        result.style.color = "#00ff88";
-      } else {
-        result.innerHTML = "❌ Incorrecto";
-        result.style.color = "#ff4444";
-      }
-
-      result.style.marginTop = "10px";
-      result.style.fontSize = "18px";
-
-      document.getElementById("answers").appendChild(result);
+      await fetch("/trivia",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          table:user.table,
+          event:eventId,
+          correct:correct
+        })
+      });
     };
 
-    answersDiv.appendChild(btn);
+    answers.appendChild(b);
+  });
+}
+
+// RANKING
+async function loadRanking() {
+  const res = await fetch("/ranking/"+eventId);
+  const data = await res.json();
+
+  rankList.innerHTML="";
+
+  data.forEach((r,i)=>{
+    rankList.innerHTML += `
+      <div class="rank">
+        ${i+1}° Mesa ${r.table} - ${r.points} pts
+      </div>`;
   });
 }
 
