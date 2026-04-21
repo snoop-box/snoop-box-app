@@ -57,7 +57,6 @@ img {
 
 <div class="container">
 
-<!-- LOGIN -->
 <div id="login">
 <h2>Ingresar</h2>
 
@@ -74,7 +73,6 @@ img {
 <button onclick="enterApp()">Entrar</button>
 </div>
 
-<!-- MENU -->
 <div id="menu" class="hidden">
 <h3 id="welcome"></h3>
 
@@ -82,7 +80,6 @@ img {
 <button onclick="show('gallery')">🖼 Ver fotos</button>
 </div>
 
-<!-- UPLOAD -->
 <div id="upload" class="hidden">
 <input type="file" id="file" accept="image/*" capture="environment" style="display:none" onchange="previewImage()">
 <button onclick="openCamera()">📸 Abrir cámara</button>
@@ -91,7 +88,6 @@ img {
 <button onclick="back()">Volver</button>
 </div>
 
-<!-- GALERIA -->
 <div id="gallery" class="hidden">
 <div id="photos"></div>
 <button onclick="back()">Volver</button>
@@ -100,8 +96,16 @@ img {
 </div>
 
 <script>
+
+// 🔥 OBTENER EVENTO DESDE URL
+function getEventId() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("event") || "default";
+}
+
+const eventId = getEventId();
+
 let user = {};
-const eventId = "evento1"; // 🔥 después lo hacemos dinámico
 
 function enterApp() {
   const name = document.getElementById("name").value;
@@ -188,6 +192,7 @@ async function loadGallery() {
     container.appendChild(div);
   });
 }
+
 </script>
 
 </body>
