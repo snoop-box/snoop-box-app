@@ -12,22 +12,22 @@ body {
   background: #111;
   color: white;
   font-family: Arial;
-  text-align: center;
   margin: 0;
-  padding: 20px;
+  padding: 10px;
 }
 
 .container {
-  max-width: 400px;
+  max-width: 420px;
   margin: auto;
 }
 
 input, select, button {
-  padding: 15px;
-  margin: 8px 0;
+  padding: 14px;
+  margin: 6px 0;
   width: 100%;
   border-radius: 10px;
   border: none;
+  font-size: 16px;
 }
 
 button {
@@ -37,18 +37,25 @@ button {
 
 .hidden { display: none; }
 
+.card {
+  margin-bottom: 12px;
+}
+
 img {
   width: 100%;
+  height: auto;
   border-radius: 10px;
 }
 
-.card {
-  margin-bottom: 15px;
+.info {
+  font-size: 13px;
+  opacity: 0.7;
+  margin-top: 4px;
 }
 
-.info {
-  font-size: 14px;
-  opacity: 0.7;
+/* evita desbordes raros en celulares viejos */
+body, html {
+  overflow-x: hidden;
 }
 </style>
 </head>
@@ -58,32 +65,33 @@ img {
 <div class="container">
 
 <div id="login">
-<h2>Ingresar</h2>
-
+<h3>Ingresar</h3>
 <input id="name" placeholder="Apodo">
 
 <select id="table">
-  <option value="">Mesa</option>
-  <option>1</option><option>2</option><option>3</option>
-  <option>4</option><option>5</option><option>6</option>
-  <option>7</option><option>8</option><option>9</option>
-  <option>10</option>
+<option value="">Mesa</option>
+<option>1</option><option>2</option><option>3</option>
+<option>4</option><option>5</option><option>6</option>
+<option>7</option><option>8</option><option>9</option>
+<option>10</option>
 </select>
 
 <button onclick="enterApp()">Entrar</button>
 </div>
 
 <div id="menu" class="hidden">
-<h3 id="welcome"></h3>
-
+<h4 id="welcome"></h4>
 <button onclick="show('upload')">📸 Sacar foto</button>
 <button onclick="show('gallery')">🖼 Ver fotos</button>
 </div>
 
 <div id="upload" class="hidden">
 <input type="file" id="file" accept="image/*" capture="environment" style="display:none" onchange="previewImage()">
+
 <button onclick="openCamera()">📸 Abrir cámara</button>
+
 <div id="preview"></div>
+
 <button onclick="sendPhoto()">Subir</button>
 <button onclick="back()">Volver</button>
 </div>
@@ -97,7 +105,6 @@ img {
 
 <script>
 
-// 🔥 OBTENER EVENTO DESDE URL
 function getEventId() {
   const params = new URLSearchParams(window.location.search);
   return params.get("event") || "default";
@@ -179,6 +186,11 @@ async function loadGallery() {
 
   const container = document.getElementById("photos");
   container.innerHTML = "";
+
+  if (data.length === 0) {
+    container.innerHTML = "<p>No hay fotos todavía</p>";
+    return;
+  }
 
   data.reverse().forEach(p => {
     const div = document.createElement("div");
