@@ -32,9 +32,10 @@ button {
 }
 
 img {
-  width: 100%;
-  max-width: 200px;
+  width: 90%;
+  max-width: 400px;
   margin: 10px;
+  border-radius: 10px;
 }
 </style>
 </head>
@@ -57,8 +58,9 @@ img {
 <div id="upload" class="hidden">
 <h2>Subir foto</h2>
 
-<!-- ESTE ES EL CAMBIO CLAVE -->
-<input type="file" id="file" accept="image/*" capture="environment">
+<input type="file" id="file" accept="image/*" capture="environment" onchange="previewImage()">
+
+<div id="previewContainer"></div>
 
 <button onclick="sendPhoto()">Subir</button>
 <button onclick="back()">Volver</button>
@@ -100,6 +102,24 @@ function back() {
   menu.classList.remove("hidden");
 }
 
+function previewImage() {
+  const file = document.getElementById("file").files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+    const img = document.createElement("img");
+    img.src = e.target.result;
+
+    const container = document.getElementById("previewContainer");
+    container.innerHTML = "";
+    container.appendChild(img);
+  };
+
+  reader.readAsDataURL(file);
+}
+
 async function sendPhoto() {
   const file = document.getElementById("file").files[0];
   if (!file) return alert("Elegí foto");
@@ -113,6 +133,13 @@ async function sendPhoto() {
   });
 
   alert("Subida!");
+
+  // limpiar preview
+  document.getElementById("previewContainer").innerHTML = "";
+  document.getElementById("file").value = "";
+
+  // volver al menú automáticamente
+  back();
 }
 
 async function loadGallery() {
