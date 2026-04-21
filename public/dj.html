@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Snoop Box DJ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  margin:0;
+  background:black;
+  font-family: Arial;
+  color:white;
+  display:flex;
+  flex-direction: column;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+/* IMAGEN */
+#img {
+  max-width:80%;
+  max-height:70%;
+  object-fit: contain;
+  opacity:0;
+  transition: opacity 0.8s;
+}
+
+#img.show {
+  opacity:1;
+}
+
+/* NOMBRE */
+#name {
+  margin-top:20px;
+  font-size: 36px;
+  font-weight: bold;
+}
+
+/* RANKING GRANDE */
+#ranking {
+  position: absolute;
+  right: 30px;
+  top: 30px;
+  font-size: 28px;
+  background: rgba(0,0,0,0.7);
+  padding: 20px;
+  border-radius: 15px;
+  line-height: 1.6;
+}
+</style>
+</head>
+
+<body>
+
+<img id="img">
+<div id="name"></div>
+<div id="ranking"></div>
+
+<script>
+
+const eventId = new URLSearchParams(location.search).get("event") || "default";
+
+let photos = [];
+let index = 0;
+
+// CARGAR FOTOS
+async function loadPhotos() {
+  const res = await fetch("/photos/" + eventId);
+  const data = await res.json();
+  photos = data.reverse();
+}
+
+// CARGAR RANKING
+async function loadRanking() {
+  const res = await fetch("/ranking/" + eventId);
+  const data = await res.json();
+
+  let html = "🏆 Ranking<br>";
+
+  data.slice(0,5).forEach((r,i)=>{
+    html += `${i+1}. Mesa ${r.table} (${r.points})<br>`;
+  });
+
+  document.getElementById("ranking").innerHTML = html;
+}
+
+// MOSTRAR SLIDE
+function showSlide() {
+  if (photos.length === 0) return;
+
+  const img = document.getElementById("img");
+  const name = document.getElementById("name");
+
+  img.classList.remove("show");
+
+  setTimeout(()=>{
+    img.src = photos[index].url;
+    name.innerText = photos[index].name;
+    img.classList.add("show");
+
+    index++;
+    if (index >= photos.length) index = 0;
+  },300);
+}
+
+// LOOP
+setInterval(showSlide, 3000);
+setInterval(loadPhotos, 5000);
+setInterval(loadRanking, 5000);
+
+// INIT
+loadPhotos();
+loadRanking();
+
+</script>
+
+</body>
+</html>

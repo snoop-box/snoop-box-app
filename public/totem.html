@@ -121,7 +121,7 @@ button {
   transition: opacity 0.2s;
 }
 
-/* RANKING MÁS GRANDE */
+/* RANKING */
 #rankingBox {
   position: fixed;
   top: 15px;
@@ -131,7 +131,6 @@ button {
   border-radius: 12px;
   font-size: 18px;
   line-height: 1.6;
-  box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
 /* CARRUSEL */
@@ -148,7 +147,6 @@ button {
   flex-direction: column;
 }
 
-/* FADE */
 .carousel-img {
   max-width:90%;
   max-height:80%;
@@ -161,13 +159,10 @@ button {
   opacity: 1;
 }
 
-/* NOMBRE EN CARRUSEL */
 .carousel-name {
   margin-top: 15px;
   font-size: 22px;
-  opacity: 0.9;
 }
-
 </style>
 </head>
 
@@ -176,7 +171,6 @@ button {
 <div id="grid"></div>
 <div id="rankingBox"></div>
 
-<!-- MODAL -->
 <div id="modal">
   <div class="modal-box">
 
@@ -193,7 +187,6 @@ button {
   </div>
 </div>
 
-<!-- CARRUSEL -->
 <div id="idleCarousel" onclick="closeCarousel()">
   <img id="carouselImg" class="carousel-img">
   <div id="carouselName" class="carousel-name"></div>
@@ -203,6 +196,22 @@ button {
 
 <script>
 
+/* ================= SONIDOS ================= */
+const sounds = {
+  click: new Audio("/sounds/click.mp3"),
+  camera: new Audio("/sounds/camera.mp3"),
+  success: new Audio("/sounds/success.mp3"),
+  error: new Audio("/sounds/error.mp3")
+};
+
+function playSound(type) {
+  if (!sounds[type]) return;
+  sounds[type].pause();
+  sounds[type].currentTime = 0;
+  sounds[type].play().catch(() => {});
+}
+
+/* ================= VARIABLES ================= */
 const eventId = new URLSearchParams(location.search).get("event") || "default";
 
 let selectedPhoto = null;
@@ -211,7 +220,7 @@ let idleTimer;
 let carouselIndex = 0;
 let carouselInterval;
 
-// ACTIVIDAD
+/* ================= ACTIVIDAD ================= */
 function resetIdleTimer() {
   clearTimeout(idleTimer);
   idleTimer = setTimeout(startCarousel, 10000);
@@ -224,7 +233,7 @@ function resetIdleTimer() {
   });
 });
 
-// FOTOS
+/* ================= CARGAR FOTOS ================= */
 async function loadPhotos() {
   const res = await fetch("/photos/" + eventId);
   const data = await res.json();
@@ -243,13 +252,16 @@ async function loadPhotos() {
       <div class="name">${p.name}</div>
     `;
 
-    div.onclick = () => openModal(p.url);
+    div.onclick = () => {
+      playSound("click");
+      openModal(p.url);
+    };
 
     grid.appendChild(div);
   });
 }
 
-// MODAL
+/* ================= MODAL ================= */
 function openModal(url) {
   selectedPhoto = url;
   modal.style.display = "flex";
@@ -260,15 +272,17 @@ function closeModal() {
   modal.style.display = "none";
 }
 
-// FLASH
+/* ================= FLASH ================= */
 function flashEffect() {
   const f = document.getElementById("flash");
   f.style.opacity = 1;
   setTimeout(()=>f.style.opacity=0,200);
 }
 
-// IMPRIMIR
+/* ================= IMPRIMIR ================= */
 function printPhoto() {
+
+  playSound("camera");
   flashEffect();
 
   const win = window.open("", "_blank");
@@ -294,7 +308,7 @@ function printPhoto() {
   closeModal();
 }
 
-// RANKING
+/* ================= RANKING ================= */
 async function loadRanking() {
   const res = await fetch("/ranking/" + eventId);
   const data = await res.json();
@@ -308,14 +322,11 @@ async function loadRanking() {
   rankingBox.innerHTML = html;
 }
 
-// CARRUSEL
+/* ================= CARRUSEL ================= */
 function startCarousel() {
   if (photosData.length === 0) return;
 
   const carousel = document.getElementById("idleCarousel");
-  const img = document.getElementById("carouselImg");
-  const name = document.getElementById("carouselName");
-
   carousel.style.display = "flex";
 
   carouselIndex = 0;
@@ -346,13 +357,13 @@ function closeCarousel() {
   clearInterval(carouselInterval);
 }
 
-// REFRESH
+/* ================= LOOP ================= */
 setInterval(()=>{
   loadPhotos();
   loadRanking();
 },4000);
 
-// INIT
+/* ================= INIT ================= */
 loadPhotos();
 loadRanking();
 resetIdleTimer();

@@ -2,305 +2,299 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Snoop Box</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snoop Box</title>
 
 <style>
-* { box-sizing: border-box; }
-
 body {
-  margin: 0;
+  margin:0;
   font-family: Arial;
-  background: linear-gradient(135deg,#0f0f0f,#1c1c1c);
-  color: white;
+  background:#111;
+  color:white;
+  text-align:center;
 }
 
-.container {
-  max-width: 420px;
-  margin: auto;
-  padding: 12px;
+/* LOGIN */
+#login, #app {
+  padding:20px;
 }
 
 input, select, button {
-  width: 100%;
-  padding: 14px;
-  margin: 6px 0;
-  border-radius: 10px;
-  border: none;
-  font-size: 16px;
+  width:90%;
+  padding:15px;
+  margin:10px;
+  font-size:18px;
+  border-radius:10px;
+  border:none;
 }
 
 button {
-  background: #ff0055;
-  color: white;
+  background:#00c853;
+  color:white;
 }
 
-.hidden { display: none; }
-
-img {
-  width: 100%;
-  border-radius: 10px;
+/* MENU */
+.menu button {
+  background:#2962ff;
 }
 
-/* RANKING PRO */
-.rank {
-  padding: 12px;
-  margin: 6px 0;
-  border-radius: 12px;
-  background: #222;
-  display: flex;
-  justify-content: space-between;
-  font-size: 16px;
+/* FOTO */
+#preview {
+  width:90%;
+  margin-top:10px;
+  border-radius:10px;
 }
 
-.rank.top1 { background: gold; color:#000; }
-.rank.top2 { background: silver; color:#000; }
-.rank.top3 { background: #cd7f32; color:#000; }
+/* GALERIA */
+#gallery img {
+  width:100%;
+  margin-top:10px;
+  border-radius:10px;
+}
 
 /* TRIVIA */
-#answers button {
-  background: #222;
+.option {
+  display:block;
+  margin:10px;
+  padding:15px;
+  background:#333;
+  border-radius:10px;
 }
 
+.correct { background:green; }
+.wrong { background:red; }
+
+#ranking {
+  margin-top:20px;
+}
 </style>
 </head>
 
 <body>
 
-<div class="container">
-
-<!-- LOGIN -->
 <div id="login">
-<h3>Ingresar</h3>
-<input id="name" placeholder="Apodo">
-<select id="table">
-<option value="">Mesa</option>
-<option>1</option><option>2</option><option>3</option>
-<option>4</option><option>5</option><option>6</option>
-<option>7</option><option>8</option><option>9</option>
-<option>10</option>
-</select>
-<button id="btnEnter">Entrar</button>
+  <h2>Ingresar</h2>
+  <input id="name" placeholder="Tu apodo">
+
+  <select id="table">
+    <option value="">Seleccionar mesa</option>
+    <option>1</option><option>2</option><option>3</option>
+    <option>4</option><option>5</option><option>6</option>
+    <option>7</option><option>8</option><option>9</option>
+    <option>10</option>
+  </select>
+
+  <button onclick="login()">Entrar</button>
 </div>
 
-<!-- MENU -->
-<div id="menu" class="hidden">
-<h3 id="welcome"></h3>
-<button onclick="showSection('upload')">📸 Foto</button>
-<button onclick="showSection('gallery')">🖼 Galería</button>
-<button onclick="showSection('trivia')">🧠 Trivia</button>
-<button onclick="showSection('ranking')">🏆 Ranking</button>
-</div>
+<div id="app" style="display:none">
 
-<!-- FOTO -->
-<div id="upload" class="hidden">
-<input type="file" id="file" accept="image/*" capture="environment" style="display:none">
-<button onclick="fileInput.click()">📸 Cámara</button>
-<div id="preview"></div>
-<button id="btnUpload">Subir</button>
-<button onclick="back()">Volver</button>
-</div>
+  <h3 id="welcome"></h3>
 
-<!-- GALERIA -->
-<div id="gallery" class="hidden">
-<div id="photos"></div>
-<button onclick="back()">Volver</button>
-</div>
+  <div class="menu">
+    <button onclick="showSection('photo')">📸 Foto</button>
+    <button onclick="showSection('gallery')">🖼 Galería</button>
+    <button onclick="showSection('trivia')">🧠 Trivia</button>
+  </div>
 
-<!-- TRIVIA -->
-<div id="trivia" class="hidden">
-<h3 id="question"></h3>
-<div id="answers"></div>
-<button onclick="back()">Volver</button>
-</div>
+  <!-- FOTO -->
+  <div id="photo" style="display:none">
+    <input type="file" accept="image/*" capture="environment" id="camera">
+    <img id="preview">
 
-<!-- RANKING -->
-<div id="ranking" class="hidden">
-<h3>🏆 Ranking</h3>
-<div id="rankList"></div>
-<button onclick="back()">Volver</button>
-</div>
+    <button onclick="uploadPhoto()">Subir Foto</button>
+  </div>
+
+  <!-- GALERIA -->
+  <div id="gallery" style="display:none"></div>
+
+  <!-- TRIVIA -->
+  <div id="trivia" style="display:none">
+    <h3 id="question"></h3>
+    <div id="options"></div>
+  </div>
+
+  <!-- RANKING -->
+  <div id="ranking"></div>
 
 </div>
 
 <script>
 
-// ELEMENTOS
-const login = document.getElementById("login");
-const menu = document.getElementById("menu");
-const upload = document.getElementById("upload");
-const gallery = document.getElementById("gallery");
-const trivia = document.getElementById("trivia");
-const ranking = document.getElementById("ranking");
+/* ================= SONIDOS ================= */
+const sounds = {
+  click: new Audio("/sounds/click.mp3"),
+  camera: new Audio("/sounds/camera.mp3"),
+  success: new Audio("/sounds/success.mp3"),
+  error: new Audio("/sounds/error.mp3")
+};
 
-const nameInput = document.getElementById("name");
-const tableSelect = document.getElementById("table");
-const welcome = document.getElementById("welcome");
-const preview = document.getElementById("preview");
-const fileInput = document.getElementById("file");
+function playSound(type) {
+  if (!sounds[type]) return;
+  sounds[type].pause();
+  sounds[type].currentTime = 0;
+  sounds[type].play().catch(()=>{});
+}
 
+/* ================= VARIABLES ================= */
 const eventId = new URLSearchParams(location.search).get("event") || "default";
 
 let user = {};
+let previewFile = null;
 
-// LOGIN
-document.getElementById("btnEnter").onclick = () => {
-  const name = nameInput.value.trim();
-  const table = tableSelect.value;
+/* ================= LOGIN ================= */
+function login() {
+  const name = document.getElementById("name").value;
+  const table = document.getElementById("table").value;
 
-  if (!name || !table) {
-    alert("Completá apodo y mesa");
-    return;
-  }
+  if (!name || !table) return alert("Completar datos");
+
+  playSound("click");
 
   user = { name, table };
 
-  login.classList.add("hidden");
-  menu.classList.remove("hidden");
+  loginDiv.style.display = "none";
+  app.style.display = "block";
 
-  welcome.innerText = name + " - Mesa " + table;
-};
-
-// NAV
-function showSection(sec) {
-  menu.classList.add("hidden");
-  upload.classList.add("hidden");
-  gallery.classList.add("hidden");
-  trivia.classList.add("hidden");
-  ranking.classList.add("hidden");
-
-  document.getElementById(sec).classList.remove("hidden");
-
-  if (sec === "gallery") loadGallery();
-  if (sec === "trivia") loadTrivia();
-  if (sec === "ranking") loadRanking();
+  welcome.innerText = `Hola ${name} (Mesa ${table})`;
 }
 
-function back() {
-  upload.classList.add("hidden");
-  gallery.classList.add("hidden");
-  trivia.classList.add("hidden");
-  ranking.classList.add("hidden");
-  menu.classList.remove("hidden");
+/* ================= MENU ================= */
+function showSection(id) {
+  playSound("click");
+
+  ["photo","gallery","trivia"].forEach(s=>{
+    document.getElementById(s).style.display="none";
+  });
+
+  document.getElementById(id).style.display="block";
+
+  if (id === "gallery") loadGallery();
+  if (id === "trivia") loadTrivia();
 }
 
-// PREVIEW
-fileInput.onchange = () => {
-  const file = fileInput.files[0];
-  if (!file) return;
+/* ================= FOTO ================= */
+camera.onchange = (e)=>{
+  previewFile = e.target.files[0];
 
   const reader = new FileReader();
-  reader.onload = e => {
-    preview.innerHTML = `<img src="${e.target.result}">`;
+  reader.onload = e=>{
+    preview.src = e.target.result;
   };
-  reader.readAsDataURL(file);
+  reader.readAsDataURL(previewFile);
+
+  playSound("camera");
 };
 
-// SUBIR FOTO
-document.getElementById("btnUpload").onclick = async () => {
-  const file = fileInput.files[0];
-  if (!file) return;
+async function uploadPhoto() {
+  if (!previewFile) return;
 
-  const fd = new FormData();
-  fd.append("photo", file);
-  fd.append("name", user.name);
-  fd.append("table", user.table);
-  fd.append("event", eventId);
+  playSound("click");
 
-  await fetch("/upload", { method: "POST", body: fd });
+  const formData = new FormData();
+  formData.append("photo", previewFile);
+  formData.append("name", user.name);
+  formData.append("table", user.table);
+  formData.append("eventId", eventId);
 
-  preview.innerHTML = "";
-  fileInput.value = "";
+  await fetch("/upload", {
+    method: "POST",
+    body: formData
+  });
 
-  back();
-};
+  preview.src = "";
+  camera.value = "";
 
-// GALERIA
+  showSection("photo");
+}
+
+/* ================= GALERIA ================= */
 async function loadGallery() {
   const res = await fetch("/photos/" + eventId);
   const data = await res.json();
 
-  const container = document.getElementById("photos");
-  container.innerHTML = "";
+  gallery.innerHTML = "";
 
-  data.reverse().forEach(p => {
-    container.innerHTML += `
-      <div>
-        <img src="${p.url}">
-        <small>${p.name} - Mesa ${p.table}</small>
-      </div>`;
+  data.reverse().forEach(p=>{
+    gallery.innerHTML += `
+      <img src="${p.url}">
+      <p>${p.name} (Mesa ${p.table})</p>
+    `;
   });
 }
 
-// TRIVIA
+/* ================= TRIVIA ================= */
+
+let answered = false;
+
 const questions = [
-{q:"¿Dónde se conocieron?",a:["Escuela","Trabajo","Fiesta"],c:1},
-{q:"¿Quién dio el primer beso?",a:["Él","Ella","Ambos"],c:0},
-{q:"¿Destino favorito?",a:["Playa","Montaña","Europa"],c:2}
+  { q:"¿De qué color era el vestido?", o:["Rojo","Azul","Blanco"], a:2 },
+  { q:"¿Cuántos años cumple?", o:["30","40","50"], a:2 }
 ];
 
 function loadTrivia() {
+
+  answered = false;
+
   const q = questions[Math.floor(Math.random()*questions.length)];
 
-  document.getElementById("question").innerText = q.q;
-  const ans = document.getElementById("answers");
-  ans.innerHTML = "";
+  question.innerText = q.q;
+  options.innerHTML = "";
 
-  q.a.forEach((txt,i)=>{
-    const b = document.createElement("button");
-    b.innerText = txt;
+  q.o.forEach((opt,i)=>{
+    const btn = document.createElement("div");
+    btn.className = "option";
+    btn.innerText = opt;
 
-    b.onclick = async () => {
+    btn.onclick = ()=>{
+      if (answered) return;
 
-      document.querySelectorAll("#answers button").forEach(x=>x.disabled=true);
+      if (i === q.a) {
+        btn.classList.add("correct");
+        playSound("success");
+        addPoints(10);
+      } else {
+        btn.classList.add("wrong");
+        playSound("error");
+      }
 
-      const correct = i === q.c;
-
-      const res = document.createElement("div");
-      res.innerText = correct ? "✔️" : "❌";
-      res.style.fontSize = "30px";
-      res.style.marginTop = "10px";
-      ans.appendChild(res);
-
-      await fetch("/trivia", {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({
-          name: user.name,
-          table: user.table,
-          event: eventId,
-          correct: correct
-        })
-      });
+      answered = true;
     };
 
-    ans.appendChild(b);
+    options.appendChild(btn);
   });
 }
 
-// RANKING PRO
+/* ================= RANKING ================= */
 async function loadRanking() {
   const res = await fetch("/ranking/" + eventId);
   const data = await res.json();
 
-  const list = document.getElementById("rankList");
-  list.innerHTML = "";
+  let html = "<h3>🏆 Ranking</h3>";
 
-  data.forEach((r,i)=>{
-    let medal = "";
-    let cls = "rank";
-
-    if (i===0){ medal="🥇"; cls+=" top1"; }
-    else if (i===1){ medal="🥈"; cls+=" top2"; }
-    else if (i===2){ medal="🥉"; cls+=" top3"; }
-
-    list.innerHTML += `
-      <div class="${cls}">
-        <span>${medal} Mesa ${r.table}</span>
-        <strong>${r.points} pts</strong>
-      </div>`;
+  data.slice(0,5).forEach((r,i)=>{
+    html += `${i+1}. Mesa ${r.table} (${r.points})<br>`;
   });
+
+  ranking.innerHTML = html;
 }
+
+async function addPoints(points) {
+  await fetch("/points", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      eventId,
+      table: user.table,
+      points
+    })
+  });
+
+  loadRanking();
+}
+
+/* ================= INIT ================= */
+setInterval(loadRanking, 5000);
 
 </script>
 
