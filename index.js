@@ -1,13 +1,20 @@
 const express = require("express");
+const path = require("path");
 
 const app = express();
 
+// Puerto Railway
+const PORT = process.env.PORT || 8080;
+
+// Carpeta pública (frontend)
+app.use(express.static(path.join(__dirname, "public")));
+
+// Ruta principal
 app.get("/", (req, res) => {
-  res.send("SNOOP BOX ONLINE 🚀");
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, "0.0.0.0", () => {
-  console.log("Servidor corriendo en puerto", PORT);
+// Levantar servidor
+app.listen(PORT, () => {
+  console.log("Servidor corriendo en puerto " + PORT);
 });
