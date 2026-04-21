@@ -4,13 +4,115 @@
   <meta charset="UTF-8">
   <title>Snoop Box</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: Arial;
+      text-align: center;
+      padding: 20px;
+    }
+
+    input, button {
+      padding: 15px;
+      margin: 10px;
+      width: 80%;
+      max-width: 300px;
+      border-radius: 10px;
+      border: none;
+      font-size: 16px;
+    }
+
+    button {
+      background: #ff0055;
+      color: white;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
 </head>
 
-<body style="background:black; color:white; text-align:center; font-family:sans-serif;">
+<body>
 
-  <h1>Snoop Box Interactive 🚀</h1>
+  <!-- LOGIN -->
+  <div id="login">
+    <h1>Ingresar al evento</h1>
 
-  <p>Si estás viendo esto, el servidor funciona 🔥</p>
+    <input type="text" id="name" placeholder="Tu apodo">
+    <input type="number" id="table" placeholder="Número de mesa">
+
+    <br>
+    <button onclick="enterApp()">Entrar</button>
+  </div>
+
+  <!-- MENU -->
+  <div id="menu" class="hidden">
+    <h1 id="welcome"></h1>
+
+    <button onclick="showSection('upload')">📸 Subir foto</button>
+    <button onclick="showSection('trivia')">🎮 Trivia</button>
+    <button onclick="showSection('gallery')">🖼 Galería</button>
+  </div>
+
+  <!-- SUBIR FOTO -->
+  <div id="upload" class="hidden">
+    <h1>Subir foto</h1>
+    <input type="file" accept="image/*">
+    <br>
+    <button onclick="back()">Volver</button>
+  </div>
+
+  <!-- TRIVIA -->
+  <div id="trivia" class="hidden">
+    <h1>Trivia</h1>
+    <p>Próximamente...</p>
+    <button onclick="back()">Volver</button>
+  </div>
+
+  <!-- GALERIA -->
+  <div id="gallery" class="hidden">
+    <h1>Galería</h1>
+    <p>Próximamente...</p>
+    <button onclick="back()">Volver</button>
+  </div>
+
+  <script>
+    let user = {};
+
+    function enterApp() {
+      const name = document.getElementById("name").value;
+      const table = document.getElementById("table").value;
+
+      if (!name || !table) {
+        alert("Completá los datos");
+        return;
+      }
+
+      user = { name, table };
+
+      document.getElementById("login").classList.add("hidden");
+      document.getElementById("menu").classList.remove("hidden");
+
+      document.getElementById("welcome").innerText =
+        "Hola " + name + " (Mesa " + table + ")";
+    }
+
+    function showSection(section) {
+      document.getElementById("menu").classList.add("hidden");
+      document.getElementById(section).classList.remove("hidden");
+    }
+
+    function back() {
+      document.getElementById("upload").classList.add("hidden");
+      document.getElementById("trivia").classList.add("hidden");
+      document.getElementById("gallery").classList.add("hidden");
+
+      document.getElementById("menu").classList.remove("hidden");
+    }
+  </script>
 
 </body>
 </html>
