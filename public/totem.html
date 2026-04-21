@@ -44,8 +44,8 @@ body {
   position: absolute;
   bottom: 0;
   width: 100%;
-  padding: 6px;
-  font-size: 14px;
+  padding: 8px;
+  font-size: 16px;
   background: rgba(0,0,0,0.6);
 }
 
@@ -62,7 +62,6 @@ body {
   align-items: center;
 }
 
-/* CAJA */
 .modal-box {
   background: white;
   padding: 20px;
@@ -122,18 +121,20 @@ button {
   transition: opacity 0.2s;
 }
 
-/* RANKING */
+/* RANKING MÁS GRANDE */
 #rankingBox {
   position: fixed;
-  top: 10px;
-  right: 10px;
-  background: rgba(0,0,0,0.7);
-  padding: 10px;
-  border-radius: 10px;
-  font-size: 14px;
+  top: 15px;
+  right: 15px;
+  background: rgba(0,0,0,0.75);
+  padding: 15px 20px;
+  border-radius: 12px;
+  font-size: 18px;
+  line-height: 1.6;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
-/* CARRUSEL INACTIVIDAD */
+/* CARRUSEL */
 #idleCarousel {
   position: fixed;
   top:0;
@@ -144,13 +145,29 @@ button {
   display:none;
   justify-content:center;
   align-items:center;
+  flex-direction: column;
 }
 
-#idleCarousel img {
+/* FADE */
+.carousel-img {
   max-width:90%;
-  max-height:90%;
+  max-height:80%;
   object-fit: contain;
+  opacity: 0;
+  transition: opacity 0.6s;
 }
+
+.carousel-img.show {
+  opacity: 1;
+}
+
+/* NOMBRE EN CARRUSEL */
+.carousel-name {
+  margin-top: 15px;
+  font-size: 22px;
+  opacity: 0.9;
+}
+
 </style>
 </head>
 
@@ -159,9 +176,10 @@ button {
 <div id="grid"></div>
 <div id="rankingBox"></div>
 
-<!-- MODAL FOTO -->
+<!-- MODAL -->
 <div id="modal">
   <div class="modal-box">
+
     <div class="frame">
       <img id="modalPhoto" class="photo">
       <img src="frame.png" class="overlay">
@@ -171,12 +189,14 @@ button {
       <button class="ok" onclick="printPhoto()">✔ Imprimir</button>
       <button class="no" onclick="closeModal()">❌ Seguir buscando</button>
     </div>
+
   </div>
 </div>
 
 <!-- CARRUSEL -->
 <div id="idleCarousel" onclick="closeCarousel()">
-  <img id="carouselImg">
+  <img id="carouselImg" class="carousel-img">
+  <div id="carouselName" class="carousel-name"></div>
 </div>
 
 <div id="flash"></div>
@@ -191,13 +211,12 @@ let idleTimer;
 let carouselIndex = 0;
 let carouselInterval;
 
-// DETECTAR ACTIVIDAD
+// ACTIVIDAD
 function resetIdleTimer() {
   clearTimeout(idleTimer);
-  idleTimer = setTimeout(startCarousel, 10000); // 10 segundos
+  idleTimer = setTimeout(startCarousel, 10000);
 }
 
-// EVENTOS DE ACTIVIDAD
 ["click","touchstart","mousemove"].forEach(evt=>{
   document.addEventListener(evt, ()=>{
     closeCarousel();
@@ -205,7 +224,7 @@ function resetIdleTimer() {
   });
 });
 
-// CARGAR FOTOS
+// FOTOS
 async function loadPhotos() {
   const res = await fetch("/photos/" + eventId);
   const data = await res.json();
@@ -295,17 +314,31 @@ function startCarousel() {
 
   const carousel = document.getElementById("idleCarousel");
   const img = document.getElementById("carouselImg");
+  const name = document.getElementById("carouselName");
 
   carousel.style.display = "flex";
 
   carouselIndex = 0;
-  img.src = photosData[carouselIndex].url;
+  showSlide();
 
   carouselInterval = setInterval(()=>{
     carouselIndex++;
     if (carouselIndex >= photosData.length) carouselIndex = 0;
+    showSlide();
+  }, 2500);
+}
+
+function showSlide() {
+  const img = document.getElementById("carouselImg");
+  const name = document.getElementById("carouselName");
+
+  img.classList.remove("show");
+
+  setTimeout(()=>{
     img.src = photosData[carouselIndex].url;
-  }, 2000);
+    name.innerText = photosData[carouselIndex].name;
+    img.classList.add("show");
+  },200);
 }
 
 function closeCarousel() {
