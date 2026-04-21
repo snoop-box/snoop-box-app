@@ -6,9 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <style>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   background: #111;
@@ -24,7 +22,7 @@ body {
   margin: auto;
 }
 
-input, button {
+input, select, button {
   padding: 15px;
   margin: 8px 0;
   width: 100%;
@@ -38,9 +36,7 @@ button {
   color: white;
 }
 
-.hidden {
-  display: none;
-}
+.hidden { display: none; }
 
 img {
   width: 100%;
@@ -48,7 +44,6 @@ img {
   margin-top: 10px;
 }
 
-/* Botón tipo grande */
 .big-button {
   font-size: 18px;
   padding: 18px;
@@ -63,8 +58,23 @@ img {
 <!-- LOGIN -->
 <div id="login">
 <h2>Ingresar</h2>
+
 <input id="name" placeholder="Apodo">
-<input id="table" placeholder="Mesa">
+
+<select id="table">
+  <option value="">Seleccionar mesa</option>
+  <option>1</option>
+  <option>2</option>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+  <option>6</option>
+  <option>7</option>
+  <option>8</option>
+  <option>9</option>
+  <option>10</option>
+</select>
+
 <button onclick="enterApp()">Entrar</button>
 </div>
 
@@ -106,7 +116,7 @@ function enterApp() {
   const name = document.getElementById("name").value;
   const table = document.getElementById("table").value;
 
-  if (!name || !table) return alert("Completá");
+  if (!name || !table) return alert("Completá todos los datos");
 
   user = { name, table };
 
@@ -129,7 +139,6 @@ function back() {
   menu.classList.remove("hidden");
 }
 
-// Abrir cámara desde botón
 function openCamera() {
   document.getElementById("file").click();
 }
@@ -164,11 +173,9 @@ async function sendPhoto() {
     body: formData
   });
 
-  // limpiar
   document.getElementById("previewContainer").innerHTML = "";
   document.getElementById("file").value = "";
 
-  // volver directo al menú
   back();
 }
 
