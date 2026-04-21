@@ -13,7 +13,7 @@ body {
   color: white;
 }
 
-/* GRID ESTÉTICO */
+/* GRID */
 #grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px,1fr));
@@ -56,13 +56,13 @@ body {
   left:0;
   width:100%;
   height:100%;
-  background: rgba(0,0,0,0.9);
+  background: rgba(0,0,0,0.85);
   display:none;
   justify-content: center;
   align-items: center;
 }
 
-/* CAJA */
+/* CAJA BLANCA */
 .modal-box {
   background: white;
   padding: 20px;
@@ -75,16 +75,28 @@ body {
   position: relative;
   width: 300px;
   height: 450px;
+  background: black;
+  overflow: hidden;
 }
 
+/* FOTO (CORREGIDA) */
 .frame img.photo {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: black;
 }
 
+/* MARCO */
 .frame img.overlay {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
+  height: 100%;
 }
 
 /* BOTONES */
@@ -103,7 +115,7 @@ button {
 .ok { background: green; color:white; }
 .no { background: red; color:white; }
 
-/* FLASH ANIMACION */
+/* FLASH */
 #flash {
   position: fixed;
   top:0;
@@ -113,6 +125,7 @@ button {
   background:white;
   opacity:0;
   pointer-events:none;
+  transition: opacity 0.2s;
 }
 
 /* RANKING */
@@ -125,14 +138,12 @@ button {
   border-radius: 10px;
   font-size: 14px;
 }
-
 </style>
 </head>
 
 <body>
 
 <div id="grid"></div>
-
 <div id="rankingBox"></div>
 
 <div id="modal">
@@ -159,7 +170,7 @@ const eventId = new URLSearchParams(location.search).get("event") || "default";
 
 let selectedPhoto = null;
 
-// FOTOS
+// CARGAR FOTOS
 async function loadPhotos() {
   const res = await fetch("/photos/" + eventId);
   const data = await res.json();
@@ -185,12 +196,12 @@ async function loadPhotos() {
 // MODAL
 function openModal(url) {
   selectedPhoto = url;
-  modal.style.display = "flex";
-  modalPhoto.src = url;
+  document.getElementById("modal").style.display = "flex";
+  document.getElementById("modalPhoto").src = url;
 }
 
 function closeModal() {
-  modal.style.display = "none";
+  document.getElementById("modal").style.display = "none";
 }
 
 // FLASH
@@ -200,7 +211,7 @@ function flashEffect() {
   setTimeout(()=>f.style.opacity=0,200);
 }
 
-// IMPRIMIR
+// IMPRIMIR (CORREGIDO)
 function printPhoto() {
 
   flashEffect();
@@ -293,7 +304,7 @@ async function loadRanking() {
     html += `${i+1}. Mesa ${r.table} (${r.points})<br>`;
   });
 
-  rankingBox.innerHTML = html;
+  document.getElementById("rankingBox").innerHTML = html;
 }
 
 // REFRESH
