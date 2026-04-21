@@ -211,13 +211,28 @@ function printPhoto() {
     <html>
     <head>
       <style>
+
+        @page {
+          size: 10cm 15cm;
+          margin: 0;
+        }
+
         body {
           margin:0;
+          padding:0;
           display:flex;
           justify-content:center;
           align-items:center;
           height:100vh;
           background:white;
+        }
+
+        .sheet {
+          width: 100%;
+          height: 100%;
+          display:flex;
+          justify-content:center;
+          align-items:center;
         }
 
         .print {
@@ -245,13 +260,14 @@ function printPhoto() {
 
       </style>
     </head>
+
     <body>
-
-      <div class="print">
-        <img src="${selectedPhoto}" class="photo">
-        <img src="frame.png" class="frame">
+      <div class="sheet">
+        <div class="print">
+          <img src="${selectedPhoto}" class="photo">
+          <img src="frame.png" class="frame">
+        </div>
       </div>
-
     </body>
     </html>
   `);
