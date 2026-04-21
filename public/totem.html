@@ -62,7 +62,7 @@ body {
   align-items: center;
 }
 
-/* CAJA BLANCA */
+/* CAJA */
 .modal-box {
   background: white;
   padding: 20px;
@@ -79,22 +79,16 @@ body {
   overflow: hidden;
 }
 
-/* FOTO (CORREGIDA) */
 .frame img.photo {
   position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
   background: black;
 }
 
-/* MARCO */
 .frame img.overlay {
   position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
 }
@@ -138,6 +132,25 @@ button {
   border-radius: 10px;
   font-size: 14px;
 }
+
+/* CARRUSEL INACTIVIDAD */
+#idleCarousel {
+  position: fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:black;
+  display:none;
+  justify-content:center;
+  align-items:center;
+}
+
+#idleCarousel img {
+  max-width:90%;
+  max-height:90%;
+  object-fit: contain;
+}
 </style>
 </head>
 
@@ -146,9 +159,9 @@ button {
 <div id="grid"></div>
 <div id="rankingBox"></div>
 
+<!-- MODAL FOTO -->
 <div id="modal">
   <div class="modal-box">
-
     <div class="frame">
       <img id="modalPhoto" class="photo">
       <img src="frame.png" class="overlay">
@@ -158,8 +171,12 @@ button {
       <button class="ok" onclick="printPhoto()">✔ Imprimir</button>
       <button class="no" onclick="closeModal()">❌ Seguir buscando</button>
     </div>
-
   </div>
+</div>
+
+<!-- CARRUSEL -->
+<div id="idleCarousel" onclick="closeCarousel()">
+  <img id="carouselImg">
 </div>
 
 <div id="flash"></div>
@@ -169,16 +186,36 @@ button {
 const eventId = new URLSearchParams(location.search).get("event") || "default";
 
 let selectedPhoto = null;
+let photosData = [];
+let idleTimer;
+let carouselIndex = 0;
+let carouselInterval;
+
+// DETECTAR ACTIVIDAD
+function resetIdleTimer() {
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(startCarousel, 10000); // 10 segundos
+}
+
+// EVENTOS DE ACTIVIDAD
+["click","touchstart","mousemove"].forEach(evt=>{
+  document.addEventListener(evt, ()=>{
+    closeCarousel();
+    resetIdleTimer();
+  });
+});
 
 // CARGAR FOTOS
 async function loadPhotos() {
   const res = await fetch("/photos/" + eventId);
   const data = await res.json();
 
+  photosData = data.reverse();
+
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
 
-  data.reverse().forEach(p => {
+  photosData.forEach(p => {
     const div = document.createElement("div");
     div.className = "card";
 
@@ -196,12 +233,12 @@ async function loadPhotos() {
 // MODAL
 function openModal(url) {
   selectedPhoto = url;
-  document.getElementById("modal").style.display = "flex";
-  document.getElementById("modalPhoto").src = url;
+  modal.style.display = "flex";
+  modalPhoto.src = url;
 }
 
 function closeModal() {
-  document.getElementById("modal").style.display = "none";
+  modal.style.display = "none";
 }
 
 // FLASH
@@ -211,73 +248,18 @@ function flashEffect() {
   setTimeout(()=>f.style.opacity=0,200);
 }
 
-// IMPRIMIR (CORREGIDO)
+// IMPRIMIR
 function printPhoto() {
-
   flashEffect();
 
   const win = window.open("", "_blank");
 
   win.document.write(`
     <html>
-    <head>
-      <style>
-
-        @page {
-          size: 10cm 15cm;
-          margin: 0;
-        }
-
-        body {
-          margin:0;
-          padding:0;
-          display:flex;
-          justify-content:center;
-          align-items:center;
-          height:100vh;
-          background:white;
-        }
-
-        .sheet {
-          width: 100%;
-          height: 100%;
-          display:flex;
-          justify-content:center;
-          align-items:center;
-        }
-
-        .print {
-          position: relative;
-          width: 1240px;
-          height: 1860px;
-        }
-
-        .print img.photo {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .print img.frame {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-        }
-
-      </style>
-    </head>
-
-    <body>
-      <div class="sheet">
-        <div class="print">
-          <img src="${selectedPhoto}" class="photo">
-          <img src="frame.png" class="frame">
-        </div>
+    <body style="margin:0; display:flex; justify-content:center; align-items:center; height:100vh;">
+      <div style="position:relative; width:600px; height:900px;">
+        <img src="${selectedPhoto}" style="position:absolute; width:100%;">
+        <img src="frame.png" style="position:absolute; width:100%;">
       </div>
     </body>
     </html>
@@ -285,10 +267,10 @@ function printPhoto() {
 
   win.document.close();
 
-  setTimeout(() => {
+  setTimeout(()=>{
     win.print();
     win.close();
-  }, 500);
+  },500);
 
   closeModal();
 }
@@ -304,7 +286,31 @@ async function loadRanking() {
     html += `${i+1}. Mesa ${r.table} (${r.points})<br>`;
   });
 
-  document.getElementById("rankingBox").innerHTML = html;
+  rankingBox.innerHTML = html;
+}
+
+// CARRUSEL
+function startCarousel() {
+  if (photosData.length === 0) return;
+
+  const carousel = document.getElementById("idleCarousel");
+  const img = document.getElementById("carouselImg");
+
+  carousel.style.display = "flex";
+
+  carouselIndex = 0;
+  img.src = photosData[carouselIndex].url;
+
+  carouselInterval = setInterval(()=>{
+    carouselIndex++;
+    if (carouselIndex >= photosData.length) carouselIndex = 0;
+    img.src = photosData[carouselIndex].url;
+  }, 2000);
+}
+
+function closeCarousel() {
+  document.getElementById("idleCarousel").style.display = "none";
+  clearInterval(carouselInterval);
 }
 
 // REFRESH
@@ -316,6 +322,7 @@ setInterval(()=>{
 // INIT
 loadPhotos();
 loadRanking();
+resetIdleTimer();
 
 </script>
 
