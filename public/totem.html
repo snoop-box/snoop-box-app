@@ -205,21 +205,63 @@ function printPhoto() {
 
   flashEffect();
 
-  const win = window.open("");
+  const win = window.open("", "_blank");
 
   win.document.write(`
     <html>
-    <body style="margin:0; display:flex; justify-content:center; align-items:center; height:100vh;">
-      <div style="position:relative; width:600px; height:900px;">
-        <img src="${selectedPhoto}" style="position:absolute; width:100%;">
-        <img src="frame.png" style="position:absolute; width:100%;">
+    <head>
+      <style>
+        body {
+          margin:0;
+          display:flex;
+          justify-content:center;
+          align-items:center;
+          height:100vh;
+          background:white;
+        }
+
+        .print {
+          position: relative;
+          width: 1240px;
+          height: 1860px;
+        }
+
+        .print img.photo {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .print img.frame {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+        }
+
+      </style>
+    </head>
+    <body>
+
+      <div class="print">
+        <img src="${selectedPhoto}" class="photo">
+        <img src="frame.png" class="frame">
       </div>
+
     </body>
     </html>
   `);
 
   win.document.close();
-  win.print();
+
+  setTimeout(() => {
+    win.print();
+    win.close();
+  }, 500);
 
   closeModal();
 }
