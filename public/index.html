@@ -6,24 +6,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+* { box-sizing: border-box; }
+
 body {
+  margin: 0;
   background: #111;
   color: white;
   font-family: Arial;
-  padding: 10px;
 }
 
 .container {
   max-width: 420px;
   margin: auto;
+  padding: 10px;
 }
 
-button, input, select {
+input, select, button {
   width: 100%;
   padding: 14px;
   margin: 6px 0;
   border-radius: 10px;
   border: none;
+  font-size: 16px;
 }
 
 button {
@@ -31,14 +35,22 @@ button {
   color: white;
 }
 
-.hidden { display:none; }
+.hidden { display: none; }
 
-img { width:100%; border-radius:10px; }
+img {
+  width: 100%;
+  border-radius: 10px;
+}
 
 .rank {
-  padding:10px;
-  border-bottom:1px solid #333;
+  padding: 10px;
+  border-bottom: 1px solid #333;
 }
+
+#answers button {
+  background: #222;
+}
+
 </style>
 </head>
 
@@ -46,7 +58,9 @@ img { width:100%; border-radius:10px; }
 
 <div class="container">
 
+<!-- LOGIN -->
 <div id="login">
+<h3>Ingresar</h3>
 <input id="name" placeholder="Apodo">
 <select id="table">
 <option value="">Mesa</option>
@@ -55,36 +69,41 @@ img { width:100%; border-radius:10px; }
 <option>7</option><option>8</option><option>9</option>
 <option>10</option>
 </select>
-<button onclick="enterApp()">Entrar</button>
+<button id="btnEnter">Entrar</button>
 </div>
 
+<!-- MENU -->
 <div id="menu" class="hidden">
 <h3 id="welcome"></h3>
-<button onclick="show('upload')">📸 Foto</button>
-<button onclick="show('gallery')">🖼 Galería</button>
-<button onclick="show('trivia')">🧠 Trivia</button>
-<button onclick="show('ranking')">🏆 Ranking</button>
+<button onclick="showSection('upload')">📸 Foto</button>
+<button onclick="showSection('gallery')">🖼 Galería</button>
+<button onclick="showSection('trivia')">🧠 Trivia</button>
+<button onclick="showSection('ranking')">🏆 Ranking</button>
 </div>
 
+<!-- FOTO -->
 <div id="upload" class="hidden">
-<input type="file" id="file" accept="image/*" capture="environment" style="display:none" onchange="previewImage()">
-<button onclick="openCamera()">📸 Cámara</button>
+<input type="file" id="file" accept="image/*" capture="environment" style="display:none">
+<button onclick="file.click()">📸 Cámara</button>
 <div id="preview"></div>
-<button onclick="sendPhoto()">Subir</button>
+<button id="btnUpload">Subir</button>
 <button onclick="back()">Volver</button>
 </div>
 
+<!-- GALERIA -->
 <div id="gallery" class="hidden">
 <div id="photos"></div>
 <button onclick="back()">Volver</button>
 </div>
 
+<!-- TRIVIA -->
 <div id="trivia" class="hidden">
 <h3 id="question"></h3>
 <div id="answers"></div>
 <button onclick="back()">Volver</button>
 </div>
 
+<!-- RANKING -->
 <div id="ranking" class="hidden">
 <h3>Ranking</h3>
 <div id="rankList"></div>
@@ -95,25 +114,55 @@ img { width:100%; border-radius:10px; }
 
 <script>
 
+// ELEMENTOS
+const login = document.getElementById("login");
+const menu = document.getElementById("menu");
+const upload = document.getElementById("upload");
+const gallery = document.getElementById("gallery");
+const trivia = document.getElementById("trivia");
+const ranking = document.getElementById("ranking");
+
+const nameInput = document.getElementById("name");
+const tableSelect = document.getElementById("table");
+const welcome = document.getElementById("welcome");
+const preview = document.getElementById("preview");
+const fileInput = document.getElementById("file");
+
 const eventId = new URLSearchParams(location.search).get("event") || "default";
+
 let user = {};
 
-function enterApp() {
-  user.name = name.value;
-  user.table = table.value;
-  if (!user.name || !user.table) return;
+// LOGIN
+document.getElementById("btnEnter").onclick = () => {
+  const name = nameInput.value.trim();
+  const table = tableSelect.value;
+
+  if (!name || !table) {
+    alert("Completá apodo y mesa");
+    return;
+  }
+
+  user = { name, table };
+
   login.classList.add("hidden");
   menu.classList.remove("hidden");
-  welcome.innerText = user.name + " - Mesa " + user.table;
-}
 
-function show(sec) {
+  welcome.innerText = name + " - Mesa " + table;
+};
+
+// NAVEGACION
+function showSection(sec) {
   menu.classList.add("hidden");
+  upload.classList.add("hidden");
+  gallery.classList.add("hidden");
+  trivia.classList.add("hidden");
+  ranking.classList.add("hidden");
+
   document.getElementById(sec).classList.remove("hidden");
 
-  if (sec=="gallery") loadGallery();
-  if (sec=="trivia") loadTrivia();
-  if (sec=="ranking") loadRanking();
+  if (sec === "gallery") loadGallery();
+  if (sec === "trivia") loadTrivia();
+  if (sec === "ranking") loadRanking();
 }
 
 function back() {
@@ -124,37 +173,47 @@ function back() {
   menu.classList.remove("hidden");
 }
 
-function openCamera() {
-  file.click();
-}
+// PREVIEW
+fileInput.onchange = () => {
+  const file = fileInput.files[0];
+  if (!file) return;
 
-function previewImage() {
   const reader = new FileReader();
-  reader.onload = e => preview.innerHTML = "<img src='"+e.target.result+"'>";
-  reader.readAsDataURL(file.files[0]);
-}
+  reader.onload = e => {
+    preview.innerHTML = `<img src="${e.target.result}">`;
+  };
+  reader.readAsDataURL(file);
+};
 
-async function sendPhoto() {
+// SUBIR FOTO
+document.getElementById("btnUpload").onclick = async () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+
   const fd = new FormData();
-  fd.append("photo", file.files[0]);
+  fd.append("photo", file);
   fd.append("name", user.name);
   fd.append("table", user.table);
   fd.append("event", eventId);
 
-  await fetch("/upload", { method:"POST", body:fd });
+  await fetch("/upload", { method: "POST", body: fd });
 
-  preview.innerHTML="";
-  file.value="";
+  preview.innerHTML = "";
+  fileInput.value = "";
+
   back();
-}
+};
 
+// GALERIA
 async function loadGallery() {
-  const res = await fetch("/photos/"+eventId);
+  const res = await fetch("/photos/" + eventId);
   const data = await res.json();
 
-  photos.innerHTML="";
-  data.reverse().forEach(p=>{
-    photos.innerHTML += `
+  const container = document.getElementById("photos");
+  container.innerHTML = "";
+
+  data.reverse().forEach(p => {
+    container.innerHTML += `
       <div>
         <img src="${p.url}">
         <small>${p.name} - Mesa ${p.table}</small>
@@ -171,48 +230,52 @@ const questions = [
 
 function loadTrivia() {
   const q = questions[Math.floor(Math.random()*questions.length)];
-  question.innerText = q.q;
-  answers.innerHTML="";
+
+  document.getElementById("question").innerText = q.q;
+  const ans = document.getElementById("answers");
+  ans.innerHTML = "";
 
   q.a.forEach((txt,i)=>{
-    const b=document.createElement("button");
-    b.innerText=txt;
+    const b = document.createElement("button");
+    b.innerText = txt;
 
-    b.onclick=async ()=>{
+    b.onclick = async () => {
+
       document.querySelectorAll("#answers button").forEach(x=>x.disabled=true);
 
-      const correct = i===q.c;
+      const correct = i === q.c;
 
-      const res=document.createElement("div");
+      const res = document.createElement("div");
       res.innerText = correct ? "✔️" : "❌";
-      res.style.fontSize="30px";
-      res.style.marginTop="10px";
-      answers.appendChild(res);
+      res.style.fontSize = "30px";
+      res.style.marginTop = "10px";
+      ans.appendChild(res);
 
-      await fetch("/trivia",{
+      await fetch("/trivia", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          table:user.table,
-          event:eventId,
-          correct:correct
+        body: JSON.stringify({
+          table: user.table,
+          event: eventId,
+          correct: correct
         })
       });
     };
 
-    answers.appendChild(b);
+    ans.appendChild(b);
   });
 }
 
 // RANKING
 async function loadRanking() {
-  const res = await fetch("/ranking/"+eventId);
+  const res = await fetch("/ranking/" + eventId);
   const data = await res.json();
 
-  rankList.innerHTML="";
+  const list = document.getElementById("rankList");
+  list.innerHTML = "";
 
   data.forEach((r,i)=>{
-    rankList.innerHTML += `
+    list.innerHTML += `
       <div class="rank">
         ${i+1}° Mesa ${r.table} - ${r.points} pts
       </div>`;
