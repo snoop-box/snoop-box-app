@@ -95,37 +95,52 @@ img {
 <!-- FOTO -->
 <div id="upload" class="hidden">
 <input type="file" id="file" accept="image/*" capture="environment" style="display:none">
-<button onclick="fileInput.click()">📸 Cámara</button>
+<button onclick="fileInput.click(); playSound('click')">📸 Cámara</button>
 <div id="preview"></div>
 <button id="btnUpload">Subir</button>
-<button onclick="back()">Volver</button>
+<button onclick="back(); playSound('click')">Volver</button>
 </div>
 
 <!-- GALERIA -->
 <div id="gallery" class="hidden">
 <div id="photos"></div>
-<button onclick="back()">Volver</button>
+<button onclick="back(); playSound('click')">Volver</button>
 </div>
 
 <!-- TRIVIA -->
 <div id="trivia" class="hidden">
 <h3 id="question"></h3>
 <div id="answers"></div>
-<button onclick="back()">Volver</button>
+<button onclick="back(); playSound('click')">Volver</button>
 </div>
 
 <!-- RANKING -->
 <div id="ranking" class="hidden">
 <h3>🏆 Ranking</h3>
 <div id="rankList"></div>
-<button onclick="back()">Volver</button>
+<button onclick="back(); playSound('click')">Volver</button>
 </div>
 
 </div>
 
 <script>
 
-// ELEMENTOS
+/* ================= SONIDOS ================= */
+const sounds = {
+  click: new Audio("/sounds/click.mp3"),
+  camera: new Audio("/sounds/camera.mp3"),
+  success: new Audio("/sounds/success.mp3"),
+  error: new Audio("/sounds/error.mp3")
+};
+
+function playSound(type) {
+  if (!sounds[type]) return;
+  sounds[type].pause();
+  sounds[type].currentTime = 0;
+  sounds[type].play().catch(()=>{});
+}
+
+/* ================= ELEMENTOS ================= */
 const login = document.getElementById("login");
 const menu = document.getElementById("menu");
 const upload = document.getElementById("upload");
@@ -143,8 +158,11 @@ const eventId = new URLSearchParams(location.search).get("event") || "default";
 
 let user = {};
 
-// LOGIN
+/* ================= LOGIN ================= */
 document.getElementById("btnEnter").onclick = () => {
+
+  playSound("click");
+
   const name = nameInput.value.trim();
   const table = tableSelect.value;
 
@@ -161,8 +179,11 @@ document.getElementById("btnEnter").onclick = () => {
   welcome.innerText = name + " - Mesa " + table;
 };
 
-// NAV
+/* ================= NAV ================= */
 function showSection(sec) {
+
+  playSound("click");
+
   menu.classList.add("hidden");
   upload.classList.add("hidden");
   gallery.classList.add("hidden");
@@ -184,8 +205,11 @@ function back() {
   menu.classList.remove("hidden");
 }
 
-// PREVIEW
+/* ================= PREVIEW ================= */
 fileInput.onchange = () => {
+
+  playSound("camera");
+
   const file = fileInput.files[0];
   if (!file) return;
 
@@ -196,8 +220,11 @@ fileInput.onchange = () => {
   reader.readAsDataURL(file);
 };
 
-// SUBIR FOTO
+/* ================= SUBIR FOTO ================= */
 document.getElementById("btnUpload").onclick = async () => {
+
+  playSound("click");
+
   const file = fileInput.files[0];
   if (!file) return;
 
@@ -215,7 +242,7 @@ document.getElementById("btnUpload").onclick = async () => {
   back();
 };
 
-// GALERIA
+/* ================= GALERIA ================= */
 async function loadGallery() {
   const res = await fetch("/photos/" + eventId);
   const data = await res.json();
@@ -232,7 +259,7 @@ async function loadGallery() {
   });
 }
 
-// TRIVIA
+/* ================= TRIVIA ================= */
 const questions = [
 {q:"¿Dónde se conocieron?",a:["Escuela","Trabajo","Fiesta"],c:1},
 {q:"¿Quién dio el primer beso?",a:["Él","Ella","Ambos"],c:0},
@@ -256,6 +283,12 @@ function loadTrivia() {
 
       const correct = i === q.c;
 
+      if (correct) {
+        playSound("success");
+      } else {
+        playSound("error");
+      }
+
       const res = document.createElement("div");
       res.innerText = correct ? "✔️" : "❌";
       res.style.fontSize = "30px";
@@ -278,7 +311,7 @@ function loadTrivia() {
   });
 }
 
-// RANKING PRO
+/* ================= RANKING ================= */
 async function loadRanking() {
   const res = await fetch("/ranking/" + eventId);
   const data = await res.json();
