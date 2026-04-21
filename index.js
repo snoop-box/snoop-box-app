@@ -19,8 +19,8 @@ cloudinary.config({
 
 // STORAGE
 const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: async (req, file) => {
+  cloudinary,
+  params: async (req) => {
     const event = req.body?.event || "default";
     return {
       folder: "snoopbox/" + event,
@@ -35,83 +35,76 @@ const upload = multer({ storage });
 // DB
 const dbFile = path.join(__dirname, "db.json");
 if (!fs.existsSync(dbFile)) {
-  fs.writeFileSync(dbFile, JSON.stringify({ photos: [], scores: [] }));
+  fs.writeFileSync(dbFile, JSON.stringify({
+    photos: [],
+    scores: [],
+    triviaUsers: []
+  }));
 }
 
-// FRONTEND
+// FRONT
 app.use(express.static(path.join(__dirname, "public")));
 
-// SUBIR FOTO (+10 puntos)
+// SUMAR PUNTOS
+function addScore(db, table, event, points) {
+  let s = db.scores.find(x => x.table == table && x.event == event);
+  if (!s) {
+    s = { table, event, points: 0 };
+    db.scores.push(s);
+  }
+  s.points += points;
+}
+
+// FOTO (+10)
 app.post("/upload", upload.single("photo"), (req, res) => {
   const { name, table, event } = req.body;
-
   const db = JSON.parse(fs.readFileSync(dbFile));
 
-  const newPhoto = {
+  db.photos.push({
     url: req.file.path,
     name,
     table,
-    event,
-    date: Date.now()
-  };
+    event
+  });
 
-  db.photos.push(newPhoto);
-
-  // SUMAR PUNTOS
   addScore(db, table, event, 10);
 
   fs.writeFileSync(dbFile, JSON.stringify(db, null, 2));
-
-  res.json({ success: true });
+  res.json({ ok: true });
 });
 
-// SUMAR PUNTOS TRIVIA
+// TRIVIA (+5 SOLO UNA VEZ)
 app.post("/trivia", (req, res) => {
-  const { table, event, correct } = req.body;
-
+  const { name, table, event, correct } = req.body;
   const db = JSON.parse(fs.readFileSync(dbFile));
 
-  if (correct) {
+  const userKey = name + "-" + table + "-" + event;
+
+  const already = db.triviaUsers.includes(userKey);
+
+  if (correct && !already) {
     addScore(db, table, event, 5);
+    db.triviaUsers.push(userKey);
   }
 
   fs.writeFileSync(dbFile, JSON.stringify(db, null, 2));
-
-  res.json({ success: true });
+  res.json({ ok: true });
 });
-
-// FUNCION SUMAR
-function addScore(db, table, event, points) {
-  let score = db.scores.find(s => s.table == table && s.event == event);
-
-  if (!score) {
-    score = { table, event, points: 0 };
-    db.scores.push(score);
-  }
-
-  score.points += points;
-}
 
 // GALERIA
 app.get("/photos/:event", (req, res) => {
   const db = JSON.parse(fs.readFileSync(dbFile));
-  const event = req.params.event;
-
-  res.json(db.photos.filter(p => p.event === event));
+  res.json(db.photos.filter(p => p.event === req.params.event));
 });
 
 // RANKING
 app.get("/ranking/:event", (req, res) => {
   const db = JSON.parse(fs.readFileSync(dbFile));
-  const event = req.params.event;
-
-  const ranking = db.scores
-    .filter(s => s.event === event)
+  const r = db.scores
+    .filter(x => x.event === req.params.event)
     .sort((a, b) => b.points - a.points);
 
-  res.json(ranking);
+  res.json(r);
 });
 
-app.listen(PORT, () => {
-  console.log("Servidor corriendo en puerto " + PORT);
-});
+app.listen(PORT, () => console.log("OK"));

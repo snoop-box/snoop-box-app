@@ -10,15 +10,15 @@
 
 body {
   margin: 0;
-  background: #111;
-  color: white;
   font-family: Arial;
+  background: linear-gradient(135deg,#0f0f0f,#1c1c1c);
+  color: white;
 }
 
 .container {
   max-width: 420px;
   margin: auto;
-  padding: 10px;
+  padding: 12px;
 }
 
 input, select, button {
@@ -42,11 +42,22 @@ img {
   border-radius: 10px;
 }
 
+/* RANKING PRO */
 .rank {
-  padding: 10px;
-  border-bottom: 1px solid #333;
+  padding: 12px;
+  margin: 6px 0;
+  border-radius: 12px;
+  background: #222;
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
 }
 
+.rank.top1 { background: gold; color:#000; }
+.rank.top2 { background: silver; color:#000; }
+.rank.top3 { background: #cd7f32; color:#000; }
+
+/* TRIVIA */
 #answers button {
   background: #222;
 }
@@ -84,7 +95,7 @@ img {
 <!-- FOTO -->
 <div id="upload" class="hidden">
 <input type="file" id="file" accept="image/*" capture="environment" style="display:none">
-<button onclick="file.click()">📸 Cámara</button>
+<button onclick="fileInput.click()">📸 Cámara</button>
 <div id="preview"></div>
 <button id="btnUpload">Subir</button>
 <button onclick="back()">Volver</button>
@@ -105,7 +116,7 @@ img {
 
 <!-- RANKING -->
 <div id="ranking" class="hidden">
-<h3>Ranking</h3>
+<h3>🏆 Ranking</h3>
 <div id="rankList"></div>
 <button onclick="back()">Volver</button>
 </div>
@@ -150,7 +161,7 @@ document.getElementById("btnEnter").onclick = () => {
   welcome.innerText = name + " - Mesa " + table;
 };
 
-// NAVEGACION
+// NAV
 function showSection(sec) {
   menu.classList.add("hidden");
   upload.classList.add("hidden");
@@ -255,6 +266,7 @@ function loadTrivia() {
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
+          name: user.name,
           table: user.table,
           event: eventId,
           correct: correct
@@ -266,7 +278,7 @@ function loadTrivia() {
   });
 }
 
-// RANKING
+// RANKING PRO
 async function loadRanking() {
   const res = await fetch("/ranking/" + eventId);
   const data = await res.json();
@@ -275,9 +287,17 @@ async function loadRanking() {
   list.innerHTML = "";
 
   data.forEach((r,i)=>{
+    let medal = "";
+    let cls = "rank";
+
+    if (i===0){ medal="🥇"; cls+=" top1"; }
+    else if (i===1){ medal="🥈"; cls+=" top2"; }
+    else if (i===2){ medal="🥉"; cls+=" top3"; }
+
     list.innerHTML += `
-      <div class="rank">
-        ${i+1}° Mesa ${r.table} - ${r.points} pts
+      <div class="${cls}">
+        <span>${medal} Mesa ${r.table}</span>
+        <strong>${r.points} pts</strong>
       </div>`;
   });
 }
