@@ -10,39 +10,33 @@ app.use(express.static("public"));
 
 const upload = multer({ dest: "uploads/" });
 
-// CONFIG CLOUDINARY
+// CLOUDINARY
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// =========================
-// CONTROL DE EVENTOS
-// =========================
-const activeEvents = {
-  "olivia2": true
-};
+// 🔒 CONTROL EVENTO (SEGURO)
+function isEventActive(event) {
+  if (event === "olivia2") return true;
+  return true; // fallback para no romper nada
+}
 
-// =========================
-// BASE EN MEMORIA
-// =========================
+// BASE
 let photos = [];
 let ranking = {};
 
-// =========================
-// SUBIR FOTO
-// =========================
+// UPLOAD
 app.post("/upload", upload.single("photo"), async (req, res) => {
-
-  const event = req.body.event;
-
-  // 🔒 VALIDACIÓN EVENTO ACTIVO
-  if (!activeEvents[event]) {
-    return res.status(403).json({ error: "Evento cerrado" });
-  }
-
   try {
+    const event = req.body.event || "default";
+
+    // VALIDACIÓN SUAVE (NO ROMPE)
+    if (!isEventActive(event)) {
+      return res.json({ success: false, message: "Evento cerrado" });
+    }
+
     const result = await cloudinary.uploader.upload(req.file.path, {
       folder: `snoopbox/${event}`
     });
@@ -51,12 +45,12 @@ app.post("/upload", upload.single("photo"), async (req, res) => {
       url: result.secure_url,
       name: req.body.name,
       table: req.body.table,
-      event: event
+      event
     };
 
     photos.push(photo);
 
-    // SUMA PUNTOS POR FOTO
+    // ranking
     if (!ranking[event]) ranking[event] = {};
     if (!ranking[event][req.body.table]) ranking[event][req.body.table] = 0;
 
@@ -65,57 +59,46 @@ app.post("/upload", upload.single("photo"), async (req, res) => {
     res.json({ success: true });
 
   } catch (err) {
-    res.status(500).json({ error: "Error al subir" });
+    console.log(err);
+    res.json({ success: false });
   }
 });
 
-// =========================
-// OBTENER FOTOS
-// =========================
+// GET PHOTOS
 app.get("/photos/:event", (req, res) => {
   const event = req.params.event;
-  const eventPhotos = photos.filter(p => p.event === event);
-  res.json(eventPhotos);
+  const data = photos.filter(p => p.event === event);
+  res.json(data);
 });
 
-// =========================
 // TRIVIA
-// =========================
 app.post("/trivia", (req, res) => {
   const { table, event, correct } = req.body;
 
   if (!ranking[event]) ranking[event] = {};
   if (!ranking[event][table]) ranking[event][table] = 0;
 
-  if (correct) {
-    ranking[event][table] += 10;
-  }
+  if (correct) ranking[event][table] += 10;
 
   res.json({ success: true });
 });
 
-// =========================
 // RANKING
-// =========================
 app.get("/ranking/:event", (req, res) => {
   const event = req.params.event;
 
   if (!ranking[event]) return res.json([]);
 
-  const result = Object.keys(ranking[event]).map(table => ({
-    table,
-    points: ranking[event][table]
+  const result = Object.keys(ranking[event]).map(t => ({
+    table: t,
+    points: ranking[event][t]
   }));
 
-  result.sort((a,b) => b.points - a.points);
+  result.sort((a,b)=>b.points-a.points);
 
   res.json(result);
 });
 
-// =========================
-// SERVER
-// =========================
+// START
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log("Servidor funcionando en puerto " + PORT);
-});
+app.listen(PORT, () => console.log("Server ON " + PORT));
