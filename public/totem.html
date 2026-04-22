@@ -78,6 +78,7 @@ body {
   overflow: hidden;
 }
 
+/* FOTO CORREGIDA */
 .frame img.photo {
   position: absolute;
   top: 0;
@@ -88,8 +89,11 @@ body {
   object-position: center;
 }
 
+/* OVERLAY */
 .frame img.overlay {
   position: absolute;
+  top:0;
+  left:0;
   width: 100%;
   height: 100%;
 }
@@ -123,7 +127,7 @@ button {
   transition: opacity 0.2s;
 }
 
-/* RANKING MÁS GRANDE */
+/* RANKING */
 #rankingBox {
   position: fixed;
   top: 15px;
@@ -133,7 +137,6 @@ button {
   border-radius: 12px;
   font-size: 18px;
   line-height: 1.6;
-  box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
 /* CARRUSEL */
@@ -150,7 +153,6 @@ button {
   flex-direction: column;
 }
 
-/* FADE */
 .carousel-img {
   max-width:90%;
   max-height:80%;
@@ -163,13 +165,10 @@ button {
   opacity: 1;
 }
 
-/* NOMBRE EN CARRUSEL */
 .carousel-name {
   margin-top: 15px;
   font-size: 22px;
-  opacity: 0.9;
 }
-
 </style>
 </head>
 
@@ -195,48 +194,22 @@ button {
   </div>
 </div>
 
-<!-- CARRUSEL -->
-<div id="idleCarousel" onclick="closeCarousel()">
-  <img id="carouselImg" class="carousel-img">
-  <div id="carouselName" class="carousel-name"></div>
-</div>
-
 <div id="flash"></div>
 
 <script>
 
 const eventId = new URLSearchParams(location.search).get("event") || "default";
-
 let selectedPhoto = null;
-let photosData = [];
-let idleTimer;
-let carouselIndex = 0;
-let carouselInterval;
-
-// ACTIVIDAD
-function resetIdleTimer() {
-  clearTimeout(idleTimer);
-  idleTimer = setTimeout(startCarousel, 10000);
-}
-
-["click","touchstart","mousemove"].forEach(evt=>{
-  document.addEventListener(evt, ()=>{
-    closeCarousel();
-    resetIdleTimer();
-  });
-});
 
 // FOTOS
 async function loadPhotos() {
   const res = await fetch("/photos/" + eventId);
   const data = await res.json();
 
-  photosData = data.reverse();
-
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
 
-  photosData.forEach(p => {
+  data.reverse().forEach(p => {
     const div = document.createElement("div");
     div.className = "card";
 
@@ -269,7 +242,7 @@ function flashEffect() {
   setTimeout(()=>f.style.opacity=0,200);
 }
 
-// IMPRIMIR
+// IMPRIMIR CORREGIDO
 function printPhoto() {
   flashEffect();
 
@@ -280,12 +253,21 @@ function printPhoto() {
     <body style="margin:0; display:flex; justify-content:center; align-items:center; height:100vh;">
       <div style="position:relative; width:600px; height:900px;">
         <img src="${selectedPhoto}" style="
-  position:absolute;
-  width:100%;
-  height:100%;
-  object-fit: cover;
-">
-        <img src="frame.png" style="position:absolute; width:100%;">
+          position:absolute;
+          top:0;
+          left:0;
+          width:100%;
+          height:100%;
+          object-fit: cover;
+          object-position: center;
+        ">
+        <img src="frame.png" style="
+          position:absolute;
+          top:0;
+          left:0;
+          width:100%;
+          height:100%;
+        ">
       </div>
     </body>
     </html>
@@ -315,44 +297,6 @@ async function loadRanking() {
   rankingBox.innerHTML = html;
 }
 
-// CARRUSEL
-function startCarousel() {
-  if (photosData.length === 0) return;
-
-  const carousel = document.getElementById("idleCarousel");
-  const img = document.getElementById("carouselImg");
-  const name = document.getElementById("carouselName");
-
-  carousel.style.display = "flex";
-
-  carouselIndex = 0;
-  showSlide();
-
-  carouselInterval = setInterval(()=>{
-    carouselIndex++;
-    if (carouselIndex >= photosData.length) carouselIndex = 0;
-    showSlide();
-  }, 2500);
-}
-
-function showSlide() {
-  const img = document.getElementById("carouselImg");
-  const name = document.getElementById("carouselName");
-
-  img.classList.remove("show");
-
-  setTimeout(()=>{
-    img.src = photosData[carouselIndex].url;
-    name.innerText = photosData[carouselIndex].name;
-    img.classList.add("show");
-  },200);
-}
-
-function closeCarousel() {
-  document.getElementById("idleCarousel").style.display = "none";
-  clearInterval(carouselInterval);
-}
-
 // REFRESH
 setInterval(()=>{
   loadPhotos();
@@ -362,7 +306,6 @@ setInterval(()=>{
 // INIT
 loadPhotos();
 loadRanking();
-resetIdleTimer();
 
 </script>
 
