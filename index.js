@@ -1,110 +1,121 @@
 const express = require("express");
-const path = require("path");
 const multer = require("multer");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("cloudinary").v2;
-const fs = require("fs");
+const cors = require("cors");
 
 const app = express();
-const PORT = process.env.PORT || 8080;
-
+app.use(cors());
 app.use(express.json());
+app.use(express.static("public"));
 
-// CLOUDINARY
+const upload = multer({ dest: "uploads/" });
+
+// CONFIG CLOUDINARY
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// STORAGE
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: async (req) => {
-    const event = req.body?.event || "default";
-    return {
-      folder: "snoopbox/" + event,
-      format: "jpg",
-      public_id: Date.now()
+// =========================
+// CONTROL DE EVENTOS
+// =========================
+const activeEvents = {
+  "olivia2": true
+};
+
+// =========================
+// BASE EN MEMORIA
+// =========================
+let photos = [];
+let ranking = {};
+
+// =========================
+// SUBIR FOTO
+// =========================
+app.post("/upload", upload.single("photo"), async (req, res) => {
+
+  const event = req.body.event;
+
+  // 🔒 VALIDACIÓN EVENTO ACTIVO
+  if (!activeEvents[event]) {
+    return res.status(403).json({ error: "Evento cerrado" });
+  }
+
+  try {
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: `snoopbox/${event}`
+    });
+
+    const photo = {
+      url: result.secure_url,
+      name: req.body.name,
+      table: req.body.table,
+      event: event
     };
+
+    photos.push(photo);
+
+    // SUMA PUNTOS POR FOTO
+    if (!ranking[event]) ranking[event] = {};
+    if (!ranking[event][req.body.table]) ranking[event][req.body.table] = 0;
+
+    ranking[event][req.body.table] += 5;
+
+    res.json({ success: true });
+
+  } catch (err) {
+    res.status(500).json({ error: "Error al subir" });
   }
 });
 
-const upload = multer({ storage });
-
-// DB
-const dbFile = path.join(__dirname, "db.json");
-if (!fs.existsSync(dbFile)) {
-  fs.writeFileSync(dbFile, JSON.stringify({
-    photos: [],
-    scores: [],
-    triviaUsers: []
-  }));
-}
-
-// FRONT
-app.use(express.static(path.join(__dirname, "public")));
-
-// SUMAR PUNTOS
-function addScore(db, table, event, points) {
-  let s = db.scores.find(x => x.table == table && x.event == event);
-  if (!s) {
-    s = { table, event, points: 0 };
-    db.scores.push(s);
-  }
-  s.points += points;
-}
-
-// FOTO (+10)
-app.post("/upload", upload.single("photo"), (req, res) => {
-  const { name, table, event } = req.body;
-  const db = JSON.parse(fs.readFileSync(dbFile));
-
-  db.photos.push({
-    url: req.file.path,
-    name,
-    table,
-    event
-  });
-
-  addScore(db, table, event, 10);
-
-  fs.writeFileSync(dbFile, JSON.stringify(db, null, 2));
-  res.json({ ok: true });
-});
-
-// TRIVIA (+5 SOLO UNA VEZ)
-app.post("/trivia", (req, res) => {
-  const { name, table, event, correct } = req.body;
-  const db = JSON.parse(fs.readFileSync(dbFile));
-
-  const userKey = name + "-" + table + "-" + event;
-
-  const already = db.triviaUsers.includes(userKey);
-
-  if (correct && !already) {
-    addScore(db, table, event, 5);
-    db.triviaUsers.push(userKey);
-  }
-
-  fs.writeFileSync(dbFile, JSON.stringify(db, null, 2));
-  res.json({ ok: true });
-});
-
-// GALERIA
+// =========================
+// OBTENER FOTOS
+// =========================
 app.get("/photos/:event", (req, res) => {
-  const db = JSON.parse(fs.readFileSync(dbFile));
-  res.json(db.photos.filter(p => p.event === req.params.event));
+  const event = req.params.event;
+  const eventPhotos = photos.filter(p => p.event === event);
+  res.json(eventPhotos);
 });
 
+// =========================
+// TRIVIA
+// =========================
+app.post("/trivia", (req, res) => {
+  const { table, event, correct } = req.body;
+
+  if (!ranking[event]) ranking[event] = {};
+  if (!ranking[event][table]) ranking[event][table] = 0;
+
+  if (correct) {
+    ranking[event][table] += 10;
+  }
+
+  res.json({ success: true });
+});
+
+// =========================
 // RANKING
+// =========================
 app.get("/ranking/:event", (req, res) => {
-  const db = JSON.parse(fs.readFileSync(dbFile));
-  const r = db.scores
-    .filter(x => x.event === req.params.event)
-    .sort((a, b) => b.points - a.points);
+  const event = req.params.event;
 
-  res.json(r);
+  if (!ranking[event]) return res.json([]);
+
+  const result = Object.keys(ranking[event]).map(table => ({
+    table,
+    points: ranking[event][table]
+  }));
+
+  result.sort((a,b) => b.points - a.points);
+
+  res.json(result);
 });
 
-app.listen(PORT, () => console.log("OK"));
+// =========================
+// SERVER
+// =========================
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log("Servidor funcionando en puerto " + PORT);
+});
