@@ -250,24 +250,47 @@ function printPhoto() {
 
   win.document.write(`
     <html>
-    <body style="margin:0; display:flex; justify-content:center; align-items:center; height:100vh;">
-      <div style="position:relative; width:600px; height:900px;">
-        <img src="${selectedPhoto}" style="
-          position:absolute;
-          top:0;
-          left:0;
-          width:100%;
-          height:100%;
+    <head>
+      <style>
+        @page {
+          size: 4in 6in;
+          margin: 0;
+        }
+
+        body {
+          margin: 0;
+          padding: 0;
+        }
+
+        .print-area {
+          position: relative;
+          width: 4in;
+          height: 6in;
+        }
+
+        .print-area img.photo {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
           object-fit: cover;
-          object-position: center;
-        ">
-        <img src="frame.png" style="
-          position:absolute;
-          top:0;
-          left:0;
-          width:100%;
-          height:100%;
-        ">
+        }
+
+        .print-area img.frame {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+        }
+      </style>
+    </head>
+
+    <body>
+      <div class="print-area">
+        <img src="${selectedPhoto}" class="photo">
+        <img src="frame.png" class="frame">
       </div>
     </body>
     </html>
