@@ -22,9 +22,10 @@ body {
   background-size: cover;
   background-position: center;
   z-index: -1;
+  filter: brightness(0.6);
 }
 
-/* LOGIN DJ */
+/* LOGIN */
 #login {
   position: absolute;
   width: 100%;
@@ -49,12 +50,10 @@ button {
   color: white;
 }
 
-/* CONTENIDO */
-#app {
-  display:none;
-}
+/* APP */
+#app { display:none; }
 
-/* CARRUSEL */
+/* SLIDES */
 #viewer {
   position:absolute;
   width:100%;
@@ -67,11 +66,11 @@ button {
 
 .slide {
   position:absolute;
-  max-width:70%;
-  max-height:70%;
+  max-width:75%;
+  max-height:75%;
   object-fit:contain;
   opacity:0;
-  transform:translateX(100px) scale(0.9);
+  transform:translateX(200px) scale(0.8);
   transition: all 0.8s ease;
 }
 
@@ -83,38 +82,72 @@ button {
 /* NOMBRE */
 #name {
   position:absolute;
-  bottom:120px;
+  bottom:140px;
   width:100%;
   text-align:center;
-  font-size:32px;
+  font-size:36px;
+  font-weight:bold;
 }
 
-/* RANKING */
-#ranking {
-  position:absolute;
-  top:20px;
-  right:20px;
-  font-size:24px;
-}
-
-/* QR */
+/* QR GRANDE */
 #qrBox {
   position:absolute;
   bottom:20px;
   left:20px;
   background:white;
-  padding:10px;
-  border-radius:12px;
+  padding:15px;
+  border-radius:16px;
   text-align:center;
   color:black;
 }
 
 #qrBox img {
-  width:120px;
+  width:160px;
 }
 
 #qrText {
-  font-size:14px;
+  font-size:16px;
+  margin-top:5px;
+}
+
+/* RANKING PRO */
+#rankingBox {
+  position:absolute;
+  top:20px;
+  right:20px;
+  background: rgba(0,0,0,0.8);
+  padding:20px;
+  border-radius:16px;
+  font-size:26px;
+  border: 3px solid gold;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow:0 0 10px gold; }
+  50% { box-shadow:0 0 25px gold; }
+  100% { box-shadow:0 0 10px gold; }
+}
+
+/* NUEVA FOTO */
+#newBadge {
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  background:#00ff88;
+  color:black;
+  padding:20px 40px;
+  font-size:40px;
+  border-radius:20px;
+  font-weight:bold;
+  opacity:0;
+  transition: all 0.5s ease;
+}
+
+#newBadge.show {
+  transform:translate(-50%,-50%) scale(1);
+  opacity:1;
 }
 </style>
 </head>
@@ -136,12 +169,15 @@ button {
 
   <div id="viewer"></div>
   <div id="name"></div>
-  <div id="ranking"></div>
+
+  <div id="rankingBox"></div>
 
   <div id="qrBox">
     <img id="qrImg">
     <div id="qrText">Escaneá y subí tus fotos 📸</div>
   </div>
+
+  <div id="newBadge">📸 Nueva foto</div>
 
 </div>
 
@@ -150,8 +186,9 @@ button {
 let eventId = "";
 let photos = [];
 let index = 0;
+let lastCount = 0;
 
-// INICIAR
+// START
 function start() {
   eventId = document.getElementById("eventInput").value.trim();
   const bgUrl = document.getElementById("bgInput").value.trim();
@@ -161,15 +198,14 @@ function start() {
   document.getElementById("login").style.display = "none";
   document.getElementById("app").style.display = "block";
 
-  // fondo
   if (bgUrl) {
     document.getElementById("bg").style.backgroundImage = `url(${bgUrl})`;
   }
 
-  // QR automático
+  // QR
   const link = location.origin + "/?event=" + eventId;
   document.getElementById("qrImg").src =
-    "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(link);
+    "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(link);
 
   load();
   loadRanking();
@@ -179,13 +215,20 @@ function start() {
   setInterval(nextSlide,3000);
 }
 
-// CARGAR FOTOS
+// LOAD PHOTOS
 async function load() {
   const res = await fetch("/photos/" + eventId);
-  photos = await res.json();
+  const newPhotos = await res.json();
+
+  if (newPhotos.length > lastCount) {
+    showNew();
+  }
+
+  lastCount = newPhotos.length;
+  photos = newPhotos;
 }
 
-// MOSTRAR
+// SLIDE
 function nextSlide() {
   if (photos.length === 0) return;
 
@@ -220,7 +263,17 @@ async function loadRanking() {
     html += `${i+1}. Mesa ${r.table} (${r.points})<br>`;
   });
 
-  document.getElementById("ranking").innerHTML = html;
+  document.getElementById("rankingBox").innerHTML = html;
+}
+
+// NUEVA FOTO
+function showNew() {
+  const badge = document.getElementById("newBadge");
+  badge.classList.add("show");
+
+  setTimeout(()=>{
+    badge.classList.remove("show");
+  },2000);
 }
 
 </script>
