@@ -43,16 +43,42 @@ body {
   width:26px;
   height:26px;
   border-radius:50%;
-  cursor:pointer;
 }
 
-/* NOMBRE */
-.name {
-  position:absolute;
-  bottom:0;
+/* BOTÓN CÁMARA */
+#cameraBtn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #ff0055;
+  padding: 15px 20px;
+  border-radius: 12px;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* CUENTA REGRESIVA */
+#countdown {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  font-size: 120px;
+  font-weight: bold;
+  display: none;
+  z-index: 999;
+}
+
+/* FLASH */
+#flash {
+  position: fixed;
+  top:0;
+  left:0;
   width:100%;
-  background:rgba(0,0,0,0.6);
-  padding:6px;
+  height:100%;
+  background:white;
+  opacity:0;
+  pointer-events:none;
 }
 
 /* MODAL */
@@ -60,8 +86,6 @@ body {
   position: fixed;
   width:100%;
   height:100%;
-  top:0;
-  left:0;
   display:none;
   justify-content:center;
   align-items:center;
@@ -90,14 +114,9 @@ body {
   padding:10px;
   border-radius:12px;
   color:black;
-  text-align:center;
 }
 
-#qrBox img {
-  width:120px;
-}
-
-/* RANKING PRO */
+/* RANKING */
 #rankingBox {
   position:fixed;
   top:15px;
@@ -105,7 +124,6 @@ body {
   background:rgba(0,0,0,0.8);
   padding:15px;
   border-radius:12px;
-  font-size:18px;
   border:2px solid gold;
   animation:pulse 2s infinite;
 }
@@ -116,23 +134,25 @@ body {
   100% { box-shadow:0 0 8px gold; }
 }
 
-button {
-  padding:10px;
-  margin:10px;
-}
 </style>
 </head>
 
 <body>
 
 <div id="grid"></div>
-
 <div id="rankingBox"></div>
 
 <div id="qrBox">
-  <img id="qrImg">
+  <img id="qrImg" width="120">
   <div>Subí tus fotos 📸</div>
 </div>
+
+<div id="cameraBtn">📸 Sacar foto</div>
+
+<div id="countdown"></div>
+<div id="flash"></div>
+
+<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
 
 <div id="modal">
   <div>
@@ -151,9 +171,8 @@ button {
 
 const eventId = new URLSearchParams(location.search).get("event") || "default";
 
-let photosData = [];
-let selectedPhoto = "";
 let frameUrl = "";
+let selectedPhoto = "";
 
 // CONFIG
 async function loadConfig(){
@@ -169,23 +188,81 @@ async function loadConfig(){
   qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(link);
 }
 
+// 📸 BOTÓN
+cameraBtn.onclick = startCountdown;
+
+// ⏱ CUENTA REGRESIVA
+function startCountdown(){
+
+  const cd = document.getElementById("countdown");
+  let count = 3;
+
+  cd.style.display = "block";
+  cd.innerText = count;
+
+  const interval = setInterval(()=>{
+
+    count--;
+    if(count > 0){
+      cd.innerText = count;
+    } else {
+      clearInterval(interval);
+      cd.style.display = "none";
+      takePhoto();
+    }
+
+  },1000);
+}
+
+// 📸 SACAR FOTO
+function takePhoto(){
+  cameraInput.click();
+}
+
+// 📸 CUANDO SE TOMA
+cameraInput.onchange = async () => {
+
+  const file = cameraInput.files[0];
+  if (!file) return;
+
+  flashEffect();
+
+  const fd = new FormData();
+  fd.append("photo", file);
+  fd.append("name", "Cabina");
+  fd.append("table", "Totem");
+  fd.append("event", eventId);
+
+  await fetch("/upload", {
+    method: "POST",
+    body: fd
+  });
+
+  cameraInput.value = "";
+  loadPhotos();
+};
+
+// FLASH
+function flashEffect(){
+  const f = document.getElementById("flash");
+  f.style.opacity = 1;
+  setTimeout(()=>f.style.opacity=0,200);
+}
+
 // FOTOS
 async function loadPhotos(){
   const res = await fetch("/photos/"+eventId);
   const data = await res.json();
 
-  photosData = data.reverse();
-
   grid.innerHTML = "";
 
-  photosData.forEach(p => {
+  data.reverse().forEach(p => {
 
     const div = document.createElement("div");
     div.className="card";
 
     div.innerHTML = `
       <img src="${p.url}">
-      <div class="name">${p.name}</div>
       <button class="deleteBtn">X</button>
     `;
 
