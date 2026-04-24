@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
 
-// MULTER EN MEMORIA
+// MULTER EN MEMORIA (IMPORTANTE)
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
@@ -20,28 +20,32 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// MEMORIA
+// MEMORIA (luego podemos pasar a DB)
 let events = {};
 let photos = [];
 let ranking = {};
 
 // =========================
-// ADMIN EVENTO
+// ADMIN CREAR EVENTO
 // =========================
 app.post("/admin/event", upload.fields([
   { name: "bg", maxCount: 1 },
   { name: "frame", maxCount: 1 }
 ]), async (req, res) => {
 
-  const name = req.body.name;
+  const name = (req.body.name || "").trim();
   const active = req.body.active === "true";
+
+  if (!name) {
+    return res.json({ success: false, message: "Nombre vacío" });
+  }
 
   let bg = "";
   let frame = "";
 
   try {
 
-    if (req.files.bg) {
+    if (req.files?.bg) {
       const result = await cloudinary.uploader.upload(
         `data:${req.files.bg[0].mimetype};base64,${req.files.bg[0].buffer.toString("base64")}`,
         { folder: `snoopbox/${name}/bg` }
@@ -49,7 +53,7 @@ app.post("/admin/event", upload.fields([
       bg = result.secure_url;
     }
 
-    if (req.files.frame) {
+    if (req.files?.frame) {
       const result = await cloudinary.uploader.upload(
         `data:${req.files.frame[0].mimetype};base64,${req.files.frame[0].buffer.toString("base64")}`,
         { folder: `snoopbox/${name}/frame` }
@@ -57,7 +61,13 @@ app.post("/admin/event", upload.fields([
       frame = result.secure_url;
     }
 
-    events[name] = { bg, frame, active };
+    events[name] = {
+      bg,
+      frame,
+      active
+    };
+
+    console.log("Evento creado:", name);
 
     res.json({ success: true });
 
@@ -67,21 +77,29 @@ app.post("/admin/event", upload.fields([
   }
 });
 
+// =========================
 // LISTAR EVENTOS
+// =========================
 app.get("/admin/events", (req, res) => {
   res.json(events);
 });
 
-// TOGGLE
+// =========================
+// ACTIVAR / DESACTIVAR
+// =========================
 app.post("/admin/event/toggle", (req, res) => {
   const { name, active } = req.body;
 
-  if (events[name]) events[name].active = active;
+  if (events[name]) {
+    events[name].active = active;
+  }
 
   res.json({ success: true });
 });
 
-// CONFIG
+// =========================
+// CONFIG EVENTO
+// =========================
 app.get("/event/:name", (req, res) => {
 
   const event = events[req.params.name];
@@ -148,10 +166,13 @@ app.get("/photos/:event", (req, res) => {
   res.json(data);
 });
 
-// BORRAR
+// =========================
+// BORRAR FOTO
+// =========================
 app.delete("/photo", (req, res) => {
 
   const { url } = req.body;
+
   photos = photos.filter(p => p.url !== url);
 
   res.json({ success: true });
