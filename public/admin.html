@@ -38,8 +38,9 @@ button{
 <h2>Crear Evento</h2>
 
 <input id="name" placeholder="Nombre evento"><br>
-<input id="bg" placeholder="URL fondo DJ"><br>
-<input id="frame" placeholder="URL frame impresión"><br>
+
+<input type="file" id="bgFile" accept="image/*"><br>
+<input type="file" id="frameFile" accept="image/*"><br>
 
 <label>
 <input type="checkbox" id="active"> Evento activo
@@ -55,14 +56,18 @@ button{
 async function save(){
 
   const name = document.getElementById("name").value;
-  const bg = document.getElementById("bg").value;
-  const frame = document.getElementById("frame").value;
   const active = document.getElementById("active").checked;
+
+  const fd = new FormData();
+  fd.append("name", name);
+  fd.append("active", active);
+
+  if (bgFile.files[0]) fd.append("bg", bgFile.files[0]);
+  if (frameFile.files[0]) fd.append("frame", frameFile.files[0]);
 
   await fetch("/admin/event",{
     method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({ name, bg, frame, active })
+    body: fd
   });
 
   load();

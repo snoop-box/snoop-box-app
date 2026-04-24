@@ -9,7 +9,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
 
-const upload = multer({ dest: "uploads/" });
+// 🔥 MULTER EN MEMORIA (CLAVE PARA RAILWAY)
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 // CLOUDINARY
 cloudinary.config({
@@ -18,35 +20,69 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// MEMORIA
+// BASES
 let events = {};
 let photos = [];
 let ranking = {};
 
 // =========================
-// ADMIN SIMPLE (SIN UPLOAD)
+// ADMIN CREAR EVENTO (CON IMÁGENES)
 // =========================
-app.post("/admin/event", (req, res) => {
+app.post("/admin/event", upload.fields([
+  { name: "bg", maxCount: 1 },
+  { name: "frame", maxCount: 1 }
+]), async (req, res) => {
 
-  const { name, bg, frame, active } = req.body;
+  const name = req.body.name;
+  const active = req.body.active === "true";
 
-  events[name] = {
-    bg,
-    frame,
-    active
-  };
+  let bg = "";
+  let frame = "";
 
-  console.log("Evento guardado:", name);
+  try {
 
-  res.json({ success: true });
+    if (req.files.bg) {
+      const result = await cloudinary.uploader.upload(
+        `data:${req.files.bg[0].mimetype};base64,${req.files.bg[0].buffer.toString("base64")}`,
+        { folder: `snoopbox/${name}/bg` }
+      );
+      bg = result.secure_url;
+    }
+
+    if (req.files.frame) {
+      const result = await cloudinary.uploader.upload(
+        `data:${req.files.frame[0].mimetype};base64,${req.files.frame[0].buffer.toString("base64")}`,
+        { folder: `snoopbox/${name}/frame` }
+      );
+      frame = result.secure_url;
+    }
+
+    events[name] = {
+      bg,
+      frame,
+      active
+    };
+
+    console.log("Evento creado:", name);
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.log(err);
+    res.json({ success: false });
+  }
 });
 
+// =========================
 // LISTAR EVENTOS
+// =========================
 app.get("/admin/events", (req, res) => {
   res.json(events);
 });
 
-// ACTIVAR / DESACTIVAR
+// =========================
+// TOGGLE EVENTO
+// =========================
 app.post("/admin/event/toggle", (req, res) => {
   const { name, active } = req.body;
 
@@ -57,14 +93,16 @@ app.post("/admin/event/toggle", (req, res) => {
   res.json({ success: true });
 });
 
+// =========================
 // CONFIG EVENTO
+// =========================
 app.get("/event/:name", (req, res) => {
   const event = events[req.params.name] || {};
   res.json(event);
 });
 
 // =========================
-// SUBIR FOTO
+// SUBIR FOTO (INVITADOS)
 // =========================
 app.post("/upload", upload.single("photo"), async (req, res) => {
 
@@ -75,9 +113,11 @@ app.post("/upload", upload.single("photo"), async (req, res) => {
   }
 
   try {
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: `snoopbox/${event}/photos`
-    });
+
+    const result = await cloudinary.uploader.upload(
+      `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
+      { folder: `snoopbox/${event}/photos` }
+    );
 
     const photo = {
       url: result.secure_url,
@@ -109,7 +149,9 @@ app.get("/photos/:event", (req, res) => {
   res.json(data);
 });
 
+// =========================
 // BORRAR FOTO
+// =========================
 app.delete("/photo", (req, res) => {
   const { url } = req.body;
 
