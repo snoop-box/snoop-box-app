@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Admin Snoop Box</title>
+<style>
+body {
+  font-family: Arial;
+  background:#111;
+  color:white;
+  text-align:center;
+  padding:40px;
+}
+
+input, button {
+  padding:12px;
+  margin:10px;
+  width:300px;
+  border-radius:8px;
+  border:none;
+}
+
+button {
+  background:#ff0055;
+  color:white;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Admin Evento</h2>
+
+<input id="name" placeholder="Nombre evento"><br>
+<input id="bg" placeholder="URL fondo DJ"><br>
+<input id="frame" placeholder="URL frame impresión"><br>
+
+<label>
+  <input type="checkbox" id="active"> Evento activo
+</label><br>
+
+<button onclick="save()">Guardar</button>
+
+<script>
+async function save() {
+
+  const data = {
+    name: document.getElementById("name").value,
+    bg: document.getElementById("bg").value,
+    frame: document.getElementById("frame").value,
+    active: document.getElementById("active").checked
+  };
+
+  await fetch("/admin/event", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify(data)
+  });
+
+  alert("Guardado");
+}
+</script>
+
+</body>
+</html>

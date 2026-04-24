@@ -53,7 +53,7 @@ button {
 /* APP */
 #app { display:none; }
 
-/* SLIDES */
+/* VISOR */
 #viewer {
   position:absolute;
   width:100%;
@@ -61,11 +61,14 @@ button {
   display:flex;
   justify-content:center;
   align-items:center;
-  overflow:hidden;
+}
+
+/* SLIDE */
+.slideBox {
+  position:relative;
 }
 
 .slide {
-  position:absolute;
   max-width:75%;
   max-height:75%;
   object-fit:contain;
@@ -79,6 +82,21 @@ button {
   transform:translateX(0) scale(1);
 }
 
+/* BOTON BORRAR */
+.deleteBtn {
+  position:absolute;
+  top:10px;
+  right:10px;
+  background:red;
+  color:white;
+  border:none;
+  border-radius:50%;
+  width:30px;
+  height:30px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
 /* NOMBRE */
 #name {
   position:absolute;
@@ -89,7 +107,7 @@ button {
   font-weight:bold;
 }
 
-/* QR GRANDE */
+/* QR */
 #qrBox {
   position:absolute;
   bottom:20px;
@@ -102,15 +120,14 @@ button {
 }
 
 #qrBox img {
-  width:160px;
+  width:180px;
 }
 
 #qrText {
   font-size:16px;
-  margin-top:5px;
 }
 
-/* RANKING PRO */
+/* RANKING */
 #rankingBox {
   position:absolute;
   top:20px;
@@ -160,7 +177,6 @@ button {
 <div id="login">
   <h2>Ingresar evento</h2>
   <input id="eventInput" placeholder="Ej: olivia2">
-  <input id="bgInput" placeholder="URL imagen fondo (opcional)">
   <button onclick="start()">Entrar</button>
 </div>
 
@@ -189,17 +205,20 @@ let index = 0;
 let lastCount = 0;
 
 // START
-function start() {
-  eventId = document.getElementById("eventInput").value.trim();
-  const bgUrl = document.getElementById("bgInput").value.trim();
+async function start() {
 
+  eventId = document.getElementById("eventInput").value.trim();
   if (!eventId) return alert("Ingresá un evento");
 
   document.getElementById("login").style.display = "none";
   document.getElementById("app").style.display = "block";
 
-  if (bgUrl) {
-    document.getElementById("bg").style.backgroundImage = `url(${bgUrl})`;
+  // CONFIG EVENTO
+  const res = await fetch("/event/" + eventId);
+  const config = await res.json();
+
+  if (config.bg) {
+    document.getElementById("bg").style.backgroundImage = `url(${config.bg})`;
   }
 
   // QR
@@ -215,17 +234,15 @@ function start() {
   setInterval(nextSlide,3000);
 }
 
-// LOAD PHOTOS
+// LOAD
 async function load() {
   const res = await fetch("/photos/" + eventId);
-  const newPhotos = await res.json();
+  const data = await res.json();
 
-  if (newPhotos.length > lastCount) {
-    showNew();
-  }
+  if (data.length > lastCount) showNew();
 
-  lastCount = newPhotos.length;
-  photos = newPhotos;
+  lastCount = data.length;
+  photos = data;
 }
 
 // SLIDE
@@ -239,11 +256,31 @@ function nextSlide() {
 
   const p = photos[index];
 
+  const box = document.createElement("div");
+  box.className = "slideBox";
+
   const img = document.createElement("img");
   img.src = p.url;
   img.className = "slide";
 
-  viewer.appendChild(img);
+  const del = document.createElement("button");
+  del.innerText = "X";
+  del.className = "deleteBtn";
+
+  del.onclick = async () => {
+    await fetch("/photo", {
+      method:"DELETE",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ url: p.url })
+    });
+
+    load();
+  };
+
+  box.appendChild(img);
+  box.appendChild(del);
+
+  viewer.appendChild(box);
 
   setTimeout(()=> img.classList.add("active"), 50);
 
