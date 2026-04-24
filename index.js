@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
 
-// 🔥 MULTER EN MEMORIA (CLAVE PARA RAILWAY)
+// MULTER EN MEMORIA
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
@@ -20,13 +20,13 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// BASES
+// MEMORIA
 let events = {};
 let photos = [];
 let ranking = {};
 
 // =========================
-// ADMIN CREAR EVENTO (CON IMÁGENES)
+// ADMIN EVENTO
 // =========================
 app.post("/admin/event", upload.fields([
   { name: "bg", maxCount: 1 },
@@ -57,13 +57,7 @@ app.post("/admin/event", upload.fields([
       frame = result.secure_url;
     }
 
-    events[name] = {
-      bg,
-      frame,
-      active
-    };
-
-    console.log("Evento creado:", name);
+    events[name] = { bg, frame, active };
 
     res.json({ success: true });
 
@@ -73,43 +67,41 @@ app.post("/admin/event", upload.fields([
   }
 });
 
-// =========================
 // LISTAR EVENTOS
-// =========================
 app.get("/admin/events", (req, res) => {
   res.json(events);
 });
 
-// =========================
-// TOGGLE EVENTO
-// =========================
+// TOGGLE
 app.post("/admin/event/toggle", (req, res) => {
   const { name, active } = req.body;
 
-  if (events[name]) {
-    events[name].active = active;
-  }
+  if (events[name]) events[name].active = active;
 
   res.json({ success: true });
 });
 
-// =========================
-// CONFIG EVENTO
-// =========================
+// CONFIG
 app.get("/event/:name", (req, res) => {
-  const event = events[req.params.name] || {};
+
+  const event = events[req.params.name];
+
+  if (!event || !event.active) {
+    return res.json({ active: false });
+  }
+
   res.json(event);
 });
 
 // =========================
-// SUBIR FOTO (INVITADOS)
+// SUBIR FOTO
 // =========================
 app.post("/upload", upload.single("photo"), async (req, res) => {
 
   const { name, table, event } = req.body;
 
   if (!events[event] || !events[event].active) {
-    return res.json({ success: false, message: "Evento cerrado" });
+    return res.json({ success: false });
   }
 
   try {
@@ -145,16 +137,21 @@ app.post("/upload", upload.single("photo"), async (req, res) => {
 // FOTOS
 // =========================
 app.get("/photos/:event", (req, res) => {
+
+  const event = events[req.params.event];
+
+  if (!event || !event.active) {
+    return res.json([]);
+  }
+
   const data = photos.filter(p => p.event === req.params.event);
   res.json(data);
 });
 
-// =========================
-// BORRAR FOTO
-// =========================
+// BORRAR
 app.delete("/photo", (req, res) => {
-  const { url } = req.body;
 
+  const { url } = req.body;
   photos = photos.filter(p => p.url !== url);
 
   res.json({ success: true });
@@ -179,6 +176,12 @@ app.post("/trivia", (req, res) => {
 // RANKING
 // =========================
 app.get("/ranking/:event", (req, res) => {
+
+  const event = events[req.params.event];
+
+  if (!event || !event.active) {
+    return res.json([]);
+  }
 
   const r = ranking[req.params.event] || {};
 

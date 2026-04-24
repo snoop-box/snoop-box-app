@@ -2,110 +2,74 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Admin Snoop Box</title>
+<title>Admin</title>
 
 <style>
-body{
-  font-family:Arial;
-  background:#111;
-  color:white;
-  text-align:center;
-}
-
-input,button{
-  padding:12px;
-  margin:6px;
-  border-radius:8px;
-  border:none;
-}
-
-button{
-  background:#ff0055;
-  color:white;
-}
-
-.event{
-  background:#222;
-  margin:10px;
-  padding:12px;
-  border-radius:10px;
-}
+body{font-family:Arial;background:#111;color:white;text-align:center;}
+input,button{padding:10px;margin:5px;}
+.event{background:#222;margin:10px;padding:10px;border-radius:10px;}
 </style>
-
 </head>
+
 <body>
 
 <h2>Crear Evento</h2>
 
-<input id="name" placeholder="Nombre evento"><br>
-
-<input type="file" id="bgFile" accept="image/*"><br>
-<input type="file" id="frameFile" accept="image/*"><br>
+<input id="name" placeholder="Evento"><br>
+<input type="file" id="bgFile"><br>
+<input type="file" id="frameFile"><br>
 
 <label>
-<input type="checkbox" id="active"> Evento activo
+<input type="checkbox" id="active"> Activo
 </label><br>
 
 <button onclick="save()">Guardar</button>
 
-<h2>Eventos creados</h2>
+<h2>Eventos</h2>
 <div id="list"></div>
 
 <script>
 
 async function save(){
+  const fd=new FormData();
+  fd.append("name",name.value);
+  fd.append("active",active.checked);
 
-  const name = document.getElementById("name").value;
-  const active = document.getElementById("active").checked;
+  if(bgFile.files[0]) fd.append("bg",bgFile.files[0]);
+  if(frameFile.files[0]) fd.append("frame",frameFile.files[0]);
 
-  const fd = new FormData();
-  fd.append("name", name);
-  fd.append("active", active);
-
-  if (bgFile.files[0]) fd.append("bg", bgFile.files[0]);
-  if (frameFile.files[0]) fd.append("frame", frameFile.files[0]);
-
-  await fetch("/admin/event",{
-    method:"POST",
-    body: fd
-  });
-
+  await fetch("/admin/event",{method:"POST",body:fd});
   load();
 }
 
 async function load(){
+  const res=await fetch("/admin/events");
+  const data=await res.json();
 
-  const res = await fetch("/admin/events");
-  const data = await res.json();
+  list.innerHTML="";
 
-  list.innerHTML = "";
+  Object.keys(data).forEach(n=>{
+    const e=data[n];
 
-  Object.keys(data).forEach(name=>{
-
-    const e = data[name];
-
-    list.innerHTML += `
-      <div class="event">
-        <strong>${name}</strong><br>
-        Activo:
-        <input type="checkbox" ${e.active ? "checked" : ""}
-        onchange="toggle('${name}', this.checked)">
-      </div>
-    `;
+    list.innerHTML+=`
+    <div class="event">
+      ${n}
+      <input type="checkbox" ${e.active?"checked":""}
+      onchange="toggle('${n}',this.checked)">
+    </div>`;
   });
 }
 
-async function toggle(name, active){
+async function toggle(name,active){
   await fetch("/admin/event/toggle",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({ name, active })
+    body:JSON.stringify({name,active})
   });
 }
 
 load();
 
 </script>
-
 </body>
 </html>
