@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <title>Tótem Snoop Box</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body {
@@ -23,9 +22,8 @@ body {
 
 .card {
   position: relative;
-  overflow: hidden;
   border-radius: 12px;
-  cursor: pointer;
+  overflow: hidden;
 }
 
 .card img {
@@ -34,66 +32,94 @@ body {
   object-fit: cover;
 }
 
+/* BORRAR */
+.deleteBtn {
+  position:absolute;
+  top:8px;
+  right:8px;
+  background:red;
+  border:none;
+  color:white;
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  cursor:pointer;
+}
+
+/* NOMBRE */
 .name {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  padding: 8px;
-  background: rgba(0,0,0,0.6);
+  position:absolute;
+  bottom:0;
+  width:100%;
+  background:rgba(0,0,0,0.6);
+  padding:6px;
 }
 
 /* MODAL */
 #modal {
   position: fixed;
-  top:0;
-  left:0;
   width:100%;
   height:100%;
-  background: rgba(0,0,0,0.85);
+  top:0;
+  left:0;
   display:none;
   justify-content:center;
   align-items:center;
+  background:rgba(0,0,0,0.85);
 }
 
-.modal-box {
-  background: white;
-  padding: 20px;
-  border-radius: 16px;
-}
-
-/* FRAME */
 .frame {
-  position: relative;
-  width: 300px;
-  height: 450px;
-  background: black;
+  position:relative;
+  width:300px;
+  height:450px;
 }
 
-.frame img.photo {
+.frame img {
   position:absolute;
   width:100%;
   height:100%;
   object-fit:cover;
 }
 
-.frame img.overlay {
-  position:absolute;
-  width:100%;
-  height:100%;
+/* QR */
+#qrBox {
+  position:fixed;
+  bottom:15px;
+  left:15px;
+  background:white;
+  padding:10px;
+  border-radius:12px;
+  color:black;
+  text-align:center;
 }
 
-/* BOTONES */
+#qrBox img {
+  width:120px;
+}
+
+/* RANKING PRO */
+#rankingBox {
+  position:fixed;
+  top:15px;
+  right:15px;
+  background:rgba(0,0,0,0.8);
+  padding:15px;
+  border-radius:12px;
+  font-size:18px;
+  border:2px solid gold;
+  animation:pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow:0 0 8px gold; }
+  50% { box-shadow:0 0 20px gold; }
+  100% { box-shadow:0 0 8px gold; }
+}
+
 button {
-  padding:14px;
+  padding:10px;
   margin:10px;
-  border:none;
-  border-radius:10px;
-  font-size:16px;
 }
-
-.ok { background:green; color:white; }
-.no { background:red; color:white; }
-
 </style>
 </head>
 
@@ -101,19 +127,23 @@ button {
 
 <div id="grid"></div>
 
+<div id="rankingBox"></div>
+
+<div id="qrBox">
+  <img id="qrImg">
+  <div>Subí tus fotos 📸</div>
+</div>
+
 <div id="modal">
-  <div class="modal-box">
-
+  <div>
     <div class="frame">
-      <img id="modalPhoto" class="photo">
-      <img id="frameOverlay" class="overlay">
+      <img id="modalPhoto">
+      <img id="frameOverlay">
     </div>
-
-    <div>
-      <button class="ok" onclick="printPhoto()">Imprimir</button>
-      <button class="no" onclick="closeModal()">Cancelar</button>
+    <div style="text-align:center">
+      <button onclick="printPhoto()">Imprimir</button>
+      <button onclick="closeModal()">Cerrar</button>
     </div>
-
   </div>
 </div>
 
@@ -121,58 +151,75 @@ button {
 
 const eventId = new URLSearchParams(location.search).get("event") || "default";
 
-let selectedPhoto = null;
+let photosData = [];
+let selectedPhoto = "";
 let frameUrl = "";
 
-// 🔥 CARGAR CONFIG EVENTO
+// CONFIG
 async function loadConfig(){
-  const res = await fetch("/event/" + eventId);
+  const res = await fetch("/event/"+eventId);
   const config = await res.json();
 
   if(config.frame){
     frameUrl = config.frame;
-    document.getElementById("frameOverlay").src = frameUrl;
+    frameOverlay.src = frameUrl;
   }
+
+  const link = location.origin + "/?event=" + eventId;
+  qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(link);
 }
 
 // FOTOS
-async function loadPhotos() {
-  const res = await fetch("/photos/" + eventId);
+async function loadPhotos(){
+  const res = await fetch("/photos/"+eventId);
   const data = await res.json();
 
-  const grid = document.getElementById("grid");
+  photosData = data.reverse();
+
   grid.innerHTML = "";
 
-  data.reverse().forEach(p => {
+  photosData.forEach(p => {
 
     const div = document.createElement("div");
-    div.className = "card";
+    div.className="card";
 
     div.innerHTML = `
       <img src="${p.url}">
       <div class="name">${p.name}</div>
+      <button class="deleteBtn">X</button>
     `;
 
     div.onclick = () => openModal(p.url);
+
+    div.querySelector(".deleteBtn").onclick = async(e)=>{
+      e.stopPropagation();
+
+      await fetch("/photo",{
+        method:"DELETE",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({url:p.url})
+      });
+
+      loadPhotos();
+    };
 
     grid.appendChild(div);
   });
 }
 
 // MODAL
-function openModal(url) {
+function openModal(url){
   selectedPhoto = url;
-  modal.style.display = "flex";
+  modal.style.display="flex";
   modalPhoto.src = url;
 }
 
-function closeModal() {
-  modal.style.display = "none";
+function closeModal(){
+  modal.style.display="none";
 }
 
-// 🔥 IMPRESIÓN CON FRAME DINÁMICO
+// PRINT
 function printPhoto(){
-
   const win = window.open("", "_blank");
 
   win.document.write(`
@@ -192,14 +239,31 @@ function printPhoto(){
     win.print();
     win.close();
   },500);
+}
 
-  closeModal();
+// RANKING
+async function loadRanking(){
+  const res = await fetch("/ranking/"+eventId);
+  const data = await res.json();
+
+  let html = "<strong>🏆 Ranking</strong><br>";
+
+  data.slice(0,3).forEach((r,i)=>{
+    html += `${i+1}. Mesa ${r.table} (${r.points})<br>`;
+  });
+
+  rankingBox.innerHTML = html;
 }
 
 // INIT
 loadConfig();
 loadPhotos();
-setInterval(loadPhotos,4000);
+loadRanking();
+
+setInterval(()=>{
+  loadPhotos();
+  loadRanking();
+},4000);
 
 </script>
 
