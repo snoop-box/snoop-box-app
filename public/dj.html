@@ -13,7 +13,6 @@ body {
   color: white;
 }
 
-/* FONDO */
 #bg {
   position: fixed;
   width: 100%;
@@ -27,33 +26,33 @@ body {
 
 /* LOGIN */
 #login {
-  position: absolute;
-  width: 100%;
-  height: 100%;
+  position:absolute;
+  width:100%;
+  height:100%;
   display:flex;
   justify-content:center;
   align-items:center;
   flex-direction:column;
-  background: black;
+  background:black;
 }
 
 input, button {
-  padding: 15px;
-  font-size: 18px;
-  border-radius: 10px;
-  border: none;
-  margin: 10px;
+  padding:15px;
+  font-size:18px;
+  border-radius:10px;
+  border:none;
+  margin:10px;
 }
 
 button {
-  background: #ff0055;
-  color: white;
+  background:#ff0055;
+  color:white;
 }
 
 /* APP */
 #app { display:none; }
 
-/* VISOR */
+/* VIEWER */
 #viewer {
   position:absolute;
   width:100%;
@@ -61,19 +60,25 @@ button {
   display:flex;
   justify-content:center;
   align-items:center;
+  overflow:hidden;
 }
 
-/* SLIDE */
 .slideBox {
   position:relative;
 }
 
+/* 🔥 CORRECCIÓN CLAVE */
 .slide {
-  max-width:75%;
-  max-height:75%;
+  width:auto;
+  height:auto;
+  max-width:80vw;
+  max-height:70vh;
   object-fit:contain;
+  display:block;
+  margin:auto;
+
   opacity:0;
-  transform:translateX(200px) scale(0.8);
+  transform:translateX(200px) scale(0.9);
   transition: all 0.8s ease;
 }
 
@@ -82,7 +87,7 @@ button {
   transform:translateX(0) scale(1);
 }
 
-/* BOTON BORRAR */
+/* BORRAR */
 .deleteBtn {
   position:absolute;
   top:10px;
@@ -91,16 +96,15 @@ button {
   color:white;
   border:none;
   border-radius:50%;
-  width:30px;
-  height:30px;
-  font-weight:bold;
+  width:32px;
+  height:32px;
   cursor:pointer;
 }
 
 /* NOMBRE */
 #name {
   position:absolute;
-  bottom:140px;
+  bottom:120px;
   width:100%;
   text-align:center;
   font-size:36px;
@@ -123,10 +127,6 @@ button {
   width:180px;
 }
 
-#qrText {
-  font-size:16px;
-}
-
 /* RANKING */
 #rankingBox {
   position:absolute;
@@ -136,8 +136,8 @@ button {
   padding:20px;
   border-radius:16px;
   font-size:26px;
-  border: 3px solid gold;
-  animation: pulse 2s infinite;
+  border:3px solid gold;
+  animation:pulse 2s infinite;
 }
 
 @keyframes pulse {
@@ -157,9 +157,8 @@ button {
   padding:20px 40px;
   font-size:40px;
   border-radius:20px;
-  font-weight:bold;
   opacity:0;
-  transition: all 0.5s ease;
+  transition:0.5s;
 }
 
 #newBadge.show {
@@ -173,24 +172,21 @@ button {
 
 <div id="bg"></div>
 
-<!-- LOGIN -->
 <div id="login">
-  <h2>Ingresar evento</h2>
-  <input id="eventInput" placeholder="Ej: olivia2">
+  <h2>Evento</h2>
+  <input id="eventInput">
   <button onclick="start()">Entrar</button>
 </div>
 
-<!-- APP -->
 <div id="app">
 
   <div id="viewer"></div>
   <div id="name"></div>
-
   <div id="rankingBox"></div>
 
   <div id="qrBox">
     <img id="qrImg">
-    <div id="qrText">Escaneá y subí tus fotos 📸</div>
+    <div>Escaneá y subí tus fotos 📸</div>
   </div>
 
   <div id="newBadge">📸 Nueva foto</div>
@@ -199,118 +195,101 @@ button {
 
 <script>
 
-let eventId = "";
-let photos = [];
-let index = 0;
-let lastCount = 0;
+let eventId="";
+let photos=[];
+let index=0;
+let lastCount=0;
 
-// START
-async function start() {
+async function start(){
 
-  eventId = document.getElementById("eventInput").value.trim();
-  if (!eventId) return alert("Ingresá un evento");
+  eventId=document.getElementById("eventInput").value.trim();
+  if(!eventId) return;
 
-  document.getElementById("login").style.display = "none";
-  document.getElementById("app").style.display = "block";
+  login.style.display="none";
+  app.style.display="block";
 
-  // CONFIG EVENTO
-  const res = await fetch("/event/" + eventId);
-  const config = await res.json();
+  const res=await fetch("/event/"+eventId);
+  const config=await res.json();
 
-  if (config.bg) {
-    document.getElementById("bg").style.backgroundImage = `url(${config.bg})`;
+  if(config.bg){
+    document.getElementById("bg").style.backgroundImage=`url(${config.bg})`;
   }
 
-  // QR
-  const link = location.origin + "/?event=" + eventId;
-  document.getElementById("qrImg").src =
-    "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(link);
+  const link=location.origin+"/?event="+eventId;
+  qrImg.src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data="+encodeURIComponent(link);
 
   load();
   loadRanking();
 
   setInterval(load,4000);
   setInterval(loadRanking,4000);
-  setInterval(nextSlide,3000);
+  setInterval(next,3000);
 }
 
-// LOAD
-async function load() {
-  const res = await fetch("/photos/" + eventId);
-  const data = await res.json();
+async function load(){
+  const res=await fetch("/photos/"+eventId);
+  const data=await res.json();
 
-  if (data.length > lastCount) showNew();
+  if(data.length>lastCount) showNew();
 
-  lastCount = data.length;
-  photos = data;
+  lastCount=data.length;
+  photos=data;
 }
 
-// SLIDE
-function nextSlide() {
-  if (photos.length === 0) return;
+function next(){
+  if(photos.length===0) return;
 
-  const viewer = document.getElementById("viewer");
-  const name = document.getElementById("name");
+  viewer.innerHTML="";
 
-  viewer.innerHTML = "";
+  const p=photos[index];
 
-  const p = photos[index];
+  const box=document.createElement("div");
+  box.className="slideBox";
 
-  const box = document.createElement("div");
-  box.className = "slideBox";
+  const img=document.createElement("img");
+  img.src=p.url;
+  img.className="slide";
 
-  const img = document.createElement("img");
-  img.src = p.url;
-  img.className = "slide";
+  const del=document.createElement("button");
+  del.innerText="X";
+  del.className="deleteBtn";
 
-  const del = document.createElement("button");
-  del.innerText = "X";
-  del.className = "deleteBtn";
-
-  del.onclick = async () => {
-    await fetch("/photo", {
+  del.onclick=async()=>{
+    await fetch("/photo",{
       method:"DELETE",
       headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ url: p.url })
+      body:JSON.stringify({url:p.url})
     });
-
     load();
   };
 
   box.appendChild(img);
   box.appendChild(del);
-
   viewer.appendChild(box);
 
-  setTimeout(()=> img.classList.add("active"), 50);
+  setTimeout(()=>img.classList.add("active"),50);
 
-  name.innerText = p.name;
+  name.innerText=p.name;
 
   index++;
-  if (index >= photos.length) index = 0;
+  if(index>=photos.length) index=0;
 }
 
-// RANKING
-async function loadRanking() {
-  const res = await fetch("/ranking/" + eventId);
-  const data = await res.json();
+async function loadRanking(){
+  const res=await fetch("/ranking/"+eventId);
+  const data=await res.json();
 
-  let html = "🏆 Ranking<br>";
+  let html="🏆 Ranking<br>";
   data.slice(0,3).forEach((r,i)=>{
-    html += `${i+1}. Mesa ${r.table} (${r.points})<br>`;
+    html+=`${i+1}. Mesa ${r.table} (${r.points})<br>`;
   });
 
-  document.getElementById("rankingBox").innerHTML = html;
+  rankingBox.innerHTML=html;
 }
 
-// NUEVA FOTO
-function showNew() {
-  const badge = document.getElementById("newBadge");
-  badge.classList.add("show");
-
-  setTimeout(()=>{
-    badge.classList.remove("show");
-  },2000);
+function showNew(){
+  newBadge.classList.add("show");
+  setTimeout(()=>newBadge.classList.remove("show"),2000);
 }
 
 </script>
