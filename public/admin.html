@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Admin</title>
+<title>Admin Snoop Box</title>
 
 <style>
 body{
@@ -13,14 +13,21 @@ body{
 }
 
 input,button{
-  padding:10px;
-  margin:5px;
+  padding:12px;
+  margin:6px;
+  border-radius:8px;
+  border:none;
+}
+
+button{
+  background:#ff0055;
+  color:white;
 }
 
 .event{
   background:#222;
   margin:10px;
-  padding:10px;
+  padding:12px;
   border-radius:10px;
 }
 </style>
@@ -30,37 +37,32 @@ input,button{
 
 <h2>Crear Evento</h2>
 
-<input id="name" placeholder="Evento"><br>
-
-<input type="file" id="bgFile"><br>
-<input type="file" id="frameFile"><br>
+<input id="name" placeholder="Nombre evento"><br>
+<input id="bg" placeholder="URL fondo DJ"><br>
+<input id="frame" placeholder="URL frame impresión"><br>
 
 <label>
-<input type="checkbox" id="active"> Activo
+<input type="checkbox" id="active"> Evento activo
 </label><br>
 
 <button onclick="save()">Guardar</button>
 
-<h2>Eventos</h2>
+<h2>Eventos creados</h2>
 <div id="list"></div>
 
 <script>
 
 async function save(){
 
-  const name=document.getElementById("name").value;
-  const active=document.getElementById("active").checked;
-
-  const fd=new FormData();
-  fd.append("name",name);
-  fd.append("active",active);
-
-  if(bgFile.files[0]) fd.append("bg",bgFile.files[0]);
-  if(frameFile.files[0]) fd.append("frame",frameFile.files[0]);
+  const name = document.getElementById("name").value;
+  const bg = document.getElementById("bg").value;
+  const frame = document.getElementById("frame").value;
+  const active = document.getElementById("active").checked;
 
   await fetch("/admin/event",{
     method:"POST",
-    body:fd
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ name, bg, frame, active })
   });
 
   load();
@@ -68,29 +70,31 @@ async function save(){
 
 async function load(){
 
-  const res=await fetch("/admin/events");
-  const data=await res.json();
+  const res = await fetch("/admin/events");
+  const data = await res.json();
 
-  list.innerHTML="";
+  list.innerHTML = "";
 
   Object.keys(data).forEach(name=>{
 
-    const e=data[name];
+    const e = data[name];
 
-    list.innerHTML+=`
-    <div class="event">
-      ${name}
-      <input type="checkbox" ${e.active?"checked":""}
-      onchange="toggle('${name}',this.checked)">
-    </div>`;
+    list.innerHTML += `
+      <div class="event">
+        <strong>${name}</strong><br>
+        Activo:
+        <input type="checkbox" ${e.active ? "checked" : ""}
+        onchange="toggle('${name}', this.checked)">
+      </div>
+    `;
   });
 }
 
-async function toggle(name,active){
+async function toggle(name, active){
   await fetch("/admin/event/toggle",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({name,active})
+    body: JSON.stringify({ name, active })
   });
 }
 
