@@ -13,6 +13,7 @@ body {
   color: white;
 }
 
+/* FONDO */
 #bg {
   position: fixed;
   width: 100%;
@@ -52,7 +53,7 @@ button {
 /* APP */
 #app { display:none; }
 
-/* VIEWER */
+/* VISOR */
 #viewer {
   position:absolute;
   width:100%;
@@ -63,11 +64,11 @@ button {
   overflow:hidden;
 }
 
+/* SLIDE */
 .slideBox {
   position:relative;
 }
 
-/* 🔥 CORRECCIÓN CLAVE */
 .slide {
   width:auto;
   height:auto;
@@ -101,7 +102,7 @@ button {
   cursor:pointer;
 }
 
-/* NOMBRE */
+/* NOMBRE ANIMADO */
 #name {
   position:absolute;
   bottom:120px;
@@ -109,6 +110,15 @@ button {
   text-align:center;
   font-size:36px;
   font-weight:bold;
+
+  opacity:0;
+  transform:translateY(30px);
+  transition: all 0.6s ease;
+}
+
+#name.show {
+  opacity:1;
+  transform:translateY(0);
 }
 
 /* QR */
@@ -172,12 +182,14 @@ button {
 
 <div id="bg"></div>
 
+<!-- LOGIN -->
 <div id="login">
   <h2>Evento</h2>
-  <input id="eventInput">
+  <input id="eventInput" placeholder="ej: olivia2">
   <button onclick="start()">Entrar</button>
 </div>
 
+<!-- APP -->
 <div id="app">
 
   <div id="viewer"></div>
@@ -200,14 +212,16 @@ let photos=[];
 let index=0;
 let lastCount=0;
 
+// START
 async function start(){
 
   eventId=document.getElementById("eventInput").value.trim();
-  if(!eventId) return;
+  if(!eventId) return alert("Ingresá evento");
 
-  login.style.display="none";
-  app.style.display="block";
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").style.display="block";
 
+  // CONFIG EVENTO
   const res=await fetch("/event/"+eventId);
   const config=await res.json();
 
@@ -215,17 +229,20 @@ async function start(){
     document.getElementById("bg").style.backgroundImage=`url(${config.bg})`;
   }
 
+  // QR
   const link=location.origin+"/?event="+eventId;
-  qrImg.src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data="+encodeURIComponent(link);
+  document.getElementById("qrImg").src=
+    "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data="+encodeURIComponent(link);
 
   load();
   loadRanking();
 
   setInterval(load,4000);
   setInterval(loadRanking,4000);
-  setInterval(next,3000);
+  setInterval(nextSlide,3000);
 }
 
+// LOAD
 async function load(){
   const res=await fetch("/photos/"+eventId);
   const data=await res.json();
@@ -236,8 +253,12 @@ async function load(){
   photos=data;
 }
 
-function next(){
+// SLIDE
+function nextSlide(){
   if(photos.length===0) return;
+
+  const viewer=document.getElementById("viewer");
+  const name=document.getElementById("name");
 
   viewer.innerHTML="";
 
@@ -267,14 +288,21 @@ function next(){
   box.appendChild(del);
   viewer.appendChild(box);
 
-  setTimeout(()=>img.classList.add("active"),50);
+  setTimeout(()=> img.classList.add("active"),50);
 
-  name.innerText=p.name;
+  // 🔥 NOMBRE ANIMADO
+  name.classList.remove("show");
+
+  setTimeout(()=>{
+    name.innerText=p.name;
+    name.classList.add("show");
+  },300);
 
   index++;
   if(index>=photos.length) index=0;
 }
 
+// RANKING
 async function loadRanking(){
   const res=await fetch("/ranking/"+eventId);
   const data=await res.json();
@@ -284,12 +312,17 @@ async function loadRanking(){
     html+=`${i+1}. Mesa ${r.table} (${r.points})<br>`;
   });
 
-  rankingBox.innerHTML=html;
+  document.getElementById("rankingBox").innerHTML=html;
 }
 
+// NUEVA FOTO
 function showNew(){
-  newBadge.classList.add("show");
-  setTimeout(()=>newBadge.classList.remove("show"),2000);
+  const badge=document.getElementById("newBadge");
+  badge.classList.add("show");
+
+  setTimeout(()=>{
+    badge.classList.remove("show");
+  },2000);
 }
 
 </script>

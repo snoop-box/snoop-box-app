@@ -21,29 +21,17 @@ body {
   padding: 12px;
 }
 
-/* CARD */
 .card {
   position: relative;
   overflow: hidden;
   border-radius: 12px;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .card img {
   width: 100%;
   height: 260px;
   object-fit: cover;
-  transition: transform 0.3s;
-}
-
-.card:hover {
-  transform: scale(1.03);
-  box-shadow: 0 0 20px rgba(255,255,255,0.15);
-}
-
-.card:hover img {
-  transform: scale(1.08);
 }
 
 .name {
@@ -51,7 +39,6 @@ body {
   bottom: 0;
   width: 100%;
   padding: 8px;
-  font-size: 16px;
   background: rgba(0,0,0,0.6);
 }
 
@@ -64,21 +51,14 @@ body {
   height:100%;
   background: rgba(0,0,0,0.85);
   display:none;
-  justify-content: center;
-  align-items: center;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-#modal.show {
-  opacity: 1;
+  justify-content:center;
+  align-items:center;
 }
 
 .modal-box {
   background: white;
   padding: 20px;
   border-radius: 16px;
-  text-align: center;
 }
 
 /* FRAME */
@@ -87,179 +67,84 @@ body {
   width: 300px;
   height: 450px;
   background: black;
-  overflow: hidden;
 }
 
 .frame img.photo {
-  position: absolute;
-  top:0;
-  left:0;
+  position:absolute;
   width:100%;
   height:100%;
-  object-fit: cover;
-  object-position: center;
-  transition: transform 0.4s ease;
-}
-
-.frame img.photo.show {
-  transform: scale(1.05);
+  object-fit:cover;
 }
 
 .frame img.overlay {
-  position: absolute;
-  top:0;
-  left:0;
+  position:absolute;
   width:100%;
   height:100%;
 }
 
 /* BOTONES */
-.buttons {
-  margin-top: 15px;
-}
-
 button {
-  padding: 14px 24px;
-  margin: 10px;
-  font-size: 18px;
-  border-radius: 10px;
-  border: none;
-  transition: transform 0.1s, box-shadow 0.1s;
+  padding:14px;
+  margin:10px;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
 }
 
-button:active {
-  transform: scale(0.95);
-  box-shadow: 0 0 10px rgba(255,255,255,0.3);
-}
+.ok { background:green; color:white; }
+.no { background:red; color:white; }
 
-.ok { background: green; color:white; }
-.no { background: red; color:white; }
-
-/* FLASH */
-#flash {
-  position: fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:white;
-  opacity:0;
-  pointer-events:none;
-  transition: opacity 0.2s;
-}
-
-/* RANKING */
-#rankingBox {
-  position: fixed;
-  top: 15px;
-  right: 15px;
-  background: rgba(0,0,0,0.75);
-  padding: 15px 20px;
-  border-radius: 12px;
-  font-size: 18px;
-  line-height: 1.6;
-}
-
-/* CARRUSEL */
-#idleCarousel {
-  position: fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:black;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  flex-direction: column;
-}
-
-.carousel-img {
-  max-width:90%;
-  max-height:80%;
-  object-fit: contain;
-  opacity: 0;
-  transition: opacity 0.8s ease-in-out, transform 1.2s;
-}
-
-.carousel-img.show {
-  opacity: 1;
-  transform: scale(1.05);
-}
-
-.carousel-name {
-  margin-top: 15px;
-  font-size: 22px;
-}
 </style>
 </head>
 
 <body>
 
 <div id="grid"></div>
-<div id="rankingBox"></div>
 
-<!-- MODAL -->
 <div id="modal">
   <div class="modal-box">
 
     <div class="frame">
       <img id="modalPhoto" class="photo">
-      <img src="frame.png" class="overlay">
+      <img id="frameOverlay" class="overlay">
     </div>
 
-    <div class="buttons">
-      <button class="ok" onclick="printPhoto()">✔ Imprimir</button>
-      <button class="no" onclick="closeModal()">❌ Seguir buscando</button>
+    <div>
+      <button class="ok" onclick="printPhoto()">Imprimir</button>
+      <button class="no" onclick="closeModal()">Cancelar</button>
     </div>
 
   </div>
 </div>
-
-<!-- CARRUSEL -->
-<div id="idleCarousel" onclick="closeCarousel()">
-  <img id="carouselImg" class="carousel-img">
-  <div id="carouselName" class="carousel-name"></div>
-</div>
-
-<div id="flash"></div>
 
 <script>
 
 const eventId = new URLSearchParams(location.search).get("event") || "default";
 
 let selectedPhoto = null;
-let photosData = [];
+let frameUrl = "";
 
-let idleTimer = null;
-let carouselIndex = 0;
-let carouselInterval = null;
-let isCarouselActive = false;
+// 🔥 CARGAR CONFIG EVENTO
+async function loadConfig(){
+  const res = await fetch("/event/" + eventId);
+  const config = await res.json();
 
-/* ACTIVIDAD */
-function resetIdleTimer() {
-  if (idleTimer) clearTimeout(idleTimer);
-  idleTimer = setTimeout(startCarousel, 10000);
+  if(config.frame){
+    frameUrl = config.frame;
+    document.getElementById("frameOverlay").src = frameUrl;
+  }
 }
 
-["click","touchstart","mousemove"].forEach(evt=>{
-  document.addEventListener(evt, ()=>{
-    closeCarousel();
-    resetIdleTimer();
-  });
-});
-
-/* FOTOS */
+// FOTOS
 async function loadPhotos() {
   const res = await fetch("/photos/" + eventId);
   const data = await res.json();
 
-  photosData = data.reverse();
-
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
 
-  photosData.forEach(p => {
+  data.reverse().forEach(p => {
+
     const div = document.createElement("div");
     div.className = "card";
 
@@ -274,173 +159,47 @@ async function loadPhotos() {
   });
 }
 
-/* MODAL PRO */
+// MODAL
 function openModal(url) {
   selectedPhoto = url;
   modal.style.display = "flex";
-
-  setTimeout(()=>{
-    modal.classList.add("show");
-    modalPhoto.src = url;
-    modalPhoto.classList.add("show");
-  },10);
+  modalPhoto.src = url;
 }
 
 function closeModal() {
-  modal.classList.remove("show");
-
-  setTimeout(()=>{
-    modal.style.display = "none";
-    modalPhoto.classList.remove("show");
-  },300);
+  modal.style.display = "none";
 }
 
-/* FLASH PRO */
-function flashEffect() {
-  const f = document.getElementById("flash");
+// 🔥 IMPRESIÓN CON FRAME DINÁMICO
+function printPhoto(){
 
-  f.style.opacity = 1;
+  const win = window.open("", "_blank");
 
-  setTimeout(()=>{
-    f.style.opacity = 0.6;
-  },80);
-
-  setTimeout(()=>{
-    f.style.opacity = 0;
-  },200);
-}
-
-/* IMPRESIÓN */
-function printPhoto() {
-  flashEffect();
-
-  const iframe = document.createElement("iframe");
-  iframe.style.position = "fixed";
-  iframe.style.right = "0";
-  iframe.style.bottom = "0";
-  iframe.style.width = "0";
-  iframe.style.height = "0";
-  iframe.style.border = "0";
-
-  document.body.appendChild(iframe);
-
-  const doc = iframe.contentWindow.document;
-
-  doc.open();
-  doc.write(`
+  win.document.write(`
     <html>
-    <head>
-      <style>
-        @page {
-          size: 4in 6in;
-          margin: 0;
-        }
-        body { margin: 0; }
-        .print-area {
-          position: relative;
-          width: 4in;
-          height: 6in;
-        }
-        .photo {
-          position:absolute;
-          top:0;
-          left:0;
-          width:100%;
-          height:100%;
-          object-fit: cover;
-        }
-        .frame {
-          position:absolute;
-          top:0;
-          left:0;
-          width:100%;
-          height:100%;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="print-area">
-        <img src="${selectedPhoto}" class="photo">
-        <img src="frame.png" class="frame">
+    <body style="margin:0; display:flex; justify-content:center; align-items:center; height:100vh;">
+      <div style="position:relative; width:600px; height:900px;">
+        <img src="${selectedPhoto}" style="position:absolute; width:100%; height:100%; object-fit:cover;">
+        <img src="${frameUrl}" style="position:absolute; width:100%; height:100%;">
       </div>
     </body>
     </html>
   `);
-  doc.close();
+
+  win.document.close();
 
   setTimeout(()=>{
-    iframe.contentWindow.print();
-    setTimeout(()=>document.body.removeChild(iframe),1000);
-  },300);
+    win.print();
+    win.close();
+  },500);
 
   closeModal();
 }
 
-/* RANKING */
-async function loadRanking() {
-  const res = await fetch("/ranking/" + eventId);
-  const data = await res.json();
-
-  let html = "<strong>🏆 Ranking</strong><br>";
-
-  data.slice(0,3).forEach((r,i)=>{
-    html += `${i+1}. Mesa ${r.table} (${r.points})<br>`;
-  });
-
-  rankingBox.innerHTML = html;
-}
-
-/* CARRUSEL */
-function startCarousel() {
-  if (photosData.length === 0) return;
-  if (isCarouselActive) return;
-
-  isCarouselActive = true;
-
-  const carousel = document.getElementById("idleCarousel");
-  carousel.style.display = "flex";
-
-  carouselIndex = 0;
-  showSlide();
-
-  carouselInterval = setInterval(()=>{
-    carouselIndex++;
-    if (carouselIndex >= photosData.length) carouselIndex = 0;
-    showSlide();
-  },2500);
-}
-
-function showSlide() {
-  const img = document.getElementById("carouselImg");
-  const name = document.getElementById("carouselName");
-
-  img.classList.remove("show");
-
-  setTimeout(()=>{
-    img.src = photosData[carouselIndex].url;
-    name.innerText = photosData[carouselIndex].name;
-    img.classList.add("show");
-  },200);
-}
-
-function closeCarousel() {
-  if (!isCarouselActive) return;
-
-  isCarouselActive = false;
-  document.getElementById("idleCarousel").style.display = "none";
-  clearInterval(carouselInterval);
-}
-
-/* REFRESH */
-setInterval(()=>{
-  loadPhotos();
-  loadRanking();
-},4000);
-
-/* INIT */
+// INIT
+loadConfig();
 loadPhotos();
-loadRanking();
-resetIdleTimer();
+setInterval(loadPhotos,4000);
 
 </script>
 
