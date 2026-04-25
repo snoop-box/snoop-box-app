@@ -44,7 +44,7 @@ body {
   border-radius:50%;
 }
 
-/* BOTÓN CÁMARA */
+/* BOTÓN */
 #cameraBtn {
   position: fixed;
   bottom: 20px;
@@ -56,26 +56,38 @@ body {
   cursor: pointer;
 }
 
-/* VIDEO PREVIEW */
-#video {
+/* POPUP CÁMARA */
+#cameraModal {
   position: fixed;
-  bottom: 100px;
-  right: 20px;
-  width: 220px;
-  border-radius: 10px;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
   display:none;
+  justify-content:center;
+  align-items:center;
+  background:rgba(0,0,0,0.9);
+  z-index:1000;
 }
 
-/* CUENTA REGRESIVA */
+#video {
+  width:60%;
+  max-width:700px;
+  border-radius:20px;
+  transform: scaleX(-1);
+}
+
+/* COUNTDOWN */
 #countdown {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%,-50%);
-  font-size: 120px;
-  font-weight: bold;
-  display: none;
-  z-index: 999;
+  position:absolute;
+  font-size:120px;
+  font-weight:bold;
+  animation: pop 0.5s ease;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.5); opacity:0; }
+  100% { transform: scale(1); opacity:1; }
 }
 
 /* FLASH */
@@ -88,30 +100,7 @@ body {
   background:white;
   opacity:0;
   pointer-events:none;
-}
-
-/* MODAL */
-#modal {
-  position: fixed;
-  width:100%;
-  height:100%;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  background:rgba(0,0,0,0.85);
-}
-
-.frame {
-  position:relative;
-  width:300px;
-  height:450px;
-}
-
-.frame img {
-  position:absolute;
-  width:100%;
-  height:100%;
-  object-fit:cover;
+  z-index:2000;
 }
 
 /* QR */
@@ -146,6 +135,30 @@ body {
   50% { box-shadow:0 0 20px gold; }
   100% { box-shadow:0 0 8px gold; }
 }
+
+/* MODAL IMPRESIÓN */
+#modal {
+  position: fixed;
+  width:100%;
+  height:100%;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  background:rgba(0,0,0,0.85);
+}
+
+.frame {
+  position:relative;
+  width:300px;
+  height:450px;
+}
+
+.frame img {
+  position:absolute;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
 </style>
 </head>
 
@@ -154,24 +167,23 @@ body {
 <div id="grid"></div>
 <div id="rankingBox"></div>
 
-<!-- QR -->
 <div id="qrBox">
   <img id="qrImg">
   <div>Subí tus fotos 📸</div>
 </div>
 
-<!-- BOTÓN -->
 <div id="cameraBtn">📸 Sacar foto</div>
 
-<!-- VIDEO -->
-<video id="video" autoplay playsinline></video>
-<canvas id="canvas" style="display:none;"></canvas>
+<!-- POPUP CÁMARA -->
+<div id="cameraModal">
+  <video id="video" autoplay playsinline></video>
+  <div id="countdown"></div>
+</div>
 
-<!-- FX -->
-<div id="countdown"></div>
+<canvas id="canvas" style="display:none;"></canvas>
 <div id="flash"></div>
 
-<!-- MODAL -->
+<!-- IMPRESIÓN -->
 <div id="modal">
   <div>
     <div class="frame">
@@ -198,11 +210,6 @@ async function loadConfig(){
   const res = await fetch("/event/"+eventId);
   const config = await res.json();
 
-  if(!config.active){
-    alert("Evento inactivo");
-    return;
-  }
-
   if(config.frame){
     frameUrl = config.frame;
     frameOverlay.src = frameUrl;
@@ -212,49 +219,51 @@ async function loadConfig(){
   qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(link);
 }
 
-// 📸 BOTÓN
+// BOTÓN
 cameraBtn.onclick = startCamera;
 
-// INICIAR CÁMARA
+// INICIAR
 async function startCamera(){
-
-  try {
+  try{
     stream = await navigator.mediaDevices.getUserMedia({ video: true });
 
     video.srcObject = stream;
-    video.style.display = "block";
+    cameraModal.style.display = "flex";
 
     startCountdown();
 
-  } catch(err){
+  }catch(err){
     alert("No se pudo acceder a la cámara");
-    console.log(err);
   }
 }
 
-// ⏱ CUENTA REGRESIVA
+// COUNTDOWN
 function startCountdown(){
 
   let count = 3;
-  countdown.style.display = "block";
+
   countdown.innerText = count;
 
   const interval = setInterval(()=>{
+
+    countdown.style.animation = "none";
+    countdown.offsetHeight;
+    countdown.style.animation = "pop 0.5s ease";
 
     count--;
 
     if(count > 0){
       countdown.innerText = count;
-    } else {
+    }else{
       clearInterval(interval);
-      countdown.style.display = "none";
+      countdown.innerText = "";
       takePhoto();
     }
 
   },1000);
 }
 
-// 📸 CAPTURA ROBUSTA
+// FOTO
 async function takePhoto(){
 
   const canvas = document.getElementById("canvas");
@@ -263,40 +272,39 @@ async function takePhoto(){
   canvas.height = video.videoHeight || 480;
 
   const ctx = canvas.getContext("2d");
+  ctx.translate(canvas.width, 0);
+  ctx.scale(-1, 1);
   ctx.drawImage(video, 0, 0);
 
   flashEffect();
 
   const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
 
-  try {
+  const blob = await (await fetch(dataUrl)).blob();
 
-    const res = await fetch(dataUrl);
-    const blob = await res.blob();
+  const fd = new FormData();
+  fd.append("photo", blob, "photo.jpg");
+  fd.append("name", "Cabina");
+  fd.append("table", "Totem");
+  fd.append("event", eventId);
 
-    const fd = new FormData();
-    fd.append("photo", blob, "photo.jpg");
-    fd.append("name", "Cabina");
-    fd.append("table", "Totem");
-    fd.append("event", eventId);
+  const upload = await fetch("/upload", {
+    method:"POST",
+    body: fd
+  });
 
-    const upload = await fetch("/upload", {
-      method: "POST",
-      body: fd
-    });
+  const result = await upload.json();
 
-    const result = await upload.json();
+  if(result.success){
+    loadPhotos();
+  }else{
+    alert("Error subiendo foto");
+  }
 
-    if(result.success){
-      console.log("✅ Foto subida");
-      loadPhotos();
-    } else {
-      alert("❌ Error subiendo la foto");
-    }
+  cameraModal.style.display = "none";
 
-  } catch(err){
-    console.log(err);
-    alert("Error en captura");
+  if(stream){
+    stream.getTracks().forEach(t=>t.stop());
   }
 }
 
@@ -327,13 +335,11 @@ async function loadPhotos(){
 
     div.querySelector(".deleteBtn").onclick = async(e)=>{
       e.stopPropagation();
-
       await fetch("/photo",{
         method:"DELETE",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({url:p.url})
       });
-
       loadPhotos();
     };
 
@@ -352,16 +358,39 @@ function closeModal(){
   modal.style.display="none";
 }
 
-// PRINT
+// PRINT CENTRADO
 function printPhoto(){
+
   const win = window.open("", "_blank");
 
   win.document.write(`
     <html>
-    <body style="margin:0; display:flex; justify-content:center; align-items:center; height:100vh;">
-      <div style="position:relative; width:600px; height:900px;">
-        <img src="${selectedPhoto}" style="position:absolute; width:100%; height:100%; object-fit:cover;">
-        <img src="${frameUrl}" style="position:absolute; width:100%; height:100%;">
+    <head>
+      <style>
+        body {
+          margin:0;
+          display:flex;
+          justify-content:center;
+          align-items:center;
+          height:100vh;
+        }
+        .c {
+          position:relative;
+          width:4in;
+          height:6in;
+        }
+        .c img {
+          position:absolute;
+          width:100%;
+          height:100%;
+          object-fit:cover;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="c">
+        <img src="${selectedPhoto}">
+        <img src="${frameUrl}">
       </div>
     </body>
     </html>
