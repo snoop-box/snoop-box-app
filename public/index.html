@@ -44,6 +44,7 @@ input, select {
 .screen { display:none; }
 .active { display:block; }
 
+/* TOAST */
 #toast {
   position:fixed;
   bottom:20px;
@@ -55,11 +56,33 @@ input, select {
   display:none;
 }
 
+/* RANKING */
 #ranking {
   margin-top:20px;
   background:rgba(255,255,255,0.1);
   padding:15px;
   border-radius:12px;
+}
+
+/* PUNTOS FLOTANTES */
+.points {
+  position: fixed;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 28px;
+  color: #00e676;
+  animation: floatUp 1.5s ease forwards;
+}
+
+@keyframes floatUp {
+  0% { opacity:1; transform: translate(-50%,0); }
+  100% { opacity:0; transform: translate(-50%,-120px); }
+}
+
+/* TRIVIA */
+#triviaBox {
+  margin-top:20px;
 }
 
 h1 { margin-top:40px; }
@@ -74,7 +97,6 @@ h1 { margin-top:40px; }
 
   <input id="name" placeholder="Tu nombre">
 
-  <!-- SELECT DE MESAS -->
   <select id="table">
     <option value="">Seleccioná tu mesa</option>
   </select>
@@ -91,7 +113,9 @@ h1 { margin-top:40px; }
 
   <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none">
 
-  <button class="btn" onclick="playTrivia()">🎮 Jugar trivia</button>
+  <button class="btn" onclick="showTrivia()">🎮 Jugar trivia</button>
+
+  <div id="triviaBox"></div>
 
   <div id="ranking"></div>
 
@@ -103,20 +127,12 @@ h1 { margin-top:40px; }
 
 const eventId = new URLSearchParams(location.search).get("event") || "default";
 
-let user = {
-  name:"",
-  table:""
-};
+let user = { name:"", table:"" };
 
-// 🔥 GENERAR MESAS AUTOMÁTICAS
+// 🔥 MESAS
 function loadTables(){
-
   const select = document.getElementById("table");
-
-  // 👉 cambiá la cantidad si querés
-  const totalMesas = 20;
-
-  for(let i=1;i<=totalMesas;i++){
+  for(let i=1;i<=20;i++){
     const opt = document.createElement("option");
     opt.value = i;
     opt.innerText = "Mesa " + i;
@@ -126,41 +142,37 @@ function loadTables(){
 
 // LOGIN
 function login(){
-  const name = document.getElementById("name").value;
-  const table = document.getElementById("table").value;
+  const name = nameInput.value;
+  const table = table.value;
 
   if(!name || !table){
     showToast("Completá los datos");
     return;
   }
 
-  user.name = name;
-  user.table = table;
+  user = { name, table };
 
   localStorage.setItem("user", JSON.stringify(user));
 
   goApp();
 }
 
-// IR A APP
+// APP
 function goApp(){
-  document.getElementById("login").classList.remove("active");
-  document.getElementById("app").classList.add("active");
+  loginDiv.classList.remove("active");
+  app.classList.add("active");
 
   const saved = JSON.parse(localStorage.getItem("user"));
+  if(saved) user = saved;
 
-  if(saved){
-    user = saved;
-  }
-
-  document.getElementById("welcome").innerText = "Hola " + user.name + " 👋";
+  welcome.innerText = "Hola " + user.name + " 👋";
 
   loadRanking();
 }
 
-// SUBIR FOTO
+// 📸 SUBIR FOTO
 function upload(){
-  document.getElementById("fileInput").click();
+  fileInput.click();
 }
 
 fileInput.onchange = async () => {
@@ -176,31 +188,83 @@ fileInput.onchange = async () => {
   fd.append("table", user.table);
   fd.append("event", eventId);
 
-  const res = await fetch("/upload", {
-    method:"POST",
-    body: fd
-  });
-
+  const res = await fetch("/upload",{ method:"POST", body:fd });
   const result = await res.json();
 
   if(result.success){
-    showToast("¡Foto subida! 🔥 + puntos");
+    showToast("¡Foto subida!");
+    showPoints("+5 🔥");
+    vibrate();
     loadRanking();
   }else{
-    showToast("Error subiendo foto");
+    showToast("Error");
   }
 
-  fileInput.value = "";
+  fileInput.value="";
 };
 
-// TRIVIA
-function playTrivia(){
-  showToast("Próximamente 😎");
+// 🔥 PUNTOS FLOTANTES
+function showPoints(text){
+  const div = document.createElement("div");
+  div.className = "points";
+  div.innerText = text;
+
+  document.body.appendChild(div);
+
+  setTimeout(()=>div.remove(),1500);
 }
 
-// RANKING
-async function loadRanking(){
+// 📳 VIBRACIÓN
+function vibrate(){
+  if(navigator.vibrate){
+    navigator.vibrate(100);
+  }
+}
 
+// 🎮 TRIVIA SIMPLE
+const trivia = [
+  {q:"¿De qué color es el cielo?", a:["Azul","Rojo","Verde"], c:0},
+  {q:"¿Cuánto es 2+2?", a:["3","4","5"], c:1}
+];
+
+let current = 0;
+
+function showTrivia(){
+  renderQuestion();
+}
+
+function renderQuestion(){
+
+  const t = trivia[current];
+
+  let html = `<h3>${t.q}</h3>`;
+
+  t.a.forEach((opt,i)=>{
+    html += `<button class="btn" onclick="answer(${i})">${opt}</button>`;
+  });
+
+  triviaBox.innerHTML = html;
+}
+
+function answer(i){
+
+  const t = trivia[current];
+
+  if(i === t.c){
+    showToast("Correcto 🔥");
+    showPoints("+10 🏆");
+    vibrate();
+  }else{
+    showToast("Incorrecto");
+  }
+
+  current = (current+1) % trivia.length;
+
+  setTimeout(renderQuestion,1000);
+}
+
+// 🏆 RANKING
+async function loadRanking(){
   const res = await fetch("/ranking/"+eventId);
   const data = await res.json();
 
@@ -210,18 +274,14 @@ async function loadRanking(){
     html += `${i+1}. Mesa ${r.table} (${r.points})<br>`;
   });
 
-  document.getElementById("ranking").innerHTML = html;
+  ranking.innerHTML = html;
 }
 
 // TOAST
 function showToast(msg){
-  const t = document.getElementById("toast");
-  t.innerText = msg;
-  t.style.display = "block";
-
-  setTimeout(()=>{
-    t.style.display = "none";
-  },2000);
+  toast.innerText = msg;
+  toast.style.display="block";
+  setTimeout(()=>toast.style.display="none",2000);
 }
 
 // INIT
@@ -229,9 +289,7 @@ window.onload = ()=>{
   loadTables();
 
   const saved = localStorage.getItem("user");
-  if(saved){
-    goApp();
-  }
+  if(saved) goApp();
 }
 
 </script>
