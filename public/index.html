@@ -2,246 +2,167 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Snoop Box</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snoop Box</title>
 
 <style>
-* { box-sizing: border-box; }
-
 body {
-  margin: 0;
+  margin:0;
   font-family: Arial;
-  background: linear-gradient(135deg,#0f0f0f,#1c1c1c);
-  color: white;
+  background: linear-gradient(135deg,#111,#000);
+  color:white;
+  text-align:center;
 }
 
-/* CONTENEDOR CENTRADO */
-.container {
-  max-width: 420px;
-  margin: auto;
-  padding: 16px;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+/* ANIMACIÓN BOTONES */
+.btn {
+  background:#ff0055;
+  border:none;
+  color:white;
+  padding:18px;
+  font-size:18px;
+  border-radius:12px;
+  width:80%;
+  margin:10px auto;
+  display:block;
+  transition: transform 0.1s, box-shadow 0.1s;
 }
 
-/* TITULOS */
-h3 {
-  text-align: center;
-  font-size: 26px;
-  margin-bottom: 20px;
+.btn:active {
+  transform: scale(0.92);
+  box-shadow:0 0 20px #ff0055;
 }
 
 /* INPUTS */
-input, select {
-  width: 100%;
-  padding: 16px;
-  margin: 8px 0;
-  border-radius: 12px;
-  border: none;
-  font-size: 18px;
+input {
+  width:80%;
+  padding:15px;
+  margin:10px;
+  border-radius:10px;
+  border:none;
+  font-size:16px;
 }
 
-/* BOTONES */
-button {
-  width: 100%;
-  padding: 18px;
-  margin: 10px 0;
-  border-radius: 14px;
-  border: none;
-  font-size: 18px;
-  font-weight: bold;
-  background: #ff0055;
-  color: white;
-  transition: transform 0.1s;
+/* PANTALLAS */
+.screen {
+  display:none;
 }
 
-button:active {
-  transform: scale(0.95);
+.active {
+  display:block;
 }
 
-/* TEXTO BIENVENIDA */
-#welcome {
-  text-align: center;
-  font-size: 22px;
-  margin-bottom: 20px;
-}
-
-/* SECCIONES */
-.hidden { display: none; }
-
-/* IMAGENES */
-img {
-  width: 100%;
-  border-radius: 12px;
+/* FEEDBACK */
+#toast {
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#00c853;
+  padding:15px 20px;
+  border-radius:10px;
+  display:none;
 }
 
 /* RANKING */
-.rank {
-  padding: 14px;
-  margin: 8px 0;
-  border-radius: 12px;
-  background: #222;
-  display: flex;
-  justify-content: space-between;
-  font-size: 18px;
+#ranking {
+  margin-top:20px;
+  background:rgba(255,255,255,0.1);
+  padding:15px;
+  border-radius:12px;
 }
 
-.rank.top1 { background: gold; color:#000; }
-.rank.top2 { background: silver; color:#000; }
-.rank.top3 { background: #cd7f32; color:#000; }
-
-/* TRIVIA */
-#answers button {
-  background: #222;
-  font-size: 16px;
+/* TITULOS */
+h1 {
+  margin-top:40px;
 }
+
 </style>
 </head>
 
 <body>
 
-<div class="container">
-
 <!-- LOGIN -->
-<div id="login">
-<h3>Ingresar</h3>
+<div id="login" class="screen active">
+  <h1>Sumate al evento 🎉</h1>
 
-<input id="name" placeholder="Apodo">
+  <input id="name" placeholder="Tu nombre">
+  <input id="table" placeholder="Mesa">
 
-<select id="table">
-<option value="">Mesa</option>
-<option>1</option><option>2</option><option>3</option>
-<option>4</option><option>5</option><option>6</option>
-<option>7</option><option>8</option><option>9</option>
-<option>10</option>
-</select>
-
-<button id="btnEnter">Ingresar</button>
+  <button class="btn" onclick="login()">Ingresar</button>
 </div>
 
-<!-- MENU -->
-<div id="menu" class="hidden">
-<h3 id="welcome"></h3>
+<!-- APP -->
+<div id="app" class="screen">
 
-<button onclick="showSection('upload')">📸 Sacar Foto</button>
-<button onclick="showSection('gallery')">🖼 Galería</button>
-<button onclick="showSection('trivia')">🧠 Trivia</button>
-<button onclick="showSection('ranking')">🏆 Ranking</button>
-</div>
+  <h1 id="welcome"></h1>
 
-<!-- FOTO -->
-<div id="upload" class="hidden">
-<input type="file" id="file" accept="image/*" capture="environment" style="display:none">
+  <button class="btn" onclick="upload()">📸 Subir foto</button>
 
-<button onclick="fileInput.click()">📸 Abrir Cámara</button>
+  <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none">
 
-<div id="preview"></div>
+  <button class="btn" onclick="playTrivia()">🎮 Jugar trivia</button>
 
-<button id="btnUpload">Subir Foto</button>
-<button onclick="back()">Volver</button>
-</div>
-
-<!-- GALERIA -->
-<div id="gallery" class="hidden">
-<div id="photos"></div>
-<button onclick="back()">Volver</button>
-</div>
-
-<!-- TRIVIA -->
-<div id="trivia" class="hidden">
-<h3 id="question"></h3>
-<div id="answers"></div>
-<button onclick="back()">Volver</button>
-</div>
-
-<!-- RANKING -->
-<div id="ranking" class="hidden">
-<h3>🏆 Ranking</h3>
-<div id="rankList"></div>
-<button onclick="back()">Volver</button>
-</div>
+  <div id="ranking"></div>
 
 </div>
+
+<div id="toast"></div>
 
 <script>
 
-// ELEMENTOS
-const login = document.getElementById("login");
-const menu = document.getElementById("menu");
-const upload = document.getElementById("upload");
-const gallery = document.getElementById("gallery");
-const trivia = document.getElementById("trivia");
-const ranking = document.getElementById("ranking");
-
-const nameInput = document.getElementById("name");
-const tableSelect = document.getElementById("table");
-const welcome = document.getElementById("welcome");
-const preview = document.getElementById("preview");
-const fileInput = document.getElementById("file");
-
 const eventId = new URLSearchParams(location.search).get("event") || "default";
 
-let user = {};
+let user = {
+  name:"",
+  table:""
+};
 
 // LOGIN
-document.getElementById("btnEnter").onclick = () => {
-  const name = nameInput.value.trim();
-  const table = tableSelect.value;
+function login(){
+  const name = document.getElementById("name").value;
+  const table = document.getElementById("table").value;
 
-  if (!name || !table) {
-    alert("Completá apodo y mesa");
+  if(!name || !table){
+    showToast("Completá los datos");
     return;
   }
 
-  user = { name, table };
+  user.name = name;
+  user.table = table;
 
-  login.classList.add("hidden");
-  menu.classList.remove("hidden");
+  localStorage.setItem("user", JSON.stringify(user));
 
-  welcome.innerText = name + " - Mesa " + table;
-};
-
-// NAV
-function showSection(sec) {
-  menu.classList.add("hidden");
-  upload.classList.add("hidden");
-  gallery.classList.add("hidden");
-  trivia.classList.add("hidden");
-  ranking.classList.add("hidden");
-
-  document.getElementById(sec).classList.remove("hidden");
-
-  if (sec === "gallery") loadGallery();
-  if (sec === "trivia") loadTrivia();
-  if (sec === "ranking") loadRanking();
+  goApp();
 }
 
-function back() {
-  upload.classList.add("hidden");
-  gallery.classList.add("hidden");
-  trivia.classList.add("hidden");
-  ranking.classList.add("hidden");
-  menu.classList.remove("hidden");
+// IR A APP
+function goApp(){
+  document.getElementById("login").classList.remove("active");
+  document.getElementById("app").classList.add("active");
+
+  const saved = JSON.parse(localStorage.getItem("user"));
+
+  if(saved){
+    user = saved;
+  }
+
+  document.getElementById("welcome").innerText = "Hola " + user.name + " 👋";
+
+  loadRanking();
 }
-
-// PREVIEW
-fileInput.onchange = () => {
-  const file = fileInput.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = e => {
-    preview.innerHTML = `<img src="${e.target.result}">`;
-  };
-  reader.readAsDataURL(file);
-};
 
 // SUBIR FOTO
-document.getElementById("btnUpload").onclick = async () => {
+function upload(){
+  document.getElementById("fileInput").click();
+}
+
+fileInput.onchange = async () => {
+
   const file = fileInput.files[0];
-  if (!file) return;
+  if(!file) return;
+
+  showToast("Subiendo foto...");
 
   const fd = new FormData();
   fd.append("photo", file);
@@ -249,101 +170,60 @@ document.getElementById("btnUpload").onclick = async () => {
   fd.append("table", user.table);
   fd.append("event", eventId);
 
-  await fetch("/upload", { method: "POST", body: fd });
+  const res = await fetch("/upload", {
+    method:"POST",
+    body: fd
+  });
 
-  preview.innerHTML = "";
+  const result = await res.json();
+
+  if(result.success){
+    showToast("¡Foto subida! 🔥 + puntos");
+    loadRanking();
+  }else{
+    showToast("Error subiendo foto");
+  }
+
   fileInput.value = "";
-
-  back();
 };
 
-// GALERIA
-async function loadGallery() {
-  const res = await fetch("/photos/" + eventId);
-  const data = await res.json();
-
-  const container = document.getElementById("photos");
-  container.innerHTML = "";
-
-  data.reverse().forEach(p => {
-    container.innerHTML += `
-      <div>
-        <img src="${p.url}">
-        <small>${p.name} - Mesa ${p.table}</small>
-      </div>`;
-  });
-}
-
-// TRIVIA
-const questions = [
-{q:"¿Cuántos años cumple Olivia?",a:["1","2","3"],c:1},
-{q:"¿Cuál es el color favorito de Olivia?",a:["Rosa","Azul","Amarillo"],c:0},
-{q:"¿Qué le gusta más a Olivia?",a:["Jugar","Dormir","Cantar"],c:0},
-{q:"¿Quién es Olivia?",a:["La cumpleañera","La mamá","La abuela"],c:0},
-{q:"¿Qué estamos festejando?",a:["Bautismo","Cumpleaños","Casamiento"],c:1}
-];
-
-function loadTrivia() {
-  const q = questions[Math.floor(Math.random()*questions.length)];
-
-  document.getElementById("question").innerText = q.q;
-  const ans = document.getElementById("answers");
-  ans.innerHTML = "";
-
-  q.a.forEach((txt,i)=>{
-    const b = document.createElement("button");
-    b.innerText = txt;
-
-    b.onclick = async () => {
-
-      document.querySelectorAll("#answers button").forEach(x=>x.disabled=true);
-
-      const correct = i === q.c;
-
-      const res = document.createElement("div");
-      res.innerText = correct ? "✔️" : "❌";
-      res.style.fontSize = "30px";
-      res.style.marginTop = "10px";
-      ans.appendChild(res);
-
-      await fetch("/trivia", {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({
-          name: user.name,
-          table: user.table,
-          event: eventId,
-          correct: correct
-        })
-      });
-    };
-
-    ans.appendChild(b);
-  });
+// TRIVIA (simple placeholder)
+function playTrivia(){
+  showToast("Próximamente 😎");
 }
 
 // RANKING
-async function loadRanking() {
-  const res = await fetch("/ranking/" + eventId);
+async function loadRanking(){
+
+  const res = await fetch("/ranking/"+eventId);
   const data = await res.json();
 
-  const list = document.getElementById("rankList");
-  list.innerHTML = "";
+  let html = "<h3>🏆 Ranking</h3>";
 
-  data.forEach((r,i)=>{
-    let medal = "";
-    let cls = "rank";
-
-    if (i===0){ medal="🥇"; cls+=" top1"; }
-    else if (i===1){ medal="🥈"; cls+=" top2"; }
-    else if (i===2){ medal="🥉"; cls+=" top3"; }
-
-    list.innerHTML += `
-      <div class="${cls}">
-        <span>${medal} Mesa ${r.table}</span>
-        <strong>${r.points} pts</strong>
-      </div>`;
+  data.slice(0,5).forEach((r,i)=>{
+    html += `${i+1}. Mesa ${r.table} (${r.points})<br>`;
   });
+
+  document.getElementById("ranking").innerHTML = html;
+}
+
+// TOAST
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.innerText = msg;
+  t.style.display = "block";
+
+  setTimeout(()=>{
+    t.style.display = "none";
+  },2000);
+}
+
+// AUTO LOGIN
+window.onload = ()=>{
+  const saved = localStorage.getItem("user");
+  if(saved){
+    goApp();
+  }
 }
 
 </script>
