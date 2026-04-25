@@ -32,7 +32,6 @@ body {
   object-fit: cover;
 }
 
-/* BORRAR */
 .deleteBtn {
   position:absolute;
   top:8px;
@@ -55,6 +54,16 @@ body {
   border-radius: 12px;
   font-size: 18px;
   cursor: pointer;
+}
+
+/* VIDEO PREVIEW */
+#video {
+  position: fixed;
+  bottom: 100px;
+  right: 20px;
+  width: 200px;
+  border-radius: 10px;
+  display:none;
 }
 
 /* CUENTA REGRESIVA */
@@ -116,6 +125,10 @@ body {
   color:black;
 }
 
+#qrBox img {
+  width:120px;
+}
+
 /* RANKING */
 #rankingBox {
   position:fixed;
@@ -133,7 +146,6 @@ body {
   50% { box-shadow:0 0 20px gold; }
   100% { box-shadow:0 0 8px gold; }
 }
-
 </style>
 </head>
 
@@ -142,18 +154,24 @@ body {
 <div id="grid"></div>
 <div id="rankingBox"></div>
 
+<!-- QR -->
 <div id="qrBox">
-  <img id="qrImg" width="120">
+  <img id="qrImg">
   <div>Subí tus fotos 📸</div>
 </div>
 
+<!-- BOTÓN -->
 <div id="cameraBtn">📸 Sacar foto</div>
 
+<!-- VIDEO -->
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas" style="display:none;"></canvas>
+
+<!-- FX -->
 <div id="countdown"></div>
 <div id="flash"></div>
 
-<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
-
+<!-- MODAL -->
 <div id="modal">
   <div>
     <div class="frame">
@@ -173,6 +191,7 @@ const eventId = new URLSearchParams(location.search).get("event") || "default";
 
 let frameUrl = "";
 let selectedPhoto = "";
+let stream = null;
 
 // CONFIG
 async function loadConfig(){
@@ -189,64 +208,83 @@ async function loadConfig(){
 }
 
 // 📸 BOTÓN
-cameraBtn.onclick = startCountdown;
+cameraBtn.onclick = startCamera;
+
+// INICIAR CÁMARA
+async function startCamera(){
+
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+
+    video.srcObject = stream;
+    video.style.display = "block";
+
+    startCountdown();
+
+  } catch(err){
+    alert("No se pudo acceder a la cámara");
+    console.log(err);
+  }
+}
 
 // ⏱ CUENTA REGRESIVA
 function startCountdown(){
 
-  const cd = document.getElementById("countdown");
   let count = 3;
-
-  cd.style.display = "block";
-  cd.innerText = count;
+  countdown.style.display = "block";
+  countdown.innerText = count;
 
   const interval = setInterval(()=>{
 
     count--;
+
     if(count > 0){
-      cd.innerText = count;
+      countdown.innerText = count;
     } else {
       clearInterval(interval);
-      cd.style.display = "none";
+      countdown.style.display = "none";
       takePhoto();
     }
 
   },1000);
 }
 
-// 📸 SACAR FOTO
+// 📸 CAPTURA
 function takePhoto(){
-  cameraInput.click();
-}
 
-// 📸 CUANDO SE TOMA
-cameraInput.onchange = async () => {
+  const canvas = document.getElementById("canvas");
 
-  const file = cameraInput.files[0];
-  if (!file) return;
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(video, 0, 0);
 
   flashEffect();
 
-  const fd = new FormData();
-  fd.append("photo", file);
-  fd.append("name", "Cabina");
-  fd.append("table", "Totem");
-  fd.append("event", eventId);
+  canvas.toBlob(async (blob)=>{
 
-  await fetch("/upload", {
-    method: "POST",
-    body: fd
-  });
+    const fd = new FormData();
+    fd.append("photo", blob, "photo.jpg");
+    fd.append("name", "Cabina");
+    fd.append("table", "Totem");
+    fd.append("event", eventId);
 
-  cameraInput.value = "";
-  loadPhotos();
-};
+    await fetch("/upload", {
+      method: "POST",
+      body: fd
+    });
+
+    loadPhotos();
+
+  }, "image/jpeg");
+
+}
 
 // FLASH
 function flashEffect(){
-  const f = document.getElementById("flash");
-  f.style.opacity = 1;
-  setTimeout(()=>f.style.opacity=0,200);
+  flash.style.opacity = 1;
+  setTimeout(()=>flash.style.opacity=0,200);
 }
 
 // FOTOS
