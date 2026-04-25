@@ -87,6 +87,7 @@ h1 { margin-top:40px; }
 
 <body>
 
+<!-- LOGIN -->
 <div id="login" class="screen active">
   <h1>Sumate al evento 🎉</h1>
 
@@ -99,6 +100,7 @@ h1 { margin-top:40px; }
   <button class="btn" onclick="login()">Ingresar</button>
 </div>
 
+<!-- APP -->
 <div id="app" class="screen">
 
   <h1 id="welcome"></h1>
@@ -144,9 +146,8 @@ function loadTables(){
   }
 }
 
-// LOGIN (FIX)
+// LOGIN
 function login(){
-
   const name = nameInput.value.trim();
   const table = tableSelect.value;
 
@@ -164,7 +165,6 @@ function login(){
 
 // APP
 function goApp(){
-
   loginDiv.classList.remove("active");
   appDiv.classList.add("active");
 
@@ -225,23 +225,44 @@ function vibrate(){
   }
 }
 
-// TRIVIA
-const trivia = [
-  {q:"¿De qué color es el cielo?", a:["Azul","Rojo","Verde"], c:0},
-  {q:"¿Cuánto es 2+2?", a:["3","4","5"], c:1}
+// 🔥 TRIVIA AVANZADA
+
+const triviaPool = [
+  {q:"¿Color Favorito de Juli?", a:["Azul","Rojo","Verde"], c:0},
+  {q:"¿Cuantos años cumple?", a:["13","15","16"], c:1},
+  {q:"¿Nombre del salon?", a:["Ensueño","Buenos Aires","Monaco"], c:1},
+  {q:"¿5+5?", a:["8","10","12"], c:1},
+  {q:"¿Color del pasto?", a:["Rojo","Verde","Azul"], c:1},
+  {q:"¿Día después de lunes?", a:["Martes","Viernes","Domingo"], c:0},
+  {q:"¿Animal que ladra?", a:["Gato","Perro","Vaca"], c:1},
+  {q:"¿2x3?", a:["5","6","7"], c:1},
+  {q:"¿El sol es...?", a:["Planeta","Estrella","Luna"], c:1},
+  {q:"¿Invierno es...?", a:["Frío","Calor","Primavera"], c:0}
 ];
 
+let triviaActual = [];
 let current = 0;
 
 function showTrivia(){
+
+  const shuffled = [...triviaPool].sort(()=>Math.random()-0.5);
+  triviaActual = shuffled.slice(0,3);
+
+  current = 0;
+
   renderQuestion();
 }
 
 function renderQuestion(){
 
-  const t = trivia[current];
+  if(current >= triviaActual.length){
+    triviaBox.innerHTML = "<h3>🎉 Terminaste!</h3>";
+    return;
+  }
 
-  let html = `<h3>${t.q}</h3>`;
+  const t = triviaActual[current];
+
+  let html = `<h3>(${current+1}/3) ${t.q}</h3>`;
 
   t.a.forEach((opt,i)=>{
     html += `<button class="btn" onclick="answer(${i})">${opt}</button>`;
@@ -252,7 +273,7 @@ function renderQuestion(){
 
 function answer(i){
 
-  const t = trivia[current];
+  const t = triviaActual[current];
 
   if(i === t.c){
     showToast("Correcto 🔥");
@@ -262,7 +283,7 @@ function answer(i){
     showToast("Incorrecto");
   }
 
-  current = (current+1) % trivia.length;
+  current++;
 
   setTimeout(renderQuestion,1000);
 }
