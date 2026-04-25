@@ -61,7 +61,7 @@ body {
   position: fixed;
   bottom: 100px;
   right: 20px;
-  width: 200px;
+  width: 220px;
   border-radius: 10px;
   display:none;
 }
@@ -198,6 +198,11 @@ async function loadConfig(){
   const res = await fetch("/event/"+eventId);
   const config = await res.json();
 
+  if(!config.active){
+    alert("Evento inactivo");
+    return;
+  }
+
   if(config.frame){
     frameUrl = config.frame;
     frameOverlay.src = frameUrl;
@@ -249,20 +254,25 @@ function startCountdown(){
   },1000);
 }
 
-// 📸 CAPTURA
-function takePhoto(){
+// 📸 CAPTURA ROBUSTA
+async function takePhoto(){
 
   const canvas = document.getElementById("canvas");
 
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  canvas.width = video.videoWidth || 640;
+  canvas.height = video.videoHeight || 480;
 
   const ctx = canvas.getContext("2d");
   ctx.drawImage(video, 0, 0);
 
   flashEffect();
 
-  canvas.toBlob(async (blob)=>{
+  const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+
+  try {
+
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
 
     const fd = new FormData();
     fd.append("photo", blob, "photo.jpg");
@@ -270,15 +280,24 @@ function takePhoto(){
     fd.append("table", "Totem");
     fd.append("event", eventId);
 
-    await fetch("/upload", {
+    const upload = await fetch("/upload", {
       method: "POST",
       body: fd
     });
 
-    loadPhotos();
+    const result = await upload.json();
 
-  }, "image/jpeg");
+    if(result.success){
+      console.log("✅ Foto subida");
+      loadPhotos();
+    } else {
+      alert("❌ Error subiendo la foto");
+    }
 
+  } catch(err){
+    console.log(err);
+    alert("Error en captura");
+  }
 }
 
 // FLASH
