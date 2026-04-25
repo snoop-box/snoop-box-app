@@ -44,7 +44,6 @@ input, select {
 .screen { display:none; }
 .active { display:block; }
 
-/* TOAST */
 #toast {
   position:fixed;
   bottom:20px;
@@ -56,7 +55,6 @@ input, select {
   display:none;
 }
 
-/* RANKING */
 #ranking {
   margin-top:20px;
   background:rgba(255,255,255,0.1);
@@ -64,7 +62,6 @@ input, select {
   border-radius:12px;
 }
 
-/* PUNTOS FLOTANTES */
 .points {
   position: fixed;
   bottom: 120px;
@@ -80,7 +77,6 @@ input, select {
   100% { opacity:0; transform: translate(-50%,-120px); }
 }
 
-/* TRIVIA */
 #triviaBox {
   margin-top:20px;
 }
@@ -91,20 +87,18 @@ h1 { margin-top:40px; }
 
 <body>
 
-<!-- LOGIN -->
 <div id="login" class="screen active">
   <h1>Sumate al evento 🎉</h1>
 
-  <input id="name" placeholder="Tu nombre">
+  <input id="nameInput" placeholder="Tu nombre">
 
-  <select id="table">
+  <select id="tableSelect">
     <option value="">Seleccioná tu mesa</option>
   </select>
 
   <button class="btn" onclick="login()">Ingresar</button>
 </div>
 
-<!-- APP -->
 <div id="app" class="screen">
 
   <h1 id="welcome"></h1>
@@ -129,21 +123,32 @@ const eventId = new URLSearchParams(location.search).get("event") || "default";
 
 let user = { name:"", table:"" };
 
-// 🔥 MESAS
+// ELEMENTOS
+const nameInput = document.getElementById("nameInput");
+const tableSelect = document.getElementById("tableSelect");
+const loginDiv = document.getElementById("login");
+const appDiv = document.getElementById("app");
+const welcome = document.getElementById("welcome");
+const ranking = document.getElementById("ranking");
+const toast = document.getElementById("toast");
+const fileInput = document.getElementById("fileInput");
+const triviaBox = document.getElementById("triviaBox");
+
+// MESAS
 function loadTables(){
-  const select = document.getElementById("table");
   for(let i=1;i<=20;i++){
     const opt = document.createElement("option");
     opt.value = i;
     opt.innerText = "Mesa " + i;
-    select.appendChild(opt);
+    tableSelect.appendChild(opt);
   }
 }
 
-// LOGIN
+// LOGIN (FIX)
 function login(){
-  const name = nameInput.value;
-  const table = table.value;
+
+  const name = nameInput.value.trim();
+  const table = tableSelect.value;
 
   if(!name || !table){
     showToast("Completá los datos");
@@ -159,8 +164,9 @@ function login(){
 
 // APP
 function goApp(){
+
   loginDiv.classList.remove("active");
-  app.classList.add("active");
+  appDiv.classList.add("active");
 
   const saved = JSON.parse(localStorage.getItem("user"));
   if(saved) user = saved;
@@ -170,7 +176,7 @@ function goApp(){
   loadRanking();
 }
 
-// 📸 SUBIR FOTO
+// SUBIR FOTO
 function upload(){
   fileInput.click();
 }
@@ -203,25 +209,23 @@ fileInput.onchange = async () => {
   fileInput.value="";
 };
 
-// 🔥 PUNTOS FLOTANTES
+// PUNTOS
 function showPoints(text){
   const div = document.createElement("div");
   div.className = "points";
   div.innerText = text;
-
   document.body.appendChild(div);
-
   setTimeout(()=>div.remove(),1500);
 }
 
-// 📳 VIBRACIÓN
+// VIBRACIÓN
 function vibrate(){
   if(navigator.vibrate){
     navigator.vibrate(100);
   }
 }
 
-// 🎮 TRIVIA SIMPLE
+// TRIVIA
 const trivia = [
   {q:"¿De qué color es el cielo?", a:["Azul","Rojo","Verde"], c:0},
   {q:"¿Cuánto es 2+2?", a:["3","4","5"], c:1}
@@ -263,7 +267,7 @@ function answer(i){
   setTimeout(renderQuestion,1000);
 }
 
-// 🏆 RANKING
+// RANKING
 async function loadRanking(){
   const res = await fetch("/ranking/"+eventId);
   const data = await res.json();
