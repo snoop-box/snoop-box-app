@@ -61,8 +61,8 @@ body {
   position: fixed;
   top:0;
   left:0;
-  width:100%;
-  height:100%;
+  width:100vw;
+  height:100vh;
   display:none;
   justify-content:center;
   align-items:center;
@@ -136,15 +136,37 @@ body {
   100% { box-shadow:0 0 8px gold; }
 }
 
-/* MODAL IMPRESIÓN */
+/* MODAL IMPRESIÓN (FIX CENTRADO) */
 #modal {
   position: fixed;
-  width:100%;
-  height:100%;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  background:rgba(0,0,0,0.85);
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+
+  display: none;
+  justify-content: center;
+  align-items: center;
+
+  background: rgba(0,0,0,0.9);
+  z-index: 1500;
+}
+
+#modal > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-20px);
+}
+
+#modal button {
+  margin: 10px;
+  padding: 12px 20px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
 }
 
 .frame {
@@ -183,14 +205,14 @@ body {
 <canvas id="canvas" style="display:none;"></canvas>
 <div id="flash"></div>
 
-<!-- IMPRESIÓN -->
+<!-- MODAL IMPRESIÓN -->
 <div id="modal">
   <div>
     <div class="frame">
       <img id="modalPhoto">
       <img id="frameOverlay">
     </div>
-    <div style="text-align:center">
+    <div>
       <button onclick="printPhoto()">Imprimir</button>
       <button onclick="closeModal()">Cerrar</button>
     </div>
@@ -222,16 +244,13 @@ async function loadConfig(){
 // BOTÓN
 cameraBtn.onclick = startCamera;
 
-// INICIAR
+// INICIAR CÁMARA
 async function startCamera(){
   try{
     stream = await navigator.mediaDevices.getUserMedia({ video: true });
-
     video.srcObject = stream;
     cameraModal.style.display = "flex";
-
     startCountdown();
-
   }catch(err){
     alert("No se pudo acceder a la cámara");
   }
@@ -239,13 +258,10 @@ async function startCamera(){
 
 // COUNTDOWN
 function startCountdown(){
-
   let count = 3;
-
   countdown.innerText = count;
 
   const interval = setInterval(()=>{
-
     countdown.style.animation = "none";
     countdown.offsetHeight;
     countdown.style.animation = "pop 0.5s ease";
@@ -259,7 +275,6 @@ function startCountdown(){
       countdown.innerText = "";
       takePhoto();
     }
-
   },1000);
 }
 
@@ -278,9 +293,7 @@ async function takePhoto(){
 
   flashEffect();
 
-  const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
-
-  const blob = await (await fetch(dataUrl)).blob();
+  const blob = await (await fetch(canvas.toDataURL("image/jpeg",0.9))).blob();
 
   const fd = new FormData();
   fd.append("photo", blob, "photo.jpg");
@@ -288,11 +301,7 @@ async function takePhoto(){
   fd.append("table", "Totem");
   fd.append("event", eventId);
 
-  const upload = await fetch("/upload", {
-    method:"POST",
-    body: fd
-  });
-
+  const upload = await fetch("/upload",{ method:"POST", body:fd });
   const result = await upload.json();
 
   if(result.success){
@@ -358,7 +367,7 @@ function closeModal(){
   modal.style.display="none";
 }
 
-// PRINT CENTRADO
+// PRINT
 function printPhoto(){
 
   const win = window.open("", "_blank");
