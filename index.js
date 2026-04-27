@@ -36,33 +36,23 @@ let guests = [
    EVENTO
 ========================= */
 
-// Crear evento
-app.post("/create-event", (req, res) => {
-  try {
-    const { name, active, background, frame } = req.body;
+// TEST CREAR EVENTO DESDE URL
+app.get("/test-event", (req,res)=>{
 
-    currentEvent = {
-      name: name || "",
-      active: active === true,
-      background: background || "",
-      frame: frame || ""
-    };
+  currentEvent = {
+    name: "TEST DIRECTO",
+    active: true,
+    background: "",
+    frame: ""
+  };
 
-    eventActive = currentEvent.active;
+  eventActive = true;
 
-    console.log("✅ Evento creado:", currentEvent);
+  res.json({
+    success:true,
+    event: currentEvent
+  });
 
-    res.json({
-      success: true,
-      event: currentEvent
-    });
-  } catch (err) {
-    console.log("❌ Error create-event:", err);
-
-    res.json({
-      success: false
-    });
-  }
 });
 
 // Ver evento actual
