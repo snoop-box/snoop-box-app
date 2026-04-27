@@ -16,7 +16,7 @@ body{
 }
 
 .box{
-  max-width:500px;
+  max-width:520px;
   margin:auto;
   background:#1c1c1c;
   padding:25px;
@@ -25,6 +25,7 @@ body{
 
 h1{
   margin-top:0;
+  margin-bottom:20px;
 }
 
 input[type=text]{
@@ -34,6 +35,7 @@ input[type=text]{
   border:none;
   border-radius:10px;
   font-size:16px;
+  box-sizing:border-box;
 }
 
 .filebox{
@@ -59,7 +61,7 @@ button{
   color:#fff;
   font-size:18px;
   cursor:pointer;
-  margin-top:15px;
+  margin-top:18px;
 }
 
 button:hover{
@@ -73,6 +75,7 @@ button:hover{
 #status{
   margin-top:18px;
   font-weight:bold;
+  min-height:25px;
   color:#00ff99;
 }
 </style>
@@ -112,30 +115,36 @@ button:hover{
 
 <script>
 
-const bgFile = document.getElementById("bgFile");
-const frameFile = document.getElementById("frameFile");
-
-bgFile.onchange = ()=> {
+// Mostrar nombres de archivos elegidos
+document.getElementById("bgFile").onchange = function(){
+  const file = this.files[0];
   document.getElementById("bgName").innerText =
-    bgFile.files[0] ? "Seleccionado: " + bgFile.files[0].name : "";
+    file ? "Seleccionado: " + file.name : "";
 };
 
-frameFile.onchange = ()=> {
+document.getElementById("frameFile").onchange = function(){
+  const file = this.files[0];
   document.getElementById("frameName").innerText =
-    frameFile.files[0] ? "Seleccionado: " + frameFile.files[0].name : "";
+    file ? "Seleccionado: " + file.name : "";
 };
 
+// Crear evento
 function createEvent(){
 
   const name = document.getElementById("eventName").value.trim();
   const active = document.getElementById("eventActive").checked;
+  const status = document.getElementById("status");
 
   if(!name){
-    alert("Poné nombre del evento");
+    status.style.color = "#ff4444";
+    status.innerText = "Poné nombre del evento";
     return;
   }
 
-  fetch("/create-event",{
+  status.style.color = "#ffffff";
+  status.innerText = "Creando...";
+
+  fetch(window.location.origin + "/create-event",{
     method:"POST",
     headers:{
       "Content-Type":"application/json"
@@ -147,19 +156,22 @@ function createEvent(){
       frame:""
     })
   })
-  .then(r=>r.json())
-  .then(data=>{
+  .then(res => res.json())
+  .then(data => {
+
     if(data.success){
-      document.getElementById("status").innerText =
-        "Evento creado correctamente 🔥";
+      status.style.color = "#00ff99";
+      status.innerText = "Evento creado correctamente 🔥";
     }else{
-      document.getElementById("status").innerText =
-        "No se pudo crear";
+      status.style.color = "#ff4444";
+      status.innerText = "No se pudo crear";
     }
+
   })
-  .catch(()=>{
-    document.getElementById("status").innerText =
-      "Error de conexión";
+  .catch(error => {
+    console.log(error);
+    status.style.color = "#ff4444";
+    status.innerText = "Error de conexión";
   });
 
 }
