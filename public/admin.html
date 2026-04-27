@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Admin</title>
+<title>Admin Snoop Box</title>
 
 <style>
 body{
@@ -11,24 +11,27 @@ body{
   background:#111;
   color:#fff;
   font-family:Arial;
-  padding:40px;
+  padding:30px;
   text-align:center;
 }
+
 .box{
-  max-width:500px;
+  max-width:520px;
   margin:auto;
-  background:#1d1d1d;
+  background:#1e1e1e;
   padding:25px;
   border-radius:18px;
 }
+
 input{
   width:100%;
   padding:14px;
+  margin:10px 0;
   border:none;
   border-radius:10px;
-  margin:10px 0;
   box-sizing:border-box;
 }
+
 button{
   width:100%;
   padding:16px;
@@ -38,10 +41,21 @@ button{
   color:white;
   font-size:18px;
   cursor:pointer;
+  margin-top:10px;
 }
+
+button:hover{
+  opacity:.9;
+}
+
 #status{
-  margin-top:18px;
+  margin-top:15px;
   min-height:25px;
+}
+
+label{
+  display:block;
+  margin-top:10px;
 }
 </style>
 </head>
@@ -53,12 +67,14 @@ button{
 
 <input type="text" id="eventName" placeholder="Nombre del evento">
 
+<input type="text" id="bgUrl" placeholder="URL fondo DJ">
+
+<input type="text" id="frameUrl" placeholder="URL frame impresión">
+
 <label>
 <input type="checkbox" id="eventActive" checked>
  Evento activo
 </label>
-
-<br><br>
 
 <button id="createBtn">Crear Evento</button>
 
@@ -71,11 +87,14 @@ button{
 document.getElementById("createBtn").addEventListener("click", async ()=>{
 
   const status = document.getElementById("status");
+
   const name = document.getElementById("eventName").value.trim();
+  const background = document.getElementById("bgUrl").value.trim();
+  const frame = document.getElementById("frameUrl").value.trim();
   const active = document.getElementById("eventActive").checked;
 
   if(!name){
-    status.innerText = "Escribí nombre del evento";
+    status.innerText = "Poné nombre del evento";
     return;
   }
 
@@ -83,9 +102,7 @@ document.getElementById("createBtn").addEventListener("click", async ()=>{
 
   try{
 
-    const url = window.location.origin + "/create-event";
-
-    const res = await fetch(url,{
+    const res = await fetch("/create-event",{
       method:"POST",
       headers:{
         "Content-Type":"application/json"
@@ -93,22 +110,22 @@ document.getElementById("createBtn").addEventListener("click", async ()=>{
       body: JSON.stringify({
         name:name,
         active:active,
-        background:"",
-        frame:""
+        background:background,
+        frame:frame
       })
     });
 
     const data = await res.json();
 
     if(data.success){
-      status.innerText = "✅ Evento creado";
+      status.innerText = "✅ Evento creado correctamente";
     }else{
       status.innerText = "❌ No se pudo crear";
     }
 
-  }catch(error){
-    console.log(error);
-    status.innerText = "❌ Error conexión";
+  }catch(err){
+    console.log(err);
+    status.innerText = "❌ Error de conexión";
   }
 
 });
