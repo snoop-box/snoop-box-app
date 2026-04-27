@@ -9,63 +9,95 @@ app.use(express.json({ limit:"10mb" }));
 app.use(express.urlencoded({ extended:true }));
 app.use(express.static("public"));
 
-console.log("🔥 SNOOP BOX BACKEND ONLINE");
+console.log("🔥 SNOOP BOX BACKEND V2");
 
 /* ===============================
-   VARIABLES GLOBALES
+   DATA
 ================================= */
 
+let events = [];
+
 let currentEvent = {
-  name: "",
-  active: true,
-  background: "",
-  frame: ""
+  name:"",
+  active:true,
+  background:"",
+  frame:""
 };
 
 let guests = [];
-
 let photos = [];
 
 function generateToken(){
   return Math.random().toString(36).substring(2,10);
 }
 
+function resetGuests(){
+  guests = [
+    { id:1, name:"Juan", table:1, checked:false, token:generateToken() },
+    { id:2, name:"Ana", table:2, checked:false, token:generateToken() },
+    { id:3, name:"Pedro", table:3, checked:false, token:generateToken() }
+  ];
+}
+
 /* ===============================
-   EVENTO
+   EVENTOS
 ================================= */
 
-// Crear evento
 app.post("/create-event",(req,res)=>{
 
   const { name, active, background, frame } = req.body;
 
-  currentEvent = {
+  const newEvent = {
+    id: Date.now(),
     name: name || "",
     active: active === true,
     background: background || "",
     frame: frame || ""
   };
 
-  // invitados demo
-  guests = [
-    { id:1, name:"Juan", table:1, checked:false, token:generateToken() },
-    { id:2, name:"Ana", table:2, checked:false, token:generateToken() },
-    { id:3, name:"Pedro", table:3, checked:false, token:generateToken() }
-  ];
+  events.push(newEvent);
+
+  currentEvent = newEvent;
+
+  resetGuests();
 
   res.json({
     success:true,
-    event:currentEvent
+    event:newEvent
   });
 
 });
 
-// Ver evento
+app.get("/events",(req,res)=>{
+  res.json(events);
+});
+
 app.get("/event",(req,res)=>{
   res.json(currentEvent);
 });
 
-// Estado
+app.post("/activate-event/:id",(req,res)=>{
+
+  const id = Number(req.params.id);
+
+  events = events.map(ev=>{
+    ev.active = ev.id === id;
+    return ev;
+  });
+
+  const found = events.find(e=>e.id===id);
+
+  if(found){
+    currentEvent = found;
+  }
+
+  res.json({ success:true });
+});
+
+/* ===============================
+   STATUS
+================================= */
+
 app.get("/event-status",(req,res)=>{
   res.json({
     active: currentEvent.active
@@ -124,21 +156,11 @@ app.post("/upload-photo",(req,res)=>{
 
   photos.unshift({
     id: Date.now(),
-    user: user || "Invitado",
-    image: image || "",
-    likes:0
+    user:user || "Invitado",
+    image:image || ""
   });
 
   res.json({ success:true });
-
-});
-
-app.post("/delete-photo/:id",(req,res)=>{
-
-  photos = photos.filter(p => p.id != req.params.id);
-
-  res.json({ success:true });
-
 });
 
 /* ===============================
@@ -156,5 +178,5 @@ app.get("/",(req,res)=>{
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT,()=>{
-  console.log("🚀 Servidor puerto " + PORT);
+  console.log("🚀 Puerto " + PORT);
 });
