@@ -1,19 +1,19 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const app = express();
 
-console.log("🔥 VERSION NUEVA BACKEND 27");
-
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit:"10mb" }));
+app.use(express.urlencoded({ extended:true }));
 app.use(express.static("public"));
 
-/* =========================
-   VARIABLES GLOBALES
-========================= */
+console.log("🔥 SNOOP BOX BACKEND ONLINE");
 
-let eventActive = true;
+/* ===============================
+   VARIABLES GLOBALES
+================================= */
 
 let currentEvent = {
   name: "",
@@ -22,108 +22,139 @@ let currentEvent = {
   frame: ""
 };
 
-function generateToken() {
-  return Math.random().toString(36).substring(2, 10);
+let guests = [];
+
+let photos = [];
+
+function generateToken(){
+  return Math.random().toString(36).substring(2,10);
 }
 
-let guests = [
-  { id: 1, name: "Juan", table: 1, checked: false, token: generateToken() },
-  { id: 2, name: "Ana", table: 2, checked: false, token: generateToken() },
-  { id: 3, name: "Pedro", table: 3, checked: false, token: generateToken() }
-];
-
-/* =========================
+/* ===============================
    EVENTO
-========================= */
+================================= */
 
-// TEST CREAR EVENTO DESDE URL
-app.get("/test-event", (req,res)=>{
+// Crear evento
+app.post("/create-event",(req,res)=>{
+
+  const { name, active, background, frame } = req.body;
 
   currentEvent = {
-    name: "TEST DIRECTO",
-    active: true,
-    background: "",
-    frame: ""
+    name: name || "",
+    active: active === true,
+    background: background || "",
+    frame: frame || ""
   };
 
-  eventActive = true;
+  // invitados demo
+  guests = [
+    { id:1, name:"Juan", table:1, checked:false, token:generateToken() },
+    { id:2, name:"Ana", table:2, checked:false, token:generateToken() },
+    { id:3, name:"Pedro", table:3, checked:false, token:generateToken() }
+  ];
 
   res.json({
     success:true,
-    event: currentEvent
+    event:currentEvent
   });
 
 });
 
-// Ver evento actual
-app.get("/event", (req, res) => {
+// Ver evento
+app.get("/event",(req,res)=>{
   res.json(currentEvent);
 });
 
-// Estado evento
-app.get("/event-status", (req, res) => {
+// Estado
+app.get("/event-status",(req,res)=>{
   res.json({
-    active: eventActive
+    active: currentEvent.active
   });
 });
 
-/* =========================
+/* ===============================
    INVITADOS
-========================= */
+================================= */
 
-// Lista invitados
-app.get("/guests", (req, res) => {
-  if (!eventActive) return res.json([]);
+app.get("/guests",(req,res)=>{
+  if(!currentEvent.active) return res.json([]);
   res.json(guests);
 });
 
-// Login QR
-app.get("/guest/:token", (req, res) => {
-  if (!eventActive) {
-    return res.json({ success: false });
-  }
+app.post("/checkin/:token",(req,res)=>{
 
   const guest = guests.find(g => g.token === req.params.token);
 
-  if (!guest) {
-    return res.json({ success: false });
-  }
-
-  res.json({
-    success: true,
-    guest
-  });
-});
-
-// Check-in
-app.post("/checkin/:token", (req, res) => {
-  const guest = guests.find(g => g.token === req.params.token);
-
-  if (!guest) {
-    return res.json({ success: false });
+  if(!guest){
+    return res.json({ success:false });
   }
 
   guest.checked = true;
 
+  res.json({ success:true });
+
+});
+
+app.get("/guest/:token",(req,res)=>{
+
+  const guest = guests.find(g => g.token === req.params.token);
+
+  if(!guest){
+    return res.json({ success:false });
+  }
+
   res.json({
-    success: true
+    success:true,
+    guest
   });
+
 });
 
-/* =========================
+/* ===============================
+   FOTOS
+================================= */
+
+app.get("/photos",(req,res)=>{
+  res.json(photos);
+});
+
+app.post("/upload-photo",(req,res)=>{
+
+  const { user, image } = req.body;
+
+  photos.unshift({
+    id: Date.now(),
+    user: user || "Invitado",
+    image: image || "",
+    likes:0
+  });
+
+  res.json({ success:true });
+
+});
+
+app.post("/delete-photo/:id",(req,res)=>{
+
+  photos = photos.filter(p => p.id != req.params.id);
+
+  res.json({ success:true });
+
+});
+
+/* ===============================
    HOME
-========================= */
+================================= */
 
-app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/public/index.html");
+app.get("/",(req,res)=>{
+  res.sendFile(path.join(__dirname,"public","index.html"));
 });
 
-/* =========================
+/* ===============================
    SERVER
-========================= */
+================================= */
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log("🚀 Servidor corriendo en puerto " + PORT);
+app.listen(PORT,()=>{
+  console.log("🚀 Servidor puerto " + PORT);
 });
