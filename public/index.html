@@ -14,6 +14,9 @@ body {
   text-align:center;
 }
 
+.screen { display:none; }
+.active { display:block; }
+
 .btn {
   background:#ff0055;
   border:none;
@@ -34,12 +37,29 @@ input {
   border:none;
 }
 
-.screen { display:none; }
-.active { display:block; }
+#blocked {
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:black;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  font-size:22px;
+}
 </style>
 </head>
 
 <body>
+
+<!-- BLOQUEO -->
+<div id="blocked">
+  🚫 Evento no disponible<br><br>
+  Volvé más tarde
+</div>
 
 <!-- LOGIN -->
 <div id="login" class="screen active">
@@ -58,26 +78,41 @@ input {
 
 let user = {};
 
-// 🔥 DETECTAR TOKEN
-const params = new URLSearchParams(location.search);
-const token = params.get("token");
-
-// 🔥 AUTO LOGIN POR QR
-if(token){
-  fetch("/guest/"+token)
+// 🔥 CHEQUEAR ESTADO DEL EVENTO
+function checkEvent(){
+  return fetch("/event-status")
   .then(r=>r.json())
   .then(data=>{
-    if(data.success){
-      user = {
-        name: data.guest.name,
-        table: data.guest.table
-      };
-
-      localStorage.setItem("user", JSON.stringify(user));
-      goApp();
+    if(!data.active){
+      document.getElementById("blocked").style.display = "flex";
+      return false;
     }
+    return true;
   });
 }
+
+// 🔥 INICIO
+checkEvent().then(active=>{
+  if(!active) return;
+
+  const params = new URLSearchParams(location.search);
+  const token = params.get("token");
+
+  if(token){
+    fetch("/guest/"+token)
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.success){
+        user = {
+          name: data.guest.name,
+          table: data.guest.table
+        };
+        localStorage.setItem("user", JSON.stringify(user));
+        goApp();
+      }
+    });
+  }
+});
 
 // LOGIN MANUAL
 function login(){

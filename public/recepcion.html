@@ -120,6 +120,24 @@ body{
 
 let guests = [];
 
+// 🔥 CHEQUEAR ESTADO DEL EVENTO
+function checkEvent(){
+  return fetch("/event-status")
+  .then(r=>r.json())
+  .then(data=>{
+    if(!data.active){
+      document.body.innerHTML = "<h1 style='text-align:center;margin-top:50px'>🚫 Evento cerrado</h1>";
+      return false;
+    }
+    return true;
+  });
+}
+
+// 🔥 INICIO
+checkEvent().then(active=>{
+  if(active) loadGuests();
+});
+
 // 🔥 CARGAR INVITADOS
 function loadGuests(){
   fetch("/guests")
@@ -130,8 +148,6 @@ function loadGuests(){
     updateCounter();
   });
 }
-
-loadGuests();
 
 // 🔍 BUSCADOR
 document.getElementById("search").addEventListener("input",render);
@@ -185,7 +201,6 @@ function checkin(token){
 
 // 📱 MOSTRAR QR
 function showQR(token){
-
   const url = location.origin + "/?token=" + token;
 
   const modal = document.getElementById("qrModal");
