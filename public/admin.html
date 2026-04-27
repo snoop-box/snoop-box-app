@@ -15,7 +15,7 @@ body{
 }
 
 .wrap{
-  max-width:700px;
+  max-width:760px;
   margin:auto;
 }
 
@@ -27,24 +27,17 @@ body{
 }
 
 h1,h2{
-  text-align:center;
   margin-top:0;
+  text-align:center;
 }
 
-input[type=text]{
+input[type=text], input[type=file]{
   width:100%;
   padding:14px;
   border:none;
   border-radius:10px;
   margin:10px 0;
   box-sizing:border-box;
-}
-
-.fileRow{
-  background:#2a2a2a;
-  padding:12px;
-  border-radius:10px;
-  margin:10px 0;
 }
 
 button{
@@ -64,7 +57,7 @@ button:hover{
 }
 
 #status{
-  margin-top:15px;
+  margin-top:14px;
   min-height:24px;
   text-align:center;
 }
@@ -76,22 +69,24 @@ button:hover{
   margin-bottom:10px;
 }
 
-.small{
-  font-size:14px;
-  color:#ccc;
-}
-
 .activeTag{
   color:#00ff99;
   font-weight:bold;
   margin-top:6px;
 }
 
-.miniBtn{
-  margin-top:10px;
+.smallBtn{
   background:#444;
+  margin-top:10px;
   padding:10px;
   font-size:14px;
+}
+
+.preview{
+  max-width:100%;
+  max-height:140px;
+  border-radius:10px;
+  margin-top:10px;
 }
 </style>
 </head>
@@ -105,22 +100,20 @@ button:hover{
 
 <input type="text" id="eventName" placeholder="Nombre del evento">
 
-<div class="fileRow">
-<label>Fondo pantalla DJ</label><br>
-<input type="file" id="bgFile">
-</div>
+<label>Imagen fondo DJ</label>
+<input type="file" id="bgFile" accept="image/*">
+<img id="bgPreview" class="preview" style="display:none;">
 
-<div class="fileRow">
-<label>Frame impresión</label><br>
-<input type="file" id="frameFile">
-</div>
+<label>Frame impresión</label>
+<input type="file" id="frameFile" accept="image/*">
+<img id="framePreview" class="preview" style="display:none;">
 
 <label>
 <input type="checkbox" id="eventActive" checked>
  Evento activo
 </label>
 
-<button id="createBtn">Crear Evento</button>
+<button onclick="createEvent()">Crear Evento</button>
 
 <div id="status"></div>
 
@@ -138,51 +131,84 @@ button:hover{
 
 <script>
 
-async function loadEvents(){
+/* 🔥 CAMBIAR SOLO SI TU PRESET ES OTRO */
+const CLOUD_NAME = "demo";
+const UPLOAD_PRESET = "unsigned_preset";
 
-  const list = document.getElementById("eventsList");
+let bgUrl = "";
+let frameUrl = "";
 
-  try{
+/* =========================
+   PREVIEW
+========================= */
 
-    const res = await fetch("/events");
-    const data = await res.json();
+document.getElementById("bgFile").onchange = async function(){
+  preview(this.files[0],"bgPreview");
+  bgUrl = await uploadFile(this.files[0]);
+};
 
-    if(!data.length){
-      list.innerHTML = "Sin eventos creados";
-      return;
-    }
+document.getElementById("frameFile").onchange = async function(){
+  preview(this.files[0],"framePreview");
+  frameUrl = await uploadFile(this.files[0]);
+};
 
-    list.innerHTML = "";
+function preview(file,id){
 
-    data.slice().reverse().forEach(ev=>{
+  if(!file) return;
 
-      list.innerHTML += `
-        <div class="eventItem">
-          <strong>${ev.name}</strong>
-          <div class="small">ID: ${ev.id}</div>
-          <div class="${ev.active ? 'activeTag':''}">
-            ${ev.active ? '🟢 ACTIVO':'⚪ Inactivo'}
-          </div>
-          <button class="miniBtn" onclick="activateEvent(${ev.id})">
-            Activar este evento
-          </button>
-        </div>
-      `;
+  const reader = new FileReader();
 
-    });
+  reader.onload = e=>{
+    const img = document.getElementById(id);
+    img.src = e.target.result;
+    img.style.display = "block";
+  };
 
-  }catch(err){
-    list.innerHTML = "Error cargando eventos";
-  }
+  reader.readAsDataURL(file);
 
 }
+
+/* =========================
+   CLOUDINARY
+========================= */
+
+async function uploadFile(file){
+
+  if(!file) return "";
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", UPLOAD_PRESET);
+
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+    {
+      method:"POST",
+      body:formData
+    }
+  );
+
+  const data = await res.json();
+
+  return data.secure_url || "";
+
+}
+
+/* =========================
+   CREAR EVENTO
+========================= */
 
 async function createEvent(){
 
   const status = document.getElementById("status");
 
-  const name = document.getElementById("eventName").value.trim();
-  const active = document.getElementById("eventActive").checked;
+  const name =
+    document.getElementById("eventName")
+    .value.trim();
+
+  const active =
+    document.getElementById("eventActive")
+    .checked;
 
   if(!name){
     status.innerText = "Poné nombre del evento";
@@ -201,8 +227,8 @@ async function createEvent(){
       body: JSON.stringify({
         name:name,
         active:active,
-        background:"",
-        frame:""
+        background:bgUrl,
+        frame:frameUrl
       })
     });
 
@@ -210,7 +236,6 @@ async function createEvent(){
 
     if(data.success){
       status.innerText = "✅ Evento creado";
-      document.getElementById("eventName").value = "";
       loadEvents();
     }else{
       status.innerText = "❌ No se pudo crear";
@@ -222,17 +247,52 @@ async function createEvent(){
 
 }
 
+/* =========================
+   LISTA EVENTOS
+========================= */
+
+async function loadEvents(){
+
+  const list = document.getElementById("eventsList");
+
+  const res = await fetch("/events");
+  const data = await res.json();
+
+  if(!data.length){
+    list.innerHTML = "Sin eventos";
+    return;
+  }
+
+  list.innerHTML = "";
+
+  data.slice().reverse().forEach(ev=>{
+
+    list.innerHTML += `
+      <div class="eventItem">
+        <strong>${ev.name}</strong>
+        <div class="${ev.active ? 'activeTag':''}">
+          ${ev.active ? '🟢 ACTIVO':'⚪ Inactivo'}
+        </div>
+        <button class="smallBtn"
+          onclick="activateEvent(${ev.id})">
+          Activar
+        </button>
+      </div>
+    `;
+
+  });
+
+}
+
 async function activateEvent(id){
 
-  await fetch("/activate-event/" + id,{
+  await fetch("/activate-event/"+id,{
     method:"POST"
   });
 
   loadEvents();
 
 }
-
-document.getElementById("createBtn").addEventListener("click",createEvent);
 
 loadEvents();
 
