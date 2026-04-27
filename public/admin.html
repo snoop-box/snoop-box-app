@@ -12,34 +12,49 @@ body{
   color:#fff;
   font-family:Arial;
   padding:30px;
-  text-align:center;
+}
+
+.wrap{
+  max-width:700px;
+  margin:auto;
 }
 
 .box{
-  max-width:520px;
-  margin:auto;
-  background:#1e1e1e;
+  background:#1d1d1d;
   padding:25px;
   border-radius:18px;
+  margin-bottom:25px;
 }
 
-input{
+h1,h2{
+  text-align:center;
+  margin-top:0;
+}
+
+input[type=text]{
   width:100%;
   padding:14px;
-  margin:10px 0;
   border:none;
   border-radius:10px;
+  margin:10px 0;
   box-sizing:border-box;
+}
+
+.fileRow{
+  background:#2a2a2a;
+  padding:12px;
+  border-radius:10px;
+  margin:10px 0;
 }
 
 button{
   width:100%;
-  padding:16px;
+  padding:15px;
   border:none;
   border-radius:12px;
   background:#ff0055;
   color:white;
-  font-size:18px;
+  font-size:17px;
   cursor:pointer;
   margin-top:10px;
 }
@@ -50,16 +65,39 @@ button:hover{
 
 #status{
   margin-top:15px;
-  min-height:25px;
+  min-height:24px;
+  text-align:center;
 }
 
-label{
-  display:block;
+.eventItem{
+  background:#262626;
+  padding:14px;
+  border-radius:12px;
+  margin-bottom:10px;
+}
+
+.small{
+  font-size:14px;
+  color:#ccc;
+}
+
+.activeTag{
+  color:#00ff99;
+  font-weight:bold;
+  margin-top:6px;
+}
+
+.miniBtn{
   margin-top:10px;
+  background:#444;
+  padding:10px;
+  font-size:14px;
 }
 </style>
 </head>
 <body>
+
+<div class="wrap">
 
 <div class="box">
 
@@ -67,9 +105,15 @@ label{
 
 <input type="text" id="eventName" placeholder="Nombre del evento">
 
-<input type="text" id="bgUrl" placeholder="URL fondo DJ">
+<div class="fileRow">
+<label>Fondo pantalla DJ</label><br>
+<input type="file" id="bgFile">
+</div>
 
-<input type="text" id="frameUrl" placeholder="URL frame impresión">
+<div class="fileRow">
+<label>Frame impresión</label><br>
+<input type="file" id="frameFile">
+</div>
 
 <label>
 <input type="checkbox" id="eventActive" checked>
@@ -82,15 +126,62 @@ label{
 
 </div>
 
+<div class="box">
+
+<h2>Eventos creados</h2>
+
+<div id="eventsList">Cargando...</div>
+
+</div>
+
+</div>
+
 <script>
 
-document.getElementById("createBtn").addEventListener("click", async ()=>{
+async function loadEvents(){
+
+  const list = document.getElementById("eventsList");
+
+  try{
+
+    const res = await fetch("/events");
+    const data = await res.json();
+
+    if(!data.length){
+      list.innerHTML = "Sin eventos creados";
+      return;
+    }
+
+    list.innerHTML = "";
+
+    data.slice().reverse().forEach(ev=>{
+
+      list.innerHTML += `
+        <div class="eventItem">
+          <strong>${ev.name}</strong>
+          <div class="small">ID: ${ev.id}</div>
+          <div class="${ev.active ? 'activeTag':''}">
+            ${ev.active ? '🟢 ACTIVO':'⚪ Inactivo'}
+          </div>
+          <button class="miniBtn" onclick="activateEvent(${ev.id})">
+            Activar este evento
+          </button>
+        </div>
+      `;
+
+    });
+
+  }catch(err){
+    list.innerHTML = "Error cargando eventos";
+  }
+
+}
+
+async function createEvent(){
 
   const status = document.getElementById("status");
 
   const name = document.getElementById("eventName").value.trim();
-  const background = document.getElementById("bgUrl").value.trim();
-  const frame = document.getElementById("frameUrl").value.trim();
   const active = document.getElementById("eventActive").checked;
 
   if(!name){
@@ -110,25 +201,40 @@ document.getElementById("createBtn").addEventListener("click", async ()=>{
       body: JSON.stringify({
         name:name,
         active:active,
-        background:background,
-        frame:frame
+        background:"",
+        frame:""
       })
     });
 
     const data = await res.json();
 
     if(data.success){
-      status.innerText = "✅ Evento creado correctamente";
+      status.innerText = "✅ Evento creado";
+      document.getElementById("eventName").value = "";
+      loadEvents();
     }else{
       status.innerText = "❌ No se pudo crear";
     }
 
   }catch(err){
-    console.log(err);
-    status.innerText = "❌ Error de conexión";
+    status.innerText = "❌ Error conexión";
   }
 
-});
+}
+
+async function activateEvent(id){
+
+  await fetch("/activate-event/" + id,{
+    method:"POST"
+  });
+
+  loadEvents();
+
+}
+
+document.getElementById("createBtn").addEventListener("click",createEvent);
+
+loadEvents();
 
 </script>
 
