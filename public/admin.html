@@ -3,53 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Admin Snoop Box</title>
+<title>Admin</title>
 
 <style>
 body{
   margin:0;
-  font-family:Arial, sans-serif;
   background:#111;
-  color:#fff;
+  color:white;
+  font-family:Arial;
   text-align:center;
-  padding:30px;
+  padding:40px;
 }
 
 .box{
-  max-width:520px;
+  max-width:500px;
   margin:auto;
-  background:#1c1c1c;
+  background:#1e1e1e;
   padding:25px;
   border-radius:18px;
 }
 
-h1{
-  margin-top:0;
-  margin-bottom:20px;
-}
-
 input[type=text]{
   width:100%;
-  padding:14px;
-  margin:10px 0;
+  padding:15px;
   border:none;
   border-radius:10px;
-  font-size:16px;
+  margin:10px 0;
   box-sizing:border-box;
-}
-
-.filebox{
-  background:#2a2a2a;
-  padding:12px;
-  border-radius:10px;
-  margin:12px 0;
-  text-align:left;
-}
-
-label{
-  display:block;
-  margin-bottom:8px;
-  font-weight:bold;
 }
 
 button{
@@ -58,25 +38,14 @@ button{
   border:none;
   border-radius:12px;
   background:#ff0055;
-  color:#fff;
+  color:white;
   font-size:18px;
   cursor:pointer;
-  margin-top:18px;
-}
-
-button:hover{
-  opacity:.9;
-}
-
-.row{
-  margin-top:15px;
 }
 
 #status{
-  margin-top:18px;
-  font-weight:bold;
+  margin-top:15px;
   min-height:25px;
-  color:#00ff99;
 }
 </style>
 </head>
@@ -84,28 +53,16 @@ button:hover{
 
 <div class="box">
 
-<h1>Admin Evento</h1>
+<h1>Crear Evento</h1>
 
 <input type="text" id="eventName" placeholder="Nombre del evento">
 
-<div class="filebox">
-<label>Fondo pantalla DJ</label>
-<input type="file" id="bgFile" accept="image/*">
-<div id="bgName"></div>
-</div>
-
-<div class="filebox">
-<label>Frame impresión</label>
-<input type="file" id="frameFile" accept="image/*">
-<div id="frameName"></div>
-</div>
-
-<div class="row">
 <label>
 <input type="checkbox" id="eventActive" checked>
  Evento activo
 </label>
-</div>
+
+<br><br>
 
 <button onclick="createEvent()">Crear Evento</button>
 
@@ -115,64 +72,46 @@ button:hover{
 
 <script>
 
-// Mostrar nombres de archivos elegidos
-document.getElementById("bgFile").onchange = function(){
-  const file = this.files[0];
-  document.getElementById("bgName").innerText =
-    file ? "Seleccionado: " + file.name : "";
-};
+async function createEvent(){
 
-document.getElementById("frameFile").onchange = function(){
-  const file = this.files[0];
-  document.getElementById("frameName").innerText =
-    file ? "Seleccionado: " + file.name : "";
-};
-
-// Crear evento
-function createEvent(){
-
+  const status = document.getElementById("status");
   const name = document.getElementById("eventName").value.trim();
   const active = document.getElementById("eventActive").checked;
-  const status = document.getElementById("status");
 
   if(!name){
-    status.style.color = "#ff4444";
-    status.innerText = "Poné nombre del evento";
+    status.innerText = "Escribí nombre del evento";
     return;
   }
 
-  status.style.color = "#ffffff";
   status.innerText = "Creando...";
 
-  fetch(window.location.origin + "/create-event",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify({
-      name:name,
-      active:active,
-      background:"",
-      frame:""
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
+  try{
+
+    const response = await fetch("/create-event",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        name:name,
+        active:active,
+        background:"",
+        frame:""
+      })
+    });
+
+    const data = await response.json();
 
     if(data.success){
-      status.style.color = "#00ff99";
-      status.innerText = "Evento creado correctamente 🔥";
+      status.innerText = "✅ Evento creado";
     }else{
-      status.style.color = "#ff4444";
-      status.innerText = "No se pudo crear";
+      status.innerText = "❌ No se pudo crear";
     }
 
-  })
-  .catch(error => {
+  }catch(error){
     console.log(error);
-    status.style.color = "#ff4444";
-    status.innerText = "Error de conexión";
-  });
+    status.innerText = "❌ Error conexión";
+  }
 
 }
 
