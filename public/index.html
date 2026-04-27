@@ -40,28 +40,19 @@ input {
 #blocked {
   display:none;
   position:fixed;
-  top:0;
-  left:0;
   width:100%;
   height:100%;
   background:black;
   justify-content:center;
   align-items:center;
-  flex-direction:column;
-  font-size:22px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- BLOQUEO -->
-<div id="blocked">
-  🚫 Evento no disponible<br><br>
-  Volvé más tarde
-</div>
+<div id="blocked">🚫 Evento no disponible</div>
 
-<!-- LOGIN -->
 <div id="login" class="screen active">
   <h1>Ingresar</h1>
   <input id="nameInput" placeholder="Nombre">
@@ -69,7 +60,6 @@ input {
   <button class="btn" onclick="login()">Ingresar</button>
 </div>
 
-<!-- APP -->
 <div id="app" class="screen">
   <h1 id="welcome"></h1>
 </div>
@@ -78,35 +68,22 @@ input {
 
 let user = {};
 
-// 🔥 CHEQUEAR ESTADO DEL EVENTO
-function checkEvent(){
-  return fetch("/event-status")
-  .then(r=>r.json())
-  .then(data=>{
-    if(!data.active){
-      document.getElementById("blocked").style.display = "flex";
-      return false;
-    }
-    return true;
-  });
-}
+fetch("/event-status")
+.then(r=>r.json())
+.then(data=>{
+  if(!data.active){
+    document.getElementById("blocked").style.display="flex";
+    return;
+  }
 
-// 🔥 INICIO
-checkEvent().then(active=>{
-  if(!active) return;
-
-  const params = new URLSearchParams(location.search);
-  const token = params.get("token");
+  const token = new URLSearchParams(location.search).get("token");
 
   if(token){
     fetch("/guest/"+token)
     .then(r=>r.json())
     .then(data=>{
       if(data.success){
-        user = {
-          name: data.guest.name,
-          table: data.guest.table
-        };
+        user = data.guest;
         localStorage.setItem("user", JSON.stringify(user));
         goApp();
       }
@@ -114,7 +91,6 @@ checkEvent().then(active=>{
   }
 });
 
-// LOGIN MANUAL
 function login(){
   user = {
     name: document.getElementById("nameInput").value,
@@ -125,7 +101,6 @@ function login(){
   goApp();
 }
 
-// ENTRAR A APP
 function goApp(){
   document.getElementById("login").classList.remove("active");
   document.getElementById("app").classList.add("active");
@@ -137,6 +112,5 @@ function goApp(){
 }
 
 </script>
-
 </body>
 </html>

@@ -2,217 +2,71 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Recepción</title>
-
+<title>Admin</title>
 <style>
 body{
-  margin:0;
   font-family:Arial;
   background:#111;
   color:white;
-}
-
-#top{
-  padding:15px;
   text-align:center;
-  background:#000;
-  border-bottom:2px solid #222;
 }
 
-#counter{
-  font-size:20px;
-  color:#0f0;
-}
-
-#search{
-  width:90%;
-  padding:15px;
-  margin:10px auto;
+input{
   display:block;
-  border-radius:10px;
-  border:none;
-  font-size:18px;
-}
-
-#list{
+  margin:10px auto;
   padding:10px;
+  width:80%;
 }
 
-.guest{
-  background:#222;
-  margin:8px 0;
-  padding:15px;
-  border-radius:12px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  transition:0.3s;
-}
-
-.checked{
-  background:#063;
-}
-
-.name{
-  font-size:18px;
-}
-
-.table{
-  font-size:14px;
-  color:#ccc;
-}
-
-.btn{
+button{
+  padding:12px;
   background:#ff0055;
-  border:none;
   color:white;
-  padding:10px 14px;
-  border-radius:8px;
-  margin-left:5px;
-  font-size:14px;
-}
-
-#qrModal{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:black;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
-  z-index:999;
-}
-
-#qrModal.active{
-  display:flex;
-}
-
-#qrText{
-  margin-bottom:15px;
-  font-size:20px;
+  border:none;
 }
 </style>
 </head>
 
 <body>
 
-<div id="top">
-  <h2>Recepción</h2>
-  <div id="counter">0 / 0 invitados</div>
-</div>
+<h2>Crear Evento</h2>
 
-<input id="search" placeholder="Buscar invitado...">
+<input id="eventName" placeholder="Nombre evento">
+<input id="bgUrl" placeholder="URL fondo DJ">
+<input id="frameUrl" placeholder="URL frame impresión">
 
-<div id="list"></div>
+<label>
+  <input type="checkbox" id="eventActive" checked>
+  Evento activo
+</label>
 
-<div id="qrModal" onclick="closeQR()">
-  <div id="qrText">Escaneá para ingresar 📱</div>
-  <canvas id="qr"></canvas>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<button onclick="createEvent()">Crear</button>
 
 <script>
 
-let guests = [];
+function createEvent(){
 
-// 🔥 CHEQUEAR ESTADO DEL EVENTO
-function checkEvent(){
-  return fetch("/event-status")
+  const name = document.getElementById("eventName").value;
+  const active = document.getElementById("eventActive").checked;
+  const background = document.getElementById("bgUrl").value;
+  const frame = document.getElementById("frameUrl").value;
+
+  fetch("/create-event", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      name,
+      active,
+      background,
+      frame
+    })
+  })
   .then(r=>r.json())
   .then(data=>{
-    if(!data.active){
-      document.body.innerHTML = "<h1 style='text-align:center;margin-top:50px'>🚫 Evento cerrado</h1>";
-      return false;
+    if(data.success){
+      alert("Evento creado 🔥");
     }
-    return true;
   });
-}
-
-// 🔥 INICIO
-checkEvent().then(active=>{
-  if(active) loadGuests();
-});
-
-// 🔥 CARGAR INVITADOS
-function loadGuests(){
-  fetch("/guests")
-  .then(r=>r.json())
-  .then(data=>{
-    guests = data;
-    render();
-    updateCounter();
-  });
-}
-
-// 🔍 BUSCADOR
-document.getElementById("search").addEventListener("input",render);
-
-// 🎯 CONTADOR
-function updateCounter(){
-  const total = guests.length;
-  const checked = guests.filter(g=>g.checked).length;
-
-  document.getElementById("counter").innerText =
-    checked + " / " + total + " invitados";
-}
-
-// 🎨 RENDER
-function render(){
-  const search = document.getElementById("search").value.toLowerCase();
-  const list = document.getElementById("list");
-  list.innerHTML = "";
-
-  guests
-  .filter(g=>g.name.toLowerCase().includes(search))
-  .sort((a,b)=>a.checked - b.checked)
-  .forEach(g=>{
-    const div = document.createElement("div");
-    div.className = "guest" + (g.checked ? " checked" : "");
-
-    div.innerHTML = `
-      <div>
-        <div class="name">${g.name}</div>
-        <div class="table">Mesa ${g.table}</div>
-      </div>
-
-      <div>
-        <button class="btn" onclick="checkin('${g.token}')">✔</button>
-        <button class="btn" onclick="showQR('${g.token}')">QR</button>
-      </div>
-    `;
-
-    list.appendChild(div);
-  });
-}
-
-// ✔ CHECK-IN
-function checkin(token){
-  fetch("/checkin/"+token,{method:"POST"})
-  .then(()=>{
-    showQR(token);
-    loadGuests();
-  });
-}
-
-// 📱 MOSTRAR QR
-function showQR(token){
-  const url = location.origin + "/?token=" + token;
-
-  const modal = document.getElementById("qrModal");
-  modal.classList.add("active");
-
-  const canvas = document.getElementById("qr");
-  QRCode.toCanvas(canvas, url, { width:300 });
-}
-
-// ❌ CERRAR QR
-function closeQR(){
-  document.getElementById("qrModal").classList.remove("active");
 }
 
 </script>
