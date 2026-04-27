@@ -3,6 +3,8 @@ const cors = require("cors");
 
 const app = express();
 
+console.log("🔥 VERSION NUEVA BACKEND 27");
+
 app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
@@ -20,14 +22,14 @@ let currentEvent = {
   frame: ""
 };
 
-function generateToken(){
-  return Math.random().toString(36).substring(2,10);
+function generateToken() {
+  return Math.random().toString(36).substring(2, 10);
 }
 
 let guests = [
-  { id:1, name:"Juan", table:1, checked:false, token:generateToken() },
-  { id:2, name:"Ana", table:2, checked:false, token:generateToken() },
-  { id:3, name:"Pedro", table:3, checked:false, token:generateToken() }
+  { id: 1, name: "Juan", table: 1, checked: false, token: generateToken() },
+  { id: 2, name: "Ana", table: 2, checked: false, token: generateToken() },
+  { id: 3, name: "Pedro", table: 3, checked: false, token: generateToken() }
 ];
 
 /* =========================
@@ -35,10 +37,8 @@ let guests = [
 ========================= */
 
 // Crear evento
-app.post("/create-event", (req,res)=>{
-
-  try{
-
+app.post("/create-event", (req, res) => {
+  try {
     const { name, active, background, frame } = req.body;
 
     currentEvent = {
@@ -50,34 +50,30 @@ app.post("/create-event", (req,res)=>{
 
     eventActive = currentEvent.active;
 
-    console.log("Evento creado:", currentEvent);
+    console.log("✅ Evento creado:", currentEvent);
 
     res.json({
-      success:true,
+      success: true,
       event: currentEvent
     });
-
-  }catch(err){
-
-    console.log(err);
+  } catch (err) {
+    console.log("❌ Error create-event:", err);
 
     res.json({
-      success:false
+      success: false
     });
-
   }
-
 });
 
 // Ver evento actual
-app.get("/event", (req,res)=>{
+app.get("/event", (req, res) => {
   res.json(currentEvent);
 });
 
 // Estado evento
-app.get("/event-status", (req,res)=>{
+app.get("/event-status", (req, res) => {
   res.json({
-    active:eventActive
+    active: eventActive
   });
 });
 
@@ -85,44 +81,51 @@ app.get("/event-status", (req,res)=>{
    INVITADOS
 ========================= */
 
-app.get("/guests",(req,res)=>{
-  if(!eventActive) return res.json([]);
+// Lista invitados
+app.get("/guests", (req, res) => {
+  if (!eventActive) return res.json([]);
   res.json(guests);
 });
 
-app.get("/guest/:token",(req,res)=>{
-
-  if(!eventActive){
-    return res.json({ success:false });
+// Login QR
+app.get("/guest/:token", (req, res) => {
+  if (!eventActive) {
+    return res.json({ success: false });
   }
 
   const guest = guests.find(g => g.token === req.params.token);
 
-  if(!guest){
-    return res.json({ success:false });
+  if (!guest) {
+    return res.json({ success: false });
   }
 
   res.json({
-    success:true,
+    success: true,
     guest
   });
-
 });
 
-app.post("/checkin/:token",(req,res)=>{
-
+// Check-in
+app.post("/checkin/:token", (req, res) => {
   const guest = guests.find(g => g.token === req.params.token);
 
-  if(!guest){
-    return res.json({ success:false });
+  if (!guest) {
+    return res.json({ success: false });
   }
 
   guest.checked = true;
 
   res.json({
-    success:true
+    success: true
   });
+});
 
+/* =========================
+   HOME
+========================= */
+
+app.get("/", (req, res) => {
+  res.sendFile(__dirname + "/public/index.html");
 });
 
 /* =========================
@@ -131,6 +134,6 @@ app.post("/checkin/:token",(req,res)=>{
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, ()=>{
-  console.log("Servidor corriendo puerto " + PORT);
+app.listen(PORT, () => {
+  console.log("🚀 Servidor corriendo en puerto " + PORT);
 });
