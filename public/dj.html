@@ -8,16 +8,55 @@
 <style>
 body{
   margin:0;
-  overflow:hidden;
+  background:#000;
+  color:#fff;
   font-family:Arial;
-  background:#000 center center/cover no-repeat;
-  color:white;
+  overflow:hidden;
 }
 
-#overlay{
+#login{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.45);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#111;
+}
+
+.loginBox{
+  width:420px;
+  background:#1d1d1d;
+  padding:30px;
+  border-radius:18px;
+  text-align:center;
+}
+
+input{
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:10px;
+  margin:10px 0;
+  box-sizing:border-box;
+}
+
+button{
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:12px;
+  background:#ff0055;
+  color:white;
+  font-size:18px;
+  cursor:pointer;
+}
+
+#status{
+  margin-top:12px;
+}
+
+#app{
+  display:none;
 }
 
 #eventName{
@@ -26,7 +65,6 @@ body{
   left:30px;
   font-size:42px;
   font-weight:bold;
-  z-index:2;
 }
 
 #photoBox{
@@ -36,131 +74,129 @@ body{
   transform:translateX(-50%);
   width:60vw;
   height:60vh;
+  background:#111;
   border-radius:20px;
-  overflow:hidden;
-  z-index:2;
-  box-shadow:0 0 25px rgba(255,255,255,.15);
-}
-
-#photoBox img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:30px;
 }
 
 #ranking{
   position:absolute;
   right:30px;
   top:120px;
-  width:260px;
-  background:rgba(0,0,0,.55);
+  width:250px;
+  background:rgba(0,0,0,.5);
   padding:18px;
-  border-radius:18px;
-  z-index:2;
-}
-
-#ranking h2{
-  margin-top:0;
-  font-size:24px;
-}
-
-.rankItem{
-  padding:8px 0;
-  border-bottom:1px solid rgba(255,255,255,.1);
+  border-radius:16px;
 }
 
 #qrBox{
   position:absolute;
   left:30px;
   bottom:30px;
-  background:rgba(0,0,0,.55);
-  padding:18px;
-  border-radius:18px;
-  z-index:2;
-  text-align:center;
+  background:rgba(0,0,0,.5);
+  padding:16px;
+  border-radius:16px;
 }
 
 #sortBtn{
   position:absolute;
   right:30px;
   bottom:30px;
-  z-index:2;
   background:#ff0055;
   border:none;
   color:white;
-  padding:18px 26px;
+  padding:18px 24px;
+  border-radius:14px;
   font-size:22px;
-  border-radius:16px;
-  cursor:pointer;
-}
-
-#sortWinner{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.88);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  z-index:10;
-  font-size:64px;
-  font-weight:bold;
-}
-
-#sortWinner small{
-  font-size:28px;
-  margin-bottom:20px;
 }
 </style>
 </head>
 <body>
 
-<div id="overlay"></div>
+<div id="login">
+  <div class="loginBox">
+    <h1>Ingresar Evento</h1>
+    <input type="text" id="eventInput" placeholder="Nombre del evento">
+    <button onclick="loginEvent()">Entrar</button>
+    <div id="status"></div>
+  </div>
+</div>
 
-<div id="eventName">Cargando...</div>
+<div id="app">
+
+<div id="eventName"></div>
 
 <div id="photoBox">
-  <img id="mainPhoto" src="https://picsum.photos/1200/800?1">
+  📸 Esperando fotos...
 </div>
 
 <div id="ranking">
-  <h2>🏆 Ranking</h2>
-  <div class="rankItem">Mesa 1 - 120 pts</div>
-  <div class="rankItem">Mesa 4 - 110 pts</div>
-  <div class="rankItem">Mesa 2 - 95 pts</div>
+<h2>🏆 Ranking</h2>
+Mesa 1<br>
+Mesa 2<br>
+Mesa 3
 </div>
 
 <div id="qrBox">
-  <div>Escaneá y participá</div>
-  <canvas id="qr"></canvas>
+<div>Escaneá y participá</div>
+<canvas id="qr"></canvas>
 </div>
 
 <button id="sortBtn">🎁 Sorteo</button>
 
-<div id="sortWinner">
-  <small>GANADOR</small>
-  <div id="winnerName">JUAN</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
 <script>
 
-let photos = [];
-let photoIndex = 0;
+let selectedEvent = null;
 
-// cargar evento
-async function loadEvent(){
+async function loginEvent(){
 
-  const res = await fetch("/event");
-  const ev = await res.json();
+  const name =
+    document.getElementById("eventInput")
+    .value.trim()
+    .toLowerCase();
+
+  const status =
+    document.getElementById("status");
+
+  status.innerText = "Buscando...";
+
+  const res = await fetch("/events");
+  const events = await res.json();
+
+  const found = events.find(ev =>
+    ev.name.toLowerCase() === name
+  );
+
+  if(!found){
+    status.innerText = "Evento no encontrado";
+    return;
+  }
+
+  selectedEvent = found;
+
+  startDJ();
+
+}
+
+function startDJ(){
+
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").style.display="block";
 
   document.getElementById("eventName").innerText =
-    ev.name || "Evento";
+    selectedEvent.name;
 
-  if(ev.background){
+  if(selectedEvent.background){
     document.body.style.backgroundImage =
-      `url('${ev.background}')`;
+      `url('${selectedEvent.background}')`;
+    document.body.style.backgroundSize = "cover";
   }
 
   QRCode.toCanvas(
@@ -170,61 +206,6 @@ async function loadEvent(){
   );
 
 }
-
-// cargar fotos
-async function loadPhotos(){
-
-  const res = await fetch("/photos");
-  photos = await res.json();
-
-}
-
-function rotatePhotos(){
-
-  if(!photos.length) return;
-
-  photoIndex++;
-
-  if(photoIndex >= photos.length){
-    photoIndex = 0;
-  }
-
-  document.getElementById("mainPhoto").src =
-    photos[photoIndex].image;
-
-}
-
-// sorteo base
-async function runSort(){
-
-  const res = await fetch("/guests");
-  const guests = await res.json();
-
-  if(!guests.length) return;
-
-  const random =
-    guests[Math.floor(Math.random()*guests.length)];
-
-  document.getElementById("winnerName").innerText =
-    random.name.toUpperCase();
-
-  const box = document.getElementById("sortWinner");
-  box.style.display = "flex";
-
-  setTimeout(()=>{
-    box.style.display = "none";
-  },4000);
-
-}
-
-document.getElementById("sortBtn")
-.addEventListener("click",runSort);
-
-loadEvent();
-loadPhotos();
-
-setInterval(loadPhotos,5000);
-setInterval(rotatePhotos,4000);
 
 </script>
 
