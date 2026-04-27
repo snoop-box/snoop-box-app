@@ -2,88 +2,164 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Admin</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Snoop Box</title>
 
 <style>
 body{
-  font-family:Arial;
+  margin:0;
+  font-family:Arial, sans-serif;
   background:#111;
-  color:white;
+  color:#fff;
   text-align:center;
+  padding:30px;
 }
 
-input{
-  display:block;
-  margin:10px auto;
-  padding:12px;
-  width:80%;
-  border-radius:8px;
+.box{
+  max-width:500px;
+  margin:auto;
+  background:#1c1c1c;
+  padding:25px;
+  border-radius:18px;
+}
+
+h1{
+  margin-top:0;
+}
+
+input[type=text]{
+  width:100%;
+  padding:14px;
+  margin:10px 0;
   border:none;
+  border-radius:10px;
+  font-size:16px;
+}
+
+.filebox{
+  background:#2a2a2a;
+  padding:12px;
+  border-radius:10px;
+  margin:12px 0;
+  text-align:left;
+}
+
+label{
+  display:block;
+  margin-bottom:8px;
+  font-weight:bold;
 }
 
 button{
-  padding:14px;
-  background:#ff0055;
-  color:white;
+  width:100%;
+  padding:16px;
   border:none;
-  border-radius:10px;
-  margin-top:10px;
+  border-radius:12px;
+  background:#ff0055;
+  color:#fff;
+  font-size:18px;
+  cursor:pointer;
+  margin-top:15px;
+}
+
+button:hover{
+  opacity:.9;
+}
+
+.row{
+  margin-top:15px;
 }
 
 #status{
-  margin-top:15px;
-  color:#0f0;
+  margin-top:18px;
+  font-weight:bold;
+  color:#00ff99;
 }
 </style>
 </head>
-
 <body>
 
-<h2>Crear Evento</h2>
+<div class="box">
 
-<input id="eventName" placeholder="Nombre evento">
-<input id="bgUrl" placeholder="URL fondo DJ">
-<input id="frameUrl" placeholder="URL frame impresión">
+<h1>Admin Evento</h1>
 
+<input type="text" id="eventName" placeholder="Nombre del evento">
+
+<div class="filebox">
+<label>Fondo pantalla DJ</label>
+<input type="file" id="bgFile" accept="image/*">
+<div id="bgName"></div>
+</div>
+
+<div class="filebox">
+<label>Frame impresión</label>
+<input type="file" id="frameFile" accept="image/*">
+<div id="frameName"></div>
+</div>
+
+<div class="row">
 <label>
-  <input type="checkbox" id="eventActive" checked>
-  Evento activo
+<input type="checkbox" id="eventActive" checked>
+ Evento activo
 </label>
+</div>
 
 <button onclick="createEvent()">Crear Evento</button>
 
 <div id="status"></div>
 
+</div>
+
 <script>
+
+const bgFile = document.getElementById("bgFile");
+const frameFile = document.getElementById("frameFile");
+
+bgFile.onchange = ()=> {
+  document.getElementById("bgName").innerText =
+    bgFile.files[0] ? "Seleccionado: " + bgFile.files[0].name : "";
+};
+
+frameFile.onchange = ()=> {
+  document.getElementById("frameName").innerText =
+    frameFile.files[0] ? "Seleccionado: " + frameFile.files[0].name : "";
+};
 
 function createEvent(){
 
-  const name = document.getElementById("eventName").value;
+  const name = document.getElementById("eventName").value.trim();
   const active = document.getElementById("eventActive").checked;
-  const background = document.getElementById("bgUrl").value;
-  const frame = document.getElementById("frameUrl").value;
 
-  fetch("/create-event", {
+  if(!name){
+    alert("Poné nombre del evento");
+    return;
+  }
+
+  fetch("/create-event",{
     method:"POST",
-    headers:{ "Content-Type":"application/json" },
+    headers:{
+      "Content-Type":"application/json"
+    },
     body: JSON.stringify({
-      name,
-      active,
-      background,
-      frame
+      name:name,
+      active:active,
+      background:"",
+      frame:""
     })
   })
   .then(r=>r.json())
   .then(data=>{
     if(data.success){
-      document.getElementById("status").innerText = "Evento creado correctamente 🔥";
+      document.getElementById("status").innerText =
+        "Evento creado correctamente 🔥";
     }else{
-      document.getElementById("status").innerText = "Error al crear evento";
+      document.getElementById("status").innerText =
+        "No se pudo crear";
     }
   })
-  .catch(err=>{
-    document.getElementById("status").innerText = "Error conexión";
-    console.error(err);
+  .catch(()=>{
+    document.getElementById("status").innerText =
+      "Error de conexión";
   });
 
 }
