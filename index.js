@@ -68,7 +68,7 @@ app.post("/create-event", (req,res)=>{
   res.json({ success:true });
 });
 
-// 📤 OBTENER EVENTO
+// 🔥 OBTENER EVENTO (ESTE ES EL FIX CLAVE)
 app.get("/event", (req,res)=>{
   res.json(currentEvent);
 });

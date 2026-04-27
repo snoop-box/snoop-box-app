@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Admin Snoop Box</title>
+<title>Admin</title>
 
 <style>
 body{
@@ -12,112 +12,81 @@ body{
   text-align:center;
 }
 
-input,button{
+input{
+  display:block;
+  margin:10px auto;
   padding:12px;
-  margin:6px;
+  width:80%;
   border-radius:8px;
   border:none;
 }
 
 button{
+  padding:14px;
   background:#ff0055;
   color:white;
+  border:none;
+  border-radius:10px;
+  margin-top:10px;
 }
 
-.event{
-  background:#222;
-  margin:10px;
-  padding:12px;
-  border-radius:10px;
+#status{
+  margin-top:15px;
+  color:#0f0;
 }
 </style>
-
 </head>
+
 <body>
 
 <h2>Crear Evento</h2>
 
-<input id="name" placeholder="Nombre del evento (ej: olivia2)"><br>
-
-<div>
-  <p>🎨 Fondo DJ (pantalla grande)</p>
-  <input type="file" id="bgFile" accept="image/*"><br>
-</div>
-
-<div>
-  <p>🖼 Frame de impresión (PNG transparente 1200x1800)</p>
-  <input type="file" id="frameFile" accept="image/*"><br>
-</div>
+<input id="eventName" placeholder="Nombre evento">
+<input id="bgUrl" placeholder="URL fondo DJ">
+<input id="frameUrl" placeholder="URL frame impresión">
 
 <label>
-<input type="checkbox" id="active"> Evento activo
-</label><br>
+  <input type="checkbox" id="eventActive" checked>
+  Evento activo
+</label>
 
-<button onclick="save()">Guardar</button>
+<button onclick="createEvent()">Crear Evento</button>
 
-<h2>Eventos creados</h2>
-<div id="list"></div>
+<div id="status"></div>
 
 <script>
 
-async function save(){
+function createEvent(){
 
-  const nameValue = document.getElementById("name").value.trim();
+  const name = document.getElementById("eventName").value;
+  const active = document.getElementById("eventActive").checked;
+  const background = document.getElementById("bgUrl").value;
+  const frame = document.getElementById("frameUrl").value;
 
-  if(!nameValue){
-    alert("Poné un nombre al evento");
-    return;
-  }
-
-  const fd = new FormData();
-  fd.append("name", nameValue);
-  fd.append("active", document.getElementById("active").checked);
-
-  if(bgFile.files[0]) fd.append("bg", bgFile.files[0]);
-  if(frameFile.files[0]) fd.append("frame", frameFile.files[0]);
-
-  await fetch("/admin/event",{
+  fetch("/create-event", {
     method:"POST",
-    body: fd
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      name,
+      active,
+      background,
+      frame
+    })
+  })
+  .then(r=>r.json())
+  .then(data=>{
+    if(data.success){
+      document.getElementById("status").innerText = "Evento creado correctamente 🔥";
+    }else{
+      document.getElementById("status").innerText = "Error al crear evento";
+    }
+  })
+  .catch(err=>{
+    document.getElementById("status").innerText = "Error conexión";
+    console.error(err);
   });
 
-  document.getElementById("name").value = "";
-
-  load();
 }
-
-async function load(){
-
-  const res = await fetch("/admin/events");
-  const data = await res.json();
-
-  list.innerHTML = "";
-
-  Object.keys(data).forEach(n=>{
-
-    if(!n) return;
-
-    const e = data[n];
-
-    list.innerHTML += `
-    <div class="event">
-      <strong>${n}</strong><br>
-      Activo:
-      <input type="checkbox" ${e.active ? "checked" : ""}
-      onchange="toggle('${n}', this.checked)">
-    </div>`;
-  });
-}
-
-async function toggle(name, active){
-  await fetch("/admin/event/toggle",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({ name, active })
-  });
-}
-
-load();
 
 </script>
 
