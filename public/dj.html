@@ -2,328 +2,229 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Snoop Box DJ</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DJ Screen</title>
 
 <style>
-body {
-  margin: 0;
-  font-family: Arial;
-  overflow: hidden;
-  color: white;
-}
-
-/* FONDO */
-#bg {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  background: black;
-  background-size: cover;
-  background-position: center;
-  z-index: -1;
-  filter: brightness(0.6);
-}
-
-/* LOGIN */
-#login {
-  position:absolute;
-  width:100%;
-  height:100%;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
-  background:black;
-}
-
-input, button {
-  padding:15px;
-  font-size:18px;
-  border-radius:10px;
-  border:none;
-  margin:10px;
-}
-
-button {
-  background:#ff0055;
-  color:white;
-}
-
-/* APP */
-#app { display:none; }
-
-/* VISOR */
-#viewer {
-  position:absolute;
-  width:100%;
-  height:100%;
-  display:flex;
-  justify-content:center;
-  align-items:center;
+body{
+  margin:0;
   overflow:hidden;
-}
-
-/* SLIDE */
-.slideBox {
-  position:relative;
-}
-
-.slide {
-  width:auto;
-  height:auto;
-  max-width:80vw;
-  max-height:70vh;
-  object-fit:contain;
-  display:block;
-  margin:auto;
-
-  opacity:0;
-  transform:translateX(200px) scale(0.9);
-  transition: all 0.8s ease;
-}
-
-.slide.active {
-  opacity:1;
-  transform:translateX(0) scale(1);
-}
-
-/* BORRAR */
-.deleteBtn {
-  position:absolute;
-  top:10px;
-  right:10px;
-  background:red;
+  font-family:Arial;
+  background:#000 center center/cover no-repeat;
   color:white;
+}
+
+#overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+}
+
+#eventName{
+  position:absolute;
+  top:20px;
+  left:30px;
+  font-size:42px;
+  font-weight:bold;
+  z-index:2;
+}
+
+#photoBox{
+  position:absolute;
+  top:110px;
+  left:50%;
+  transform:translateX(-50%);
+  width:60vw;
+  height:60vh;
+  border-radius:20px;
+  overflow:hidden;
+  z-index:2;
+  box-shadow:0 0 25px rgba(255,255,255,.15);
+}
+
+#photoBox img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+#ranking{
+  position:absolute;
+  right:30px;
+  top:120px;
+  width:260px;
+  background:rgba(0,0,0,.55);
+  padding:18px;
+  border-radius:18px;
+  z-index:2;
+}
+
+#ranking h2{
+  margin-top:0;
+  font-size:24px;
+}
+
+.rankItem{
+  padding:8px 0;
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+
+#qrBox{
+  position:absolute;
+  left:30px;
+  bottom:30px;
+  background:rgba(0,0,0,.55);
+  padding:18px;
+  border-radius:18px;
+  z-index:2;
+  text-align:center;
+}
+
+#sortBtn{
+  position:absolute;
+  right:30px;
+  bottom:30px;
+  z-index:2;
+  background:#ff0055;
   border:none;
-  border-radius:50%;
-  width:32px;
-  height:32px;
+  color:white;
+  padding:18px 26px;
+  font-size:22px;
+  border-radius:16px;
   cursor:pointer;
 }
 
-/* NOMBRE ANIMADO */
-#name {
-  position:absolute;
-  bottom:120px;
-  width:100%;
-  text-align:center;
-  font-size:36px;
+#sortWinner{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.88);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  z-index:10;
+  font-size:64px;
   font-weight:bold;
-
-  opacity:0;
-  transform:translateY(30px);
-  transition: all 0.6s ease;
 }
 
-#name.show {
-  opacity:1;
-  transform:translateY(0);
-}
-
-/* QR */
-#qrBox {
-  position:absolute;
-  bottom:20px;
-  left:20px;
-  background:white;
-  padding:15px;
-  border-radius:16px;
-  text-align:center;
-  color:black;
-}
-
-#qrBox img {
-  width:180px;
-}
-
-/* RANKING */
-#rankingBox {
-  position:absolute;
-  top:20px;
-  right:20px;
-  background: rgba(0,0,0,0.8);
-  padding:20px;
-  border-radius:16px;
-  font-size:26px;
-  border:3px solid gold;
-  animation:pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% { box-shadow:0 0 10px gold; }
-  50% { box-shadow:0 0 25px gold; }
-  100% { box-shadow:0 0 10px gold; }
-}
-
-/* NUEVA FOTO */
-#newBadge {
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%) scale(0);
-  background:#00ff88;
-  color:black;
-  padding:20px 40px;
-  font-size:40px;
-  border-radius:20px;
-  opacity:0;
-  transition:0.5s;
-}
-
-#newBadge.show {
-  transform:translate(-50%,-50%) scale(1);
-  opacity:1;
+#sortWinner small{
+  font-size:28px;
+  margin-bottom:20px;
 }
 </style>
 </head>
-
 <body>
 
-<div id="bg"></div>
+<div id="overlay"></div>
 
-<!-- LOGIN -->
-<div id="login">
-  <h2>Evento</h2>
-  <input id="eventInput" placeholder="ej: olivia2">
-  <button onclick="start()">Entrar</button>
+<div id="eventName">Cargando...</div>
+
+<div id="photoBox">
+  <img id="mainPhoto" src="https://picsum.photos/1200/800?1">
 </div>
 
-<!-- APP -->
-<div id="app">
-
-  <div id="viewer"></div>
-  <div id="name"></div>
-  <div id="rankingBox"></div>
-
-  <div id="qrBox">
-    <img id="qrImg">
-    <div>Escaneá y subí tus fotos 📸</div>
-  </div>
-
-  <div id="newBadge">📸 Nueva foto</div>
-
+<div id="ranking">
+  <h2>🏆 Ranking</h2>
+  <div class="rankItem">Mesa 1 - 120 pts</div>
+  <div class="rankItem">Mesa 4 - 110 pts</div>
+  <div class="rankItem">Mesa 2 - 95 pts</div>
 </div>
+
+<div id="qrBox">
+  <div>Escaneá y participá</div>
+  <canvas id="qr"></canvas>
+</div>
+
+<button id="sortBtn">🎁 Sorteo</button>
+
+<div id="sortWinner">
+  <small>GANADOR</small>
+  <div id="winnerName">JUAN</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
 <script>
 
-let eventId="";
-let photos=[];
-let index=0;
-let lastCount=0;
+let photos = [];
+let photoIndex = 0;
 
-// START
-async function start(){
+// cargar evento
+async function loadEvent(){
 
-  eventId=document.getElementById("eventInput").value.trim();
-  if(!eventId) return alert("Ingresá evento");
+  const res = await fetch("/event");
+  const ev = await res.json();
 
-  document.getElementById("login").style.display="none";
-  document.getElementById("app").style.display="block";
+  document.getElementById("eventName").innerText =
+    ev.name || "Evento";
 
-  // CONFIG EVENTO
-  const res=await fetch("/event/"+eventId);
-  const config=await res.json();
-
-  if(config.bg){
-    document.getElementById("bg").style.backgroundImage=`url(${config.bg})`;
+  if(ev.background){
+    document.body.style.backgroundImage =
+      `url('${ev.background}')`;
   }
 
-  // QR
-  const link=location.origin+"/?event="+eventId;
-  document.getElementById("qrImg").src=
-    "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data="+encodeURIComponent(link);
+  QRCode.toCanvas(
+    document.getElementById("qr"),
+    window.location.origin,
+    { width:160 }
+  );
 
-  load();
-  loadRanking();
-
-  setInterval(load,4000);
-  setInterval(loadRanking,4000);
-  setInterval(nextSlide,3000);
 }
 
-// LOAD
-async function load(){
-  const res=await fetch("/photos/"+eventId);
-  const data=await res.json();
+// cargar fotos
+async function loadPhotos(){
 
-  if(data.length>lastCount) showNew();
+  const res = await fetch("/photos");
+  photos = await res.json();
 
-  lastCount=data.length;
-  photos=data;
 }
 
-// SLIDE
-function nextSlide(){
-  if(photos.length===0) return;
+function rotatePhotos(){
 
-  const viewer=document.getElementById("viewer");
-  const name=document.getElementById("name");
+  if(!photos.length) return;
 
-  viewer.innerHTML="";
+  photoIndex++;
 
-  const p=photos[index];
+  if(photoIndex >= photos.length){
+    photoIndex = 0;
+  }
 
-  const box=document.createElement("div");
-  box.className="slideBox";
+  document.getElementById("mainPhoto").src =
+    photos[photoIndex].image;
 
-  const img=document.createElement("img");
-  img.src=p.url;
-  img.className="slide";
+}
 
-  const del=document.createElement("button");
-  del.innerText="X";
-  del.className="deleteBtn";
+// sorteo base
+async function runSort(){
 
-  del.onclick=async()=>{
-    await fetch("/photo",{
-      method:"DELETE",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({url:p.url})
-    });
-    load();
-  };
+  const res = await fetch("/guests");
+  const guests = await res.json();
 
-  box.appendChild(img);
-  box.appendChild(del);
-  viewer.appendChild(box);
+  if(!guests.length) return;
 
-  setTimeout(()=> img.classList.add("active"),50);
+  const random =
+    guests[Math.floor(Math.random()*guests.length)];
 
-  // 🔥 NOMBRE ANIMADO
-  name.classList.remove("show");
+  document.getElementById("winnerName").innerText =
+    random.name.toUpperCase();
+
+  const box = document.getElementById("sortWinner");
+  box.style.display = "flex";
 
   setTimeout(()=>{
-    name.innerText=p.name;
-    name.classList.add("show");
-  },300);
+    box.style.display = "none";
+  },4000);
 
-  index++;
-  if(index>=photos.length) index=0;
 }
 
-// RANKING
-async function loadRanking(){
-  const res=await fetch("/ranking/"+eventId);
-  const data=await res.json();
+document.getElementById("sortBtn")
+.addEventListener("click",runSort);
 
-  let html="🏆 Ranking<br>";
-  data.slice(0,3).forEach((r,i)=>{
-    html+=`${i+1}. Mesa ${r.table} (${r.points})<br>`;
-  });
+loadEvent();
+loadPhotos();
 
-  document.getElementById("rankingBox").innerHTML=html;
-}
-
-// NUEVA FOTO
-function showNew(){
-  const badge=document.getElementById("newBadge");
-  badge.classList.add("show");
-
-  setTimeout(()=>{
-    badge.classList.remove("show");
-  },2000);
-}
+setInterval(loadPhotos,5000);
+setInterval(rotatePhotos,4000);
 
 </script>
 
