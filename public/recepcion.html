@@ -12,7 +12,7 @@ body{
   padding:25px;
   color:#fff;
   background:
-  linear-gradient(135deg,#0f0f0f,#1a1030,#111827);
+  linear-gradient(135deg,#0b1f5e,#1e3a8a,#7f1d1d,#dc2626);
   min-height:100vh;
 }
 
@@ -22,7 +22,7 @@ body{
 }
 
 .box{
-  background:rgba(255,255,255,0.06);
+  background:rgba(255,255,255,0.07);
   backdrop-filter:blur(10px);
   padding:22px;
   border-radius:20px;
@@ -50,19 +50,13 @@ button{
   font-size:16px;
   cursor:pointer;
   margin-top:8px;
-  transition:.2s;
-}
-
-button:hover{
-  transform:translateY(-1px);
 }
 
 .guest{
-  background:rgba(255,255,255,0.05);
+  background:rgba(255,255,255,0.06);
   padding:16px;
   border-radius:16px;
   margin-bottom:12px;
-  box-shadow:0 5px 18px rgba(0,0,0,.18);
 }
 
 .row{
@@ -73,7 +67,7 @@ button:hover{
 
 .small{
   flex:1;
-  background:#374151;
+  background:#334155;
   padding:10px;
   font-size:14px;
 }
@@ -83,12 +77,25 @@ button:hover{
   font-weight:bold;
 }
 
+.qrWrap{
+  margin-top:12px;
+  display:flex;
+  gap:15px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
 .qr{
-  margin-top:10px;
   background:#fff;
   padding:8px;
   border-radius:10px;
-  display:inline-block;
+}
+
+.qrText{
+  font-size:15px;
+  max-width:220px;
+  line-height:1.4;
+  color:#f8fafc;
 }
 
 #app{
@@ -100,30 +107,24 @@ button:hover{
   font-size:32px;
   margin:0 0 10px 0;
   font-weight:bold;
-  letter-spacing:1px;
   animation:fadeGlow 2s ease-in-out infinite alternate;
 }
 
 #counter{
   text-align:center;
-  font-size:18px;
   margin-bottom:10px;
-  color:#d1d5db;
 }
 
 #loginBox h1{
   text-align:center;
-  margin-top:0;
 }
 
 @keyframes fadeGlow{
   from{
-    text-shadow:0 0 5px rgba(255,255,255,.15);
-    transform:scale(1);
+    text-shadow:0 0 5px rgba(255,255,255,.2);
   }
   to{
-    text-shadow:0 0 18px rgba(255,0,120,.55);
-    transform:scale(1.02);
+    text-shadow:0 0 20px rgba(255,0,90,.6);
   }
 }
 </style>
@@ -133,25 +134,18 @@ button:hover{
 <div class="wrap">
 
 <div class="box" id="loginBox">
-
 <h1>Recepción</h1>
 
-<input type="text"
-id="eventInput"
-placeholder="Nombre del evento">
+<input type="text" id="eventInput" placeholder="Nombre del evento">
 
-<button onclick="loginEvent()">
-Ingresar
-</button>
+<button onclick="loginEvent()">Ingresar</button>
 
 <div id="loginStatus"></div>
-
 </div>
 
 <div id="app">
 
 <div class="box">
-
 <h2 id="eventTitle"></h2>
 
 <div id="counter">Cargando...</div>
@@ -160,206 +154,169 @@ Ingresar
 id="search"
 placeholder="Buscar invitado"
 oninput="renderGuests()">
-
 </div>
 
 <div id="guestList"></div>
 
 </div>
-
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
 <script>
-
 let currentEvent = null;
 let guests = [];
 
 async function loginEvent(){
 
   const name =
-    document.getElementById("eventInput")
-    .value.trim();
+  document.getElementById("eventInput")
+  .value.trim();
 
   const status =
-    document.getElementById("loginStatus");
+  document.getElementById("loginStatus");
 
   if(!name){
-    status.innerText = "Escribí nombre";
+    status.innerText="Escribí nombre";
     return;
   }
 
-  status.innerText = "Buscando...";
-
   const res =
-    await fetch("/event/" +
-    encodeURIComponent(name));
+  await fetch("/event/"+encodeURIComponent(name));
 
   const data = await res.json();
 
   if(!data.success){
-    status.innerText =
-      "Evento no encontrado";
+    status.innerText="Evento no encontrado";
     return;
   }
 
   currentEvent = data.event;
 
-  document.getElementById("loginBox")
-    .style.display = "none";
-
-  document.getElementById("app")
-    .style.display = "block";
-
-  document.getElementById("eventTitle")
-    .innerText = currentEvent.name;
+  document.getElementById("loginBox").style.display="none";
+  document.getElementById("app").style.display="block";
+  document.getElementById("eventTitle").innerText=currentEvent.name;
 
   loadGuests();
-
 }
 
 async function loadGuests(){
 
   const res =
-    await fetch("/guests/" +
-    currentEvent.id);
+  await fetch("/guests/"+currentEvent.id);
 
   guests = await res.json();
 
   renderGuests();
-
 }
 
 function guestName(g){
-
-  return g.name ||
-         g.Nombre ||
-         g.NOMBRE ||
-         g.invitado ||
-         "Sin nombre";
-
+  return g.name || "Sin nombre";
 }
 
 function guestTable(g){
-
-  return g.table ||
-         g.Mesa ||
-         g.mesa ||
-         "-";
-
+  return g.table || "-";
 }
 
 function renderGuests(){
 
-  const text =
-    document.getElementById("search")
-    .value.toLowerCase();
+  const txt =
+  document.getElementById("search")
+  .value.toLowerCase();
 
   const box =
-    document.getElementById("guestList");
+  document.getElementById("guestList");
 
   const filtered =
-    guests.filter(g =>
-      guestName(g)
-      .toLowerCase()
-      .includes(text)
-    );
+  guests.filter(g =>
+    guestName(g)
+    .toLowerCase()
+    .includes(txt)
+  );
 
-  box.innerHTML = "";
+  box.innerHTML="";
 
   filtered.forEach(g=>{
 
-    const name = guestName(g);
-    const table = guestTable(g);
-
     box.innerHTML += `
-      <div class="guest">
+    <div class="guest">
 
-        <strong>${name}</strong>
-        <br>
-        Mesa: ${table}
+      <strong>${guestName(g)}</strong><br>
+      Mesa: ${guestTable(g)}
 
-        <div class="row">
+      <div class="row">
 
-          ${
-            g.arrived
-            ? '<span class="green">✔ Presente</span>'
-            : `<button class="small"
-                onclick="markArrived(${g.id})">
-                Llegó
-               </button>`
-          }
+      ${
+        g.arrived
+        ? '<span class="green">✔ Presente</span>'
+        : `<button class="small"
+           onclick="markArrived(${g.id})">
+           Llegó
+           </button>`
+      }
 
-          <button class="small"
-            onclick="showQR(${g.id})">
-            QR
-          </button>
-
-        </div>
-
-        <div id="qr_${g.id}"></div>
+      <button class="small"
+      onclick="showQR(${g.id})">
+      QR
+      </button>
 
       </div>
-    `;
 
+      <div id="qr_${g.id}"></div>
+
+    </div>
+    `;
   });
 
-  const arrived =
-    guests.filter(g => g.arrived).length;
-
   document.getElementById("counter")
-    .innerText =
-    "Presentes: " +
-    arrived +
-    " / " +
-    guests.length;
+  .innerText =
+  "Presentes: " +
+  guests.filter(g=>g.arrived).length +
+  " / " +
+  guests.length;
 
 }
 
 async function markArrived(id){
 
   await fetch(
-    "/arrive/" +
-    currentEvent.id +
-    "/" +
-    id,
-    { method:"POST" }
+    "/arrive/"+currentEvent.id+"/"+id,
+    {method:"POST"}
   );
 
   loadGuests();
-
 }
 
 function showQR(id){
 
   const guest =
-    guests.find(g => g.id === id);
-
-  const name =
-    guestName(guest);
+  guests.find(g=>g.id===id);
 
   const code =
-    currentEvent.name +
-    "|" +
-    id +
-    "|" +
-    name;
+  currentEvent.name +
+  "|" + id +
+  "|" + guestName(guest);
 
   const box =
-    document.getElementById("qr_"+id);
+  document.getElementById("qr_"+id);
 
   box.innerHTML =
-    `<canvas id="canvas_${id}" class="qr"></canvas>`;
+  `
+  <div class="qrWrap">
+    <canvas id="canvas_${id}" class="qr"></canvas>
+    <div class="qrText">
+      Escaneá y comenzá a participar del evento
+    </div>
+  </div>
+  `;
 
   QRCode.toCanvas(
     document.getElementById("canvas_"+id),
     code,
-    { width:150 }
+    {width:150}
   );
 
 }
-
 </script>
 
 </body>
