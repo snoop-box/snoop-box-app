@@ -44,7 +44,7 @@ body{
   margin-bottom:18px;
 }
 
-input{
+input,select{
   width:100%;
   padding:15px;
   margin:8px 0;
@@ -129,15 +129,18 @@ button{
 <div id="subText">Ingresá para participar</div>
 </div>
 
-<input id="nameInput" placeholder="Tu nombre">
-
 <input
-id="tableInput"
-type="number"
-inputmode="numeric"
-placeholder="Mesa">
+id="nameInput"
+placeholder="Tu nombre">
 
-<button class="primary"
+<select id="tableInput">
+<option value="">
+Seleccioná tu mesa
+</option>
+</select>
+
+<button
+class="primary"
 onclick="enterApp()">
 Ingresar
 </button>
@@ -159,17 +162,20 @@ id="userInfo"></div>
 
 <div class="section">
 
-<button class="primary menuBtn"
+<button
+class="primary menuBtn"
 onclick="openCamera()">
 📸 Subir Foto
 </button>
 
-<button class="dark menuBtn"
+<button
+class="dark menuBtn"
 onclick="openRanking()">
 🏆 Ranking Mesas
 </button>
 
-<button class="dark menuBtn"
+<button
+class="dark menuBtn"
 onclick="alert('Próximo paso: trivia')">
 🎮 Trivia
 </button>
@@ -219,8 +225,10 @@ async function init(){
  }
 
  const res =
- await fetch("/event/" +
- encodeURIComponent(eventName));
+ await fetch(
+ "/event/" +
+ encodeURIComponent(eventName)
+ );
 
  const data =
  await res.json();
@@ -234,9 +242,10 @@ async function init(){
 
  }
 
- eventData = data.event;
+ eventData =
+ data.event;
 
- /* AUTOLOGIN QR */
+ /* AUTOLOGIN RECEPCIÓN */
 
  const qrName =
  params.get("name");
@@ -278,6 +287,8 @@ function renderLogin(){
  eventTitle.innerText =
  eventData.name;
 
+ buildTables();
+
  const saved =
  localStorage.getItem(
  "snoop_" + eventName
@@ -296,13 +307,37 @@ function renderLogin(){
 
 /* ===================== */
 
+function buildTables(){
+
+ tableInput.innerHTML =
+ `<option value="">
+ Seleccioná tu mesa
+ </option>`;
+
+ for(let i=1;i<=40;i++){
+
+  const n =
+  String(i)
+  .padStart(2,"0");
+
+  tableInput.innerHTML +=
+  `<option value="${n}">
+   Mesa ${n}
+   </option>`;
+
+ }
+
+}
+
+/* ===================== */
+
 function enterApp(){
 
  const name =
  nameInput.value.trim();
 
  const table =
- tableInput.value.trim();
+ tableInput.value;
 
  if(!name || !table){
 
@@ -394,7 +429,8 @@ function uploadPhoto(e){
   "✅ Foto subida";
 
   setTimeout(()=>{
-   status.innerText = "";
+   status.innerText =
+   "";
   },2500);
 
  };
