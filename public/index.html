@@ -26,22 +26,15 @@ body{
   border-radius:22px;
   padding:22px;
   box-shadow:0 18px 40px rgba(0,0,0,.25);
+  margin-bottom:18px;
 }
 
-.center{
-  text-align:center;
-}
+.center{text-align:center;}
 
-#eventTitle,
-#eventTitleApp{
+#eventTitle,#eventTitleApp{
   font-size:34px;
   font-weight:bold;
   margin-bottom:8px;
-}
-
-#subText{
-  color:#ddd;
-  margin-bottom:18px;
 }
 
 input,select{
@@ -64,28 +57,10 @@ button{
   cursor:pointer;
 }
 
-.primary{
-  background:#ff0055;
-  color:#fff;
-}
+.primary{background:#ff0055;color:#fff;}
+.dark{background:#263238;color:#fff;}
 
-.dark{
-  background:#263238;
-  color:#fff;
-}
-
-.menuBtn{
-  margin-top:12px;
-  font-size:18px;
-}
-
-#app{
-  display:none;
-}
-
-#login{
-  display:none;
-}
+#login,#app{display:none;}
 
 .badge{
   display:inline-block;
@@ -96,23 +71,21 @@ button{
   font-size:14px;
 }
 
+#photoInput{display:none;}
+#status{margin-top:12px;font-size:14px;}
+
+.rankRow{
+  display:flex;
+  justify-content:space-between;
+  padding:12px;
+  margin-top:8px;
+  border-radius:12px;
+  background:rgba(255,255,255,.06);
+}
+
 .small{
-  font-size:14px;
   color:#ddd;
-}
-
-.section{
-  margin-top:18px;
-}
-
-#photoInput{
-  display:none;
-}
-
-#status{
-  margin-top:12px;
   font-size:14px;
-  color:#fff;
 }
 </style>
 </head>
@@ -126,22 +99,15 @@ button{
 
 <div class="center">
 <div id="eventTitle">Evento</div>
-<div id="subText">Ingresá para participar</div>
 </div>
 
-<input
-id="nameInput"
-placeholder="Tu nombre">
+<input id="nameInput" placeholder="Tu nombre">
 
 <select id="tableInput">
-<option value="">
-Seleccioná tu mesa
-</option>
+<option value="">Seleccioná tu mesa</option>
 </select>
 
-<button
-class="primary"
-onclick="enterApp()">
+<button class="primary" onclick="enterApp()">
 Ingresar
 </button>
 
@@ -149,34 +115,21 @@ Ingresar
 
 <!-- APP -->
 
-<div class="card" id="app">
+<div id="app">
+
+<div class="card">
 
 <div class="center">
-
 <div id="eventTitleApp"></div>
-
-<div class="badge"
-id="userInfo"></div>
-
+<div class="badge" id="userInfo"></div>
 </div>
 
-<div class="section">
-
-<button
-class="primary menuBtn"
-onclick="openCamera()">
+<button class="primary" onclick="openCamera()">
 📸 Subir Foto
 </button>
 
-<button
-class="dark menuBtn"
-onclick="openRanking()">
-🏆 Ranking Mesas
-</button>
-
-<button
-class="dark menuBtn"
-onclick="alert('Próximo paso: trivia')">
+<button class="dark"
+onclick="alert('Trivia próxima etapa')">
 🎮 Trivia
 </button>
 
@@ -191,8 +144,19 @@ onchange="uploadPhoto(event)">
 
 </div>
 
-<div class="section center small">
-Snoop Box Experience
+<!-- RANKING -->
+
+<div class="card">
+
+<div class="center">
+<h2>🏆 Ranking Mesas</h2>
+<div class="small">
+Actualización automática
+</div>
+</div>
+
+<div id="rankingBox"></div>
+
 </div>
 
 </div>
@@ -201,236 +165,164 @@ Snoop Box Experience
 
 <script>
 
-let eventName = "";
-let eventData = null;
-let user = null;
-
-/* ===================== */
+let eventName="";
+let eventData=null;
+let user=null;
 
 async function init(){
 
- const params =
+ const params=
  new URLSearchParams(location.search);
 
- eventName =
- params.get("event") || "";
+ eventName=
+ params.get("event")||"";
 
- if(!eventName){
+ if(!eventName)return;
 
-  document.body.innerHTML =
-  "<div style='padding:30px;color:white;font-family:Arial'>Falta ?event=nombre</div>";
+ const res=
+ await fetch("/event/"+encodeURIComponent(eventName));
 
-  return;
-
- }
-
- const res =
- await fetch(
- "/event/" +
- encodeURIComponent(eventName)
- );
-
- const data =
+ const data=
  await res.json();
 
- if(!data.success){
+ if(!data.success)return;
 
-  document.body.innerHTML =
-  "<div style='padding:30px;color:white;font-family:Arial'>Evento no encontrado</div>";
+ eventData=data.event;
 
-  return;
-
- }
-
- eventData =
- data.event;
-
- /* AUTOLOGIN RECEPCIÓN */
-
- const qrName =
- params.get("name");
-
- const qrTable =
- params.get("table");
+ const qrName=params.get("name");
+ const qrTable=params.get("table");
 
  if(qrName && qrTable){
 
-  user = {
-   name: qrName,
-   table: qrTable
-  };
+   user={
+    name:qrName,
+    table:qrTable
+   };
 
-  localStorage.setItem(
-   "snoop_" + eventName,
-   JSON.stringify(user)
-  );
+   localStorage.setItem(
+   "snoop_"+eventName,
+   JSON.stringify(user));
 
-  showApp();
-  return;
-
+   showApp();
+   return;
  }
 
  renderLogin();
 
 }
 
-/* ===================== */
-
 function renderLogin(){
 
- login.style.display =
- "block";
+ login.style.display="block";
+ app.style.display="none";
 
- app.style.display =
- "none";
-
- eventTitle.innerText =
+ eventTitle.innerText=
  eventData.name;
 
  buildTables();
 
- const saved =
+ const saved=
  localStorage.getItem(
- "snoop_" + eventName
- );
+ "snoop_"+eventName);
 
  if(saved){
 
-  user =
-  JSON.parse(saved);
-
+  user=JSON.parse(saved);
   showApp();
 
  }
 
 }
 
-/* ===================== */
-
 function buildTables(){
-
- tableInput.innerHTML =
- `<option value="">
- Seleccioná tu mesa
- </option>`;
 
  for(let i=1;i<=40;i++){
 
-  const n =
-  String(i)
-  .padStart(2,"0");
+  const n=
+  String(i).padStart(2,"0");
 
-  tableInput.innerHTML +=
+  tableInput.innerHTML+=
   `<option value="${n}">
    Mesa ${n}
    </option>`;
-
  }
 
 }
 
-/* ===================== */
-
 function enterApp(){
 
- const name =
+ const name=
  nameInput.value.trim();
 
- const table =
+ const table=
  tableInput.value;
 
- if(!name || !table){
+ if(!name || !table)return;
 
-  alert(
-   "Completá nombre y mesa"
-  );
-
-  return;
-
- }
-
- user = {
-  name,
-  table
- };
+ user={name,table};
 
  localStorage.setItem(
- "snoop_" + eventName,
- JSON.stringify(user)
- );
+ "snoop_"+eventName,
+ JSON.stringify(user));
 
  showApp();
 
 }
 
-/* ===================== */
-
 function showApp(){
 
- login.style.display =
- "none";
+ login.style.display="none";
+ app.style.display="block";
 
- app.style.display =
- "block";
-
- eventTitleApp.innerText =
+ eventTitleApp.innerText=
  eventData.name;
 
- userInfo.innerText =
- user.name +
- " • Mesa " +
+ userInfo.innerText=
+ user.name+
+ " • Mesa "+
  user.table;
 
-}
+ loadRanking();
 
-/* ===================== */
+}
 
 function openCamera(){
-
  photoInput.click();
-
 }
-
-/* ===================== */
 
 function uploadPhoto(e){
 
- const file =
- e.target.files[0];
+ const file=e.target.files[0];
+ if(!file)return;
 
- if(!file) return;
-
- status.innerText =
+ status.innerText=
  "Subiendo foto...";
 
- const reader =
+ const reader=
  new FileReader();
 
- reader.onload =
+ reader.onload=
  async function(ev){
 
-  await fetch(
-   "/upload-photo",
-   {
-    method:"POST",
-    headers:{
-     "Content-Type":
-     "application/json"
-    },
-    body:JSON.stringify({
-      eventName:eventName,
-      user:user.name,
-      image:ev.target.result
-    })
-   }
-  );
+  await fetch("/upload-photo",{
+   method:"POST",
+   headers:{
+    "Content-Type":"application/json"
+   },
+   body:JSON.stringify({
+    eventName:eventName,
+    user:user.name,
+    image:ev.target.result
+   })
+  });
 
-  status.innerText =
+  status.innerText=
   "✅ Foto subida";
 
+  loadRanking();
+
   setTimeout(()=>{
-   status.innerText =
-   "";
+   status.innerText="";
   },2500);
 
  };
@@ -439,21 +331,45 @@ function uploadPhoto(e){
 
 }
 
-/* ===================== */
+async function loadRanking(){
 
-function openRanking(){
+ const res=
+ await fetch("/ranking/"+encodeURIComponent(eventName));
 
- location.href =
- "/ranking.html?event=" +
- encodeURIComponent(eventName);
+ const data=
+ await res.json();
+
+ rankingBox.innerHTML="";
+
+ if(!data.length){
+
+  rankingBox.innerHTML=
+  "Sin puntos todavía";
+
+  return;
+ }
+
+ data.slice(0,5).forEach((r,i)=>{
+
+ rankingBox.innerHTML+=`
+ <div class="rankRow">
+   <div>${i+1}. Mesa ${r.table}</div>
+   <div>${r.points||0} pts</div>
+ </div>
+ `;
+
+ });
 
 }
 
-/* ===================== */
+setInterval(()=>{
+ if(app.style.display==="block"){
+  loadRanking();
+ }
+},5000);
 
 init();
 
 </script>
-
 </body>
 </html>
