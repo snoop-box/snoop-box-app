@@ -110,8 +110,6 @@ app.get("/events",(req,res)=>{
   res.json(events);
 });
 
-/* EVENTO + BLOQUEO SI ESTÁ DESACTIVADO */
-
 app.get("/event/:name",(req,res)=>{
 
   const found = events.find(ev =>
@@ -277,7 +275,7 @@ app.get("/control/:id",(req,res)=>{
 });
 
 /* ===============================
-   FOTOS LEGACY
+   SUBIDA LEGACY
 =============================== */
 
 app.post("/upload",(req,res)=>{
@@ -292,6 +290,19 @@ app.post("/upload",(req,res)=>{
 
     const table =
       req.body.table || "-";
+
+    const ev =
+      events.find(e =>
+        normalize(e.name) ===
+        normalize(event)
+      );
+
+    if(!ev || !ev.active){
+      return res.json({
+        success:false,
+        inactive:true
+      });
+    }
 
     const folder =
       "snoopbox/" +
@@ -308,34 +319,24 @@ app.post("/upload",(req,res)=>{
       folder,
       url:fakeUrl,
       user:name,
-      table:table,
+      table,
       createdAt:Date.now()
     });
 
-    const ev =
-      events.find(e =>
-        normalize(e.name) ===
-        normalize(event)
+    const guest =
+      ev.guests.find(g =>
+        g.table == table
       );
 
-    if(ev){
-
-      const guest =
-        ev.guests.find(g =>
-          g.table == table
-        );
-
-      if(guest){
-        guest.points =
-          (guest.points || 0) + 1;
-      }
-
+    if(guest){
+      guest.points =
+        (guest.points || 0) + 1;
     }
 
     res.json({
       success:true,
       url:fakeUrl,
-      folder:folder
+      folder
     });
 
   }catch(err){
@@ -349,7 +350,7 @@ app.post("/upload",(req,res)=>{
 });
 
 /* ===============================
-   FOTOS NUEVO SISTEMA
+   SUBIDA NUEVA + LOCK
 =============================== */
 
 app.post("/upload-photo",(req,res)=>{
@@ -367,6 +368,19 @@ app.post("/upload-photo",(req,res)=>{
     });
   }
 
+  const ev =
+    events.find(e =>
+      normalize(e.name) ===
+      normalize(eventName)
+    );
+
+  if(!ev || !ev.active){
+    return res.json({
+      success:false,
+      inactive:true
+    });
+  }
+
   const folder =
     "snoopbox/" +
     cleanFolder(eventName);
@@ -374,42 +388,32 @@ app.post("/upload-photo",(req,res)=>{
   photos.unshift({
     id:newId(),
     eventName:eventName,
-    folder:folder,
+    folder,
     url:image,
     user:user || "Invitado",
     table:table || "-",
     createdAt:Date.now()
   });
 
-  const ev =
-    events.find(e =>
-      normalize(e.name) ===
-      normalize(eventName)
+  let guest =
+    ev.guests.find(g =>
+      normalize(g.name) ===
+      normalize(user)
     );
 
-  if(ev){
+  if(!guest && table){
 
-    let guest =
+    guest =
       ev.guests.find(g =>
-        normalize(g.name) ===
-        normalize(user)
+        g.table == table
       );
 
-    if(!guest && table){
+  }
 
-      guest =
-        ev.guests.find(g =>
-          g.table == table
-        );
+  if(guest){
 
-    }
-
-    if(guest){
-
-      guest.points =
-        (guest.points || 0) + 1;
-
-    }
+    guest.points =
+      (guest.points || 0) + 1;
 
   }
 
