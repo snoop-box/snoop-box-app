@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DJ Screen Cinema</title>
+<title>DJ Screen WOW FIT</title>
 
 <style>
 body{
@@ -58,10 +58,9 @@ button{
   position:fixed;
   inset:0;
   background:rgba(0,0,0,.42);
-  backdrop-filter:blur(1px);
 }
 
-/* EVENTO CENTRADO */
+/* EVENTO */
 
 #eventName{
   position:absolute;
@@ -74,15 +73,13 @@ button{
   text-shadow:0 8px 18px rgba(0,0,0,.45);
 }
 
-/* FOTO PRINCIPAL */
+/* FOTO BOX DINÁMICO */
 
 #photoBox{
   position:absolute;
   top:105px;
   left:50%;
   transform:translateX(-50%);
-  width:62vw;
-  height:62vh;
   display:none;
   z-index:4;
 
@@ -90,24 +87,32 @@ button{
   overflow:hidden;
   background:rgba(0,0,0,.35);
   box-shadow:0 28px 60px rgba(0,0,0,.45);
+
+  max-width:68vw;
+  max-height:68vh;
 }
 
 #photoImg{
+  display:block;
   width:100%;
   height:100%;
   object-fit:contain;
   background:#000;
 
   opacity:0;
-  transform:scale(1.04);
+  filter:blur(10px) brightness(.7);
+  transform:scale(1.08) translateY(20px);
+
   transition:
     opacity .9s ease,
-    transform 6s ease;
+    transform 1.2s ease,
+    filter 1s ease;
 }
 
 #photoImg.show{
   opacity:1;
-  transform:scale(1);
+  filter:blur(0) brightness(1);
+  transform:scale(1) translateY(0);
 }
 
 #photoUser{
@@ -117,8 +122,8 @@ button{
   bottom:0;
   background:linear-gradient(
     to top,
-    rgba(0,0,0,.72),
-    rgba(0,0,0,.08)
+    rgba(0,0,0,.78),
+    rgba(0,0,0,.05)
   );
   padding:18px;
   font-size:28px;
@@ -170,7 +175,7 @@ button{
   text-align:center;
 }
 
-/* BOTON */
+/* BOTÓN */
 
 #sortBtn{
   position:absolute;
@@ -219,24 +224,24 @@ button{
 <!-- LOGIN -->
 
 <div id="login">
-  <div class="loginBox">
+<div class="loginBox">
 
-    <h1>DJ Screen</h1>
+<h1>DJ Screen</h1>
 
-    <input
-    type="text"
-    id="eventInput"
-    placeholder="Nombre del evento">
+<input
+type="text"
+id="eventInput"
+placeholder="Nombre del evento">
 
-    <button
-    onclick="loginEvent()"
-    style="width:100%;padding:15px;background:#ff0055;color:#fff;font-size:18px;">
-    Entrar
-    </button>
+<button
+onclick="loginEvent()"
+style="width:100%;padding:15px;background:#ff0055;color:#fff;font-size:18px;">
+Entrar
+</button>
 
-    <div id="status"></div>
+<div id="status"></div>
 
-  </div>
+</div>
 </div>
 
 <!-- APP -->
@@ -248,8 +253,8 @@ button{
 <div id="eventName"></div>
 
 <div id="photoBox">
-  <img id="photoImg">
-  <div id="photoUser"></div>
+<img id="photoImg">
+<div id="photoUser"></div>
 </div>
 
 <div id="ranking">
@@ -288,46 +293,43 @@ let lastCount=0;
 
 async function loginEvent(){
 
- const name =
+ const name=
  eventInput.value.trim()
  .toLowerCase();
 
- const res =
+ const res=
  await fetch("/events");
 
- const events =
+ const events=
  await res.json();
 
- const found =
+ const found=
  events.find(ev =>
- ev.name.toLowerCase() === name
+ ev.name.toLowerCase()===name
  );
 
  if(!found){
-
-  status.innerText =
+  status.innerText=
   "Evento no encontrado";
-
   return;
-
  }
 
- selectedEvent = found;
+ selectedEvent=found;
 
  login.style.display="none";
  app.style.display="block";
 
- eventName.innerText =
+ eventName.innerText=
  selectedEvent.name;
 
  if(selectedEvent.background){
 
-  document.body.style.backgroundImage =
+  document.body.style.backgroundImage=
   `url('${selectedEvent.background}')`;
 
  }
 
- const qrLink =
+ const qrLink=
  location.origin +
  "/?event=" +
  encodeURIComponent(
@@ -337,7 +339,7 @@ async function loginEvent(){
  QRCode.toCanvas(
  qr,
  qrLink,
- { width:170 }
+ {width:170}
  );
 
  loadPhotos();
@@ -353,22 +355,22 @@ async function loginEvent(){
 
 async function loadPhotos(){
 
- const res =
+ const res=
  await fetch(
  "/photos/" +
  encodeURIComponent(
  selectedEvent.name
  ));
 
- const data =
+ const data=
  await res.json();
 
  if(data.length > lastCount){
   showAlert();
  }
 
- lastCount = data.length;
- photos = data;
+ lastCount=data.length;
+ photos=data;
 
 }
 
@@ -381,29 +383,63 @@ function rotatePhotos(){
  photoBox.style.display="block";
 
  if(photoIndex >= photos.length){
-  photoIndex = 0;
+  photoIndex=0;
  }
 
- const p =
+ const p=
  photos[photoIndex];
 
- const img =
+ const img=
  p.url || p.image;
 
  photoImg.classList.remove("show");
 
- setTimeout(()=>{
+ const temp =
+ new Image();
 
-  photoImg.src = img;
+ temp.onload=function(){
 
-  photoUser.innerText =
-  (p.user || "Invitado") +
-  " • Mesa " +
-  (p.table || "-");
+   const ratio =
+   temp.width / temp.height;
 
-  photoImg.classList.add("show");
+   let w,h;
 
- },250);
+   if(ratio > 1.25){
+
+     w="68vw";
+     h="52vh";
+
+   }else if(ratio < 0.8){
+
+     w="42vw";
+     h="72vh";
+
+   }else{
+
+     w="58vw";
+     h="62vh";
+
+   }
+
+   photoBox.style.width=w;
+   photoBox.style.height=h;
+
+   setTimeout(()=>{
+
+     photoImg.src=img;
+
+     photoUser.innerText =
+     (p.user || "Invitado") +
+     " • Mesa " +
+     (p.table || "-");
+
+     photoImg.classList.add("show");
+
+   },250);
+
+ };
+
+ temp.src=img;
 
  photoIndex++;
 
@@ -413,11 +449,11 @@ function rotatePhotos(){
 
 function showAlert(){
 
- newPhotoAlert.style.display =
+ newPhotoAlert.style.display=
  "block";
 
  setTimeout(()=>{
-  newPhotoAlert.style.display =
+  newPhotoAlert.style.display=
   "none";
  },2500);
 
@@ -427,14 +463,14 @@ function showAlert(){
 
 async function loadRanking(){
 
- const res =
+ const res=
  await fetch(
  "/ranking/" +
  encodeURIComponent(
  selectedEvent.name
  ));
 
- const data =
+ const data=
  await res.json();
 
  rankingBox.innerHTML="";
@@ -450,8 +486,8 @@ async function loadRanking(){
 
  rankingBox.innerHTML += `
  <div class="rankRow ${cls}">
-   <div>${i+1}. Mesa ${r.table}</div>
-   <div>${r.points||0}</div>
+  <div>${i+1}. Mesa ${r.table}</div>
+  <div>${r.points||0}</div>
  </div>
  `;
 
@@ -475,7 +511,7 @@ function runDraw(){
  photos.length
  )];
 
- winnerBox.innerHTML = `
+ winnerBox.innerHTML=`
  <div>🎉 GANADOR 🎉</div>
  <div style="font-size:72px;margin-top:20px;">
  ${random.user || "Invitado"}
