@@ -44,12 +44,21 @@ function cleanFolder(txt=""){
 =============================== */
 
 app.post("/create-event",(req,res)=>{
+
   try{
 
-    const { name, logoVenue, background, frame } = req.body;
+    const {
+      name,
+      logoVenue,
+      background,
+      frame
+    } = req.body;
 
     if(!name || !name.trim()){
-      return res.json({ success:false, message:"Nombre requerido" });
+      return res.json({
+        success:false,
+        message:"Nombre requerido"
+      });
     }
 
     const exists = events.find(ev =>
@@ -57,10 +66,14 @@ app.post("/create-event",(req,res)=>{
     );
 
     if(exists){
-      return res.json({ success:false, message:"Ese evento ya existe" });
+      return res.json({
+        success:false,
+        message:"Ese evento ya existe"
+      });
     }
 
-    const folder = "snoopbox/" + cleanFolder(name);
+    const folder =
+      "snoopbox/" + cleanFolder(name);
 
     const event = {
       id:newId(),
@@ -83,25 +96,41 @@ app.post("/create-event",(req,res)=>{
     });
 
   }catch(err){
+
     res.json({
       success:false,
       message:"Error servidor"
     });
+
   }
+
 });
 
 app.get("/events",(req,res)=>{
   res.json(events);
 });
 
+/* EVENTO + BLOQUEO SI ESTÁ DESACTIVADO */
+
 app.get("/event/:name",(req,res)=>{
 
   const found = events.find(ev =>
-    normalize(ev.name) === normalize(req.params.name)
+    normalize(ev.name) ===
+    normalize(req.params.name)
   );
 
   if(!found){
-    return res.json({ success:false });
+    return res.json({
+      success:false
+    });
+  }
+
+  if(!found.active){
+    return res.json({
+      success:false,
+      inactive:true,
+      message:"Evento desactivado"
+    });
   }
 
   res.json({
@@ -114,10 +143,13 @@ app.get("/event/:name",(req,res)=>{
 app.post("/toggle-event/:id",(req,res)=>{
 
   const id = Number(req.params.id);
+
   const ev = events.find(e=>e.id===id);
 
   if(!ev){
-    return res.json({ success:false });
+    return res.json({
+      success:false
+    });
   }
 
   ev.active = !ev.active;
@@ -136,10 +168,13 @@ app.post("/toggle-event/:id",(req,res)=>{
 app.post("/upload-guests/:id",(req,res)=>{
 
   const id = Number(req.params.id);
+
   const ev = events.find(e=>e.id===id);
 
   if(!ev){
-    return res.json({ success:false });
+    return res.json({
+      success:false
+    });
   }
 
   const guests = req.body.guests || [];
@@ -165,6 +200,7 @@ app.post("/upload-guests/:id",(req,res)=>{
 app.get("/guests/:id",(req,res)=>{
 
   const id = Number(req.params.id);
+
   const ev = events.find(e=>e.id===id);
 
   if(!ev) return res.json([]);
@@ -181,13 +217,18 @@ app.post("/arrive/:eventId/:guestId",(req,res)=>{
   const ev = events.find(e=>e.id===eventId);
 
   if(!ev){
-    return res.json({ success:false });
+    return res.json({
+      success:false
+    });
   }
 
-  const guest = ev.guests.find(g=>g.id===guestId);
+  const guest =
+    ev.guests.find(g=>g.id===guestId);
 
   if(!guest){
-    return res.json({ success:false });
+    return res.json({
+      success:false
+    });
   }
 
   if(!guest.arrived){
@@ -195,7 +236,9 @@ app.post("/arrive/:eventId/:guestId",(req,res)=>{
     ev.arrived++;
   }
 
-  res.json({ success:true });
+  res.json({
+    success:true
+  });
 
 });
 
@@ -206,13 +249,17 @@ app.post("/arrive/:eventId/:guestId",(req,res)=>{
 app.get("/control/:id",(req,res)=>{
 
   const id = Number(req.params.id);
+
   const ev = events.find(e=>e.id===id);
 
   if(!ev){
-    return res.json({ success:false });
+    return res.json({
+      success:false
+    });
   }
 
   const total = ev.guests.length;
+
   const percent =
     total
     ? Math.round((ev.arrived/total)*100)
@@ -230,16 +277,21 @@ app.get("/control/:id",(req,res)=>{
 });
 
 /* ===============================
-   FOTOS TÓTEM LEGACY
+   FOTOS LEGACY
 =============================== */
 
 app.post("/upload",(req,res)=>{
 
   try{
 
-    const event = req.body.event || "default";
-    const name  = req.body.name || "Invitado";
-    const table = req.body.table || "-";
+    const event =
+      req.body.event || "default";
+
+    const name =
+      req.body.name || "Invitado";
+
+    const table =
+      req.body.table || "-";
 
     const folder =
       "snoopbox/" +
@@ -256,13 +308,15 @@ app.post("/upload",(req,res)=>{
       folder,
       url:fakeUrl,
       user:name,
-      table,
+      table:table,
       createdAt:Date.now()
     });
 
-    const ev = events.find(e =>
-      normalize(e.name) === normalize(event)
-    );
+    const ev =
+      events.find(e =>
+        normalize(e.name) ===
+        normalize(event)
+      );
 
     if(ev){
 
@@ -281,19 +335,21 @@ app.post("/upload",(req,res)=>{
     res.json({
       success:true,
       url:fakeUrl,
-      folder
+      folder:folder
     });
 
   }catch(err){
 
-    res.json({ success:false });
+    res.json({
+      success:false
+    });
 
   }
 
 });
 
 /* ===============================
-   FOTOS NUEVO SISTEMA + PUNTOS FIX
+   FOTOS NUEVO SISTEMA
 =============================== */
 
 app.post("/upload-photo",(req,res)=>{
@@ -318,7 +374,7 @@ app.post("/upload-photo",(req,res)=>{
   photos.unshift({
     id:newId(),
     eventName:eventName,
-    folder,
+    folder:folder,
     url:image,
     user:user || "Invitado",
     table:table || "-",
