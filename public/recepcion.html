@@ -2,71 +2,240 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Admin</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Recepción</title>
+
 <style>
 body{
-  font-family:Arial;
+  margin:0;
   background:#111;
-  color:white;
-  text-align:center;
+  color:#fff;
+  font-family:Arial;
+  padding:25px;
+}
+
+.wrap{
+  max-width:800px;
+  margin:auto;
+}
+
+.box{
+  background:#1d1d1d;
+  padding:22px;
+  border-radius:18px;
+  margin-bottom:20px;
 }
 
 input{
-  display:block;
-  margin:10px auto;
-  padding:10px;
-  width:80%;
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  margin:10px 0;
+  box-sizing:border-box;
 }
 
 button{
+  width:100%;
   padding:12px;
-  background:#ff0055;
-  color:white;
   border:none;
+  border-radius:12px;
+  background:#ff0055;
+  color:#fff;
+  font-size:16px;
+  cursor:pointer;
+  margin-top:8px;
+}
+
+.guest{
+  background:#262626;
+  padding:14px;
+  border-radius:12px;
+  margin-bottom:10px;
+}
+
+.small{
+  background:#444;
+  padding:10px;
+  font-size:14px;
+}
+
+.green{
+  color:#00ff99;
+}
+
+#app{
+  display:none;
 }
 </style>
 </head>
-
 <body>
 
-<h2>Crear Evento</h2>
+<div class="wrap">
 
-<input id="eventName" placeholder="Nombre evento">
-<input id="bgUrl" placeholder="URL fondo DJ">
-<input id="frameUrl" placeholder="URL frame impresión">
+<div class="box" id="loginBox">
 
-<label>
-  <input type="checkbox" id="eventActive" checked>
-  Evento activo
-</label>
+<h1>Recepción</h1>
 
-<button onclick="createEvent()">Crear</button>
+<input type="text"
+id="eventInput"
+placeholder="Nombre del evento">
+
+<button onclick="loginEvent()">
+Ingresar
+</button>
+
+<div id="loginStatus"></div>
+
+</div>
+
+<div id="app">
+
+<div class="box">
+
+<h2 id="eventTitle"></h2>
+
+<div id="counter">Cargando...</div>
+
+<input type="text"
+id="search"
+placeholder="Buscar invitado"
+oninput="renderGuests()">
+
+</div>
+
+<div id="guestList"></div>
+
+</div>
+
+</div>
 
 <script>
 
-function createEvent(){
+let currentEvent = null;
+let guests = [];
 
-  const name = document.getElementById("eventName").value;
-  const active = document.getElementById("eventActive").checked;
-  const background = document.getElementById("bgUrl").value;
-  const frame = document.getElementById("frameUrl").value;
+async function loginEvent(){
 
-  fetch("/create-event", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      name,
-      active,
-      background,
-      frame
-    })
-  })
-  .then(r=>r.json())
-  .then(data=>{
-    if(data.success){
-      alert("Evento creado 🔥");
-    }
+  const name =
+    document.getElementById("eventInput")
+    .value.trim();
+
+  const status =
+    document.getElementById("loginStatus");
+
+  if(!name){
+    status.innerText = "Escribí nombre";
+    return;
+  }
+
+  status.innerText = "Buscando...";
+
+  const res =
+    await fetch("/event/" +
+    encodeURIComponent(name));
+
+  const data = await res.json();
+
+  if(!data.success){
+    status.innerText =
+      "Evento no encontrado";
+    return;
+  }
+
+  currentEvent = data.event;
+
+  document.getElementById("loginBox")
+    .style.display = "none";
+
+  document.getElementById("app")
+    .style.display = "block";
+
+  document.getElementById("eventTitle")
+    .innerText = currentEvent.name;
+
+  loadGuests();
+
+}
+
+async function loadGuests(){
+
+  const res =
+    await fetch("/guests/" +
+    currentEvent.id);
+
+  guests = await res.json();
+
+  renderGuests();
+
+}
+
+function renderGuests(){
+
+  const text =
+    document.getElementById("search")
+    .value.toLowerCase();
+
+  const box =
+    document.getElementById("guestList");
+
+  const filtered =
+    guests.filter(g =>
+      g.name.toLowerCase()
+      .includes(text)
+    );
+
+  box.innerHTML = "";
+
+  filtered.forEach(g=>{
+
+    box.innerHTML += `
+      <div class="guest">
+
+        <strong>${g.name}</strong>
+        <br>
+        Mesa: ${g.table || "-"}
+
+        <br><br>
+
+        ${
+          g.arrived
+          ? '<span class="green">✔ Presente</span>'
+          : `<button class="small"
+              onclick="markArrived(${g.id})">
+              Llegó
+             </button>`
+        }
+
+      </div>
+    `;
+
   });
+
+  const arrived =
+    guests.filter(g => g.arrived).length;
+
+  document.getElementById("counter")
+    .innerText =
+    "Presentes: " +
+    arrived +
+    " / " +
+    guests.length;
+
+}
+
+async function markArrived(id){
+
+  await fetch(
+    "/arrive/" +
+    currentEvent.id +
+    "/" +
+    id,
+    { method:"POST" }
+  );
+
+  loadGuests();
+
 }
 
 </script>
