@@ -1,3 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Plus V2</title>
+
+<style>
+body{
+  margin:0;
+  background:#111;
+  color:#fff;
+  font-family:Arial;
+  padding:30px;
+}
+.wrap{
+  max-width:820px;
+  margin:auto;
+}
+.box{
+  background:#1d1d1d;
+  padding:25px;
+  border-radius:18px;
+  margin-bottom:25px;
+}
+input[type=text],
+input[type=file]{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  margin:10px 0;
+  box-sizing:border-box;
+}
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:#ff0055;
+  color:#fff;
+  font-size:16px;
+  cursor:pointer;
+  margin-top:10px;
+}
+button:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+.preview{
+  max-width:100%;
+  max-height:140px;
+  border-radius:10px;
+  margin-top:8px;
+}
+.event{
+  background:#262626;
+  padding:14px;
+  border-radius:12px;
+  margin-bottom:12px;
+}
+.row{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+}
+.smallBtn{
+  flex:1;
+  background:#444;
+  font-size:14px;
+  padding:10px;
+}
+#status{
+  min-height:24px;
+  margin-top:12px;
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<div class="box">
+<h1>Admin Plus V2</h1>
+
+<input type="text" id="eventName" placeholder="Nombre del evento">
+
+<label>Fondo DJ</label>
+<input type="file" id="bgFile" accept="image/*">
+<img id="bgPreview" class="preview" style="display:none;">
+
+<label>Frame</label>
+<input type="file" id="frameFile" accept="image/*">
+<img id="framePreview" class="preview" style="display:none;">
+
+<button id="saveBtn" onclick="saveEvent()">Crear Evento</button>
+
+<div id="status"></div>
+</div>
+
+<div class="box">
+<h2>Eventos</h2>
+<div id="list">Cargando...</div>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
 <script>
 const CLOUD_NAME = "daxf4enjn";
 const UPLOAD_PRESET = "snoopbox";
@@ -6,12 +115,11 @@ let bgUrl = "";
 let frameUrl = "";
 let uploading = 0;
 
-/* ======================
+/* =======================
    HELPERS
-====================== */
+======================= */
 
 function btnState(){
-
   const btn = document.getElementById("saveBtn");
 
   if(uploading > 0){
@@ -21,21 +129,18 @@ function btnState(){
     btn.disabled = false;
     btn.innerText = "Crear Evento";
   }
-
 }
 
 function preview(file,id){
-
   const reader = new FileReader();
 
-  reader.onload = e=>{
+  reader.onload = function(e){
     const img = document.getElementById(id);
     img.src = e.target.result;
     img.style.display = "block";
   };
 
   reader.readAsDataURL(file);
-
 }
 
 function resetForm(){
@@ -52,9 +157,9 @@ function resetForm(){
 
 }
 
-/* ======================
+/* =======================
    CLOUDINARY
-====================== */
+======================= */
 
 async function uploadImage(file){
 
@@ -79,9 +184,9 @@ async function uploadImage(file){
 
 }
 
-/* ======================
-   FILE EVENTS
-====================== */
+/* =======================
+   FILE INPUTS
+======================= */
 
 document.getElementById("bgFile").onchange =
 async function(){
@@ -119,9 +224,9 @@ async function(){
 
 };
 
-/* ======================
-   GUARDAR
-====================== */
+/* =======================
+   SAVE EVENT
+======================= */
 
 async function saveEvent(){
 
@@ -179,67 +284,75 @@ async function saveEvent(){
 
 }
 
-/* ======================
-   LISTA
-====================== */
+/* =======================
+   EVENTS LIST
+======================= */
 
 async function loadEvents(){
 
   const box =
     document.getElementById("list");
 
-  const res = await fetch("/events");
-  const data = await res.json();
+  try{
 
-  if(!data.length){
-    box.innerHTML = "Sin eventos";
-    return;
-  }
+    const res = await fetch("/events");
+    const data = await res.json();
 
-  box.innerHTML = "";
+    if(!data.length){
+      box.innerHTML = "Sin eventos";
+      return;
+    }
 
-  data.slice().reverse().forEach(ev=>{
+    box.innerHTML = "";
 
-    box.innerHTML += `
-      <div class="event">
+    data.slice().reverse().forEach(function(ev){
 
-        <strong>${ev.name}</strong>
-        <br>
-        ${ev.active ? "🟢 Activo":"⚪ Inactivo"}
-        <br>
-        Invitados: ${(ev.guests||[]).length}
+      box.innerHTML += `
+        <div class="event">
 
-        <div class="row">
+          <strong>${ev.name}</strong>
+          <br>
+          ${ev.active ? "🟢 Activo" : "⚪ Inactivo"}
+          <br>
+          Invitados: ${(ev.guests || []).length}
 
-          <button class="smallBtn"
-          onclick="toggleEvent(${ev.id})">
-          Activar
-          </button>
+          <div class="row">
 
-          <button class="smallBtn"
-          onclick="openExcel(${ev.id})">
-          Excel
-          </button>
+            <button class="smallBtn"
+            onclick="toggleEvent(${ev.id})">
+            Activar
+            </button>
+
+            <button class="smallBtn"
+            onclick="openExcel(${ev.id})">
+            Excel
+            </button>
+
+          </div>
+
+          <input
+            type="file"
+            id="excel_${ev.id}"
+            accept=".xlsx,.xls,.csv"
+            style="display:none"
+            onchange="processExcel(event,${ev.id})">
 
         </div>
+      `;
 
-        <input
-          type="file"
-          id="excel_${ev.id}"
-          accept=".xlsx,.xls,.csv"
-          style="display:none"
-          onchange="processExcel(event,${ev.id})">
+    });
 
-      </div>
-    `;
+  }catch(err){
 
-  });
+    box.innerHTML = "Error cargando";
+
+  }
 
 }
 
 async function toggleEvent(id){
 
-  await fetch("/toggle-event/"+id,{
+  await fetch("/toggle-event/" + id,{
     method:"POST"
   });
 
@@ -247,14 +360,14 @@ async function toggleEvent(id){
 
 }
 
-/* ======================
-   EXCEL FIX V3
-====================== */
+/* =======================
+   EXCEL
+======================= */
 
 function openExcel(id){
 
   document
-    .getElementById("excel_"+id)
+    .getElementById("excel_" + id)
     .click();
 
 }
@@ -272,7 +385,7 @@ function processExcel(e,id){
       new Uint8Array(evt.target.result);
 
     const workbook =
-      XLSX.read(data,{ type:"array" });
+      XLSX.read(data,{type:"array"});
 
     const sheet =
       workbook.Sheets[
@@ -282,11 +395,11 @@ function processExcel(e,id){
     const rows =
       XLSX.utils.sheet_to_json(sheet);
 
-    const guests = rows.map(r=>{
+    const guests = rows.map(function(r){
 
       const clean = {};
 
-      Object.keys(r).forEach(key=>{
+      Object.keys(r).forEach(function(key){
 
         const k =
           key.toString()
@@ -298,7 +411,6 @@ function processExcel(e,id){
       });
 
       return {
-
         name:
           clean.nombre ||
           clean.name ||
@@ -312,10 +424,9 @@ function processExcel(e,id){
 
         phone:
           clean.telefono ||
-          clean.teléfono ||
+          clean["teléfono"] ||
           clean.phone ||
           ""
-
       };
 
     });
@@ -330,7 +441,7 @@ function processExcel(e,id){
 
 async function uploadGuests(id,guests){
 
-  await fetch("/upload-guests/"+id,{
+  await fetch("/upload-guests/" + id,{
     method:"POST",
     headers:{
       "Content-Type":"application/json"
@@ -350,3 +461,6 @@ loadEvents();
 btnState();
 
 </script>
+
+</body>
+</html>
