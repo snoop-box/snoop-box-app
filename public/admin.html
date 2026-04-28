@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Admin Snoop Box</title>
+<title>Admin Core Test</title>
 
 <style>
 body{
@@ -15,7 +15,7 @@ body{
 }
 
 .wrap{
-  max-width:850px;
+  max-width:700px;
   margin:auto;
 }
 
@@ -26,13 +26,7 @@ body{
   margin-bottom:25px;
 }
 
-h1,h2{
-  margin-top:0;
-  text-align:center;
-}
-
-input[type=text],
-input[type=file]{
+input{
   width:100%;
   padding:14px;
   border:none;
@@ -47,58 +41,22 @@ button{
   border:none;
   border-radius:12px;
   background:#ff0055;
-  color:#fff;
+  color:white;
   font-size:16px;
   cursor:pointer;
   margin-top:10px;
 }
 
-button:hover{
-  opacity:.9;
-}
-
-.preview{
-  max-width:100%;
-  max-height:140px;
-  border-radius:10px;
-  margin-top:8px;
-}
-
-#status{
-  min-height:24px;
-  margin-top:12px;
-  text-align:center;
-}
-
-.eventItem{
+.event{
   background:#262626;
   padding:14px;
   border-radius:12px;
-  margin-bottom:12px;
+  margin-bottom:10px;
 }
 
-.row{
-  display:flex;
-  gap:10px;
-  margin-top:10px;
-}
-
-.smallBtn{
-  flex:1;
-  background:#444;
-  font-size:14px;
-  padding:10px;
-}
-
-.tag{
-  color:#00ff99;
-  margin-top:6px;
-}
-
-.sub{
-  color:#aaa;
-  font-size:14px;
-  margin-top:5px;
+#status{
+  margin-top:12px;
+  min-height:24px;
 }
 </style>
 </head>
@@ -112,14 +70,6 @@ button:hover{
 
 <input type="text" id="eventName" placeholder="Nombre del evento">
 
-<label>Imagen fondo DJ</label>
-<input type="file" id="bgFile" accept="image/*">
-<img id="bgPreview" class="preview" style="display:none;">
-
-<label>Frame impresión</label>
-<input type="file" id="frameFile" accept="image/*">
-<img id="framePreview" class="preview" style="display:none;">
-
 <button onclick="createEvent()">Crear Evento</button>
 
 <div id="status"></div>
@@ -128,194 +78,104 @@ button:hover{
 
 <div class="box">
 
-<h2>Eventos creados</h2>
+<h2>Eventos</h2>
 
-<div id="eventsList">Cargando...</div>
-
-</div>
+<div id="list">Cargando...</div>
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+</div>
 
 <script>
 
-/* ===========================
-   CLOUDINARY
-=========================== */
-
-/* REEMPLAZAR POR LOS TUYOS */
-const CLOUD_NAME = "demo";
-const UPLOAD_PRESET = "unsigned_preset";
-
-let bgUrl = "";
-let frameUrl = "";
-
-/* ===========================
-   PREVIEW + SUBIDA
-=========================== */
-
-document.getElementById("bgFile").onchange = async function(){
-
-  const file = this.files[0];
-  if(!file) return;
-
-  preview(file,"bgPreview");
-  bgUrl = await uploadCloudinary(file);
-
-};
-
-document.getElementById("frameFile").onchange = async function(){
-
-  const file = this.files[0];
-  if(!file) return;
-
-  preview(file,"framePreview");
-  frameUrl = await uploadCloudinary(file);
-
-};
-
-function preview(file,id){
-
-  const reader = new FileReader();
-
-  reader.onload = e => {
-    const img = document.getElementById(id);
-    img.src = e.target.result;
-    img.style.display = "block";
-  };
-
-  reader.readAsDataURL(file);
-
-}
-
-async function uploadCloudinary(file){
-
-  const form = new FormData();
-
-  form.append("file", file);
-  form.append("upload_preset", UPLOAD_PRESET);
-
-  const res = await fetch(
-    "https://api.cloudinary.com/v1_1/" +
-    CLOUD_NAME +
-    "/image/upload",
-    {
-      method:"POST",
-      body:form
-    }
-  );
-
-  const data = await res.json();
-
-  return data.secure_url || "";
-
-}
-
-/* ===========================
-   CREAR EVENTO
-=========================== */
-
 async function createEvent(){
-
-  const status = document.getElementById("status");
 
   const name =
     document.getElementById("eventName")
     .value.trim();
 
+  const status =
+    document.getElementById("status");
+
   if(!name){
-    status.innerText = "Poné nombre del evento";
+    status.innerText = "Escribí nombre";
     return;
   }
 
   status.innerText = "Creando...";
 
-  const res = await fetch("/create-event",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify({
-      name:name,
-      background:bgUrl,
-      frame:frameUrl
-    })
-  });
+  try{
 
-  const data = await res.json();
+    const res = await fetch("/create-event",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        name:name,
+        background:"",
+        frame:""
+      })
+    });
 
-  if(data.success){
+    const data = await res.json();
 
-    status.innerText = "✅ Evento creado";
-    loadEvents();
+    if(data.success){
+      status.innerText = "✅ Evento creado";
+      document.getElementById("eventName").value="";
+      loadEvents();
+    }else{
+      status.innerText =
+        data.message || "Error";
+    }
 
-  }else{
+  }catch(err){
 
-    status.innerText =
-      data.message || "Error";
+    console.log(err);
+    status.innerText = "❌ Error conexión";
 
   }
 
 }
 
-/* ===========================
-   LISTA EVENTOS
-=========================== */
-
 async function loadEvents(){
 
   const box =
-    document.getElementById("eventsList");
+    document.getElementById("list");
 
-  const res = await fetch("/events");
-  const events = await res.json();
+  try{
 
-  if(!events.length){
-    box.innerHTML = "Sin eventos";
-    return;
+    const res = await fetch("/events");
+    const data = await res.json();
+
+    if(!data.length){
+      box.innerHTML = "Sin eventos";
+      return;
+    }
+
+    box.innerHTML = "";
+
+    data.slice().reverse().forEach(ev=>{
+
+      box.innerHTML += `
+        <div class="event">
+          <strong>${ev.name}</strong>
+          <br>
+          ${ev.active ? "🟢 Activo" : "⚪ Inactivo"}
+          <br><br>
+          <button onclick="toggleEvent(${ev.id})">
+            Activar / Desactivar
+          </button>
+        </div>
+      `;
+
+    });
+
+  }catch(err){
+
+    box.innerHTML = "Error cargando";
+
   }
-
-  box.innerHTML = "";
-
-  events.slice().reverse().forEach(ev=>{
-
-    box.innerHTML += `
-      <div class="eventItem">
-
-        <strong>${ev.name}</strong>
-
-        ${ev.active ? '<div class="tag">🟢 Activo</div>' : ''}
-
-        <div class="sub">
-          Invitados:
-          ${(ev.guests || []).length}
-        </div>
-
-        <div class="row">
-
-          <button class="smallBtn"
-          onclick="toggleEvent(${ev.id})">
-          Activar / Desactivar
-          </button>
-
-          <button class="smallBtn"
-          onclick="loadExcel(${ev.id})">
-          Cargar Excel
-          </button>
-
-        </div>
-
-        <input type="file"
-          id="excel_${ev.id}"
-          accept=".xlsx,.xls,.csv"
-          style="display:none"
-          onchange="processExcel(event,${ev.id})">
-
-      </div>
-    `;
-
-  });
 
 }
 
@@ -324,73 +184,6 @@ async function toggleEvent(id){
   await fetch("/toggle-event/"+id,{
     method:"POST"
   });
-
-  loadEvents();
-
-}
-
-/* ===========================
-   EXCEL
-=========================== */
-
-function loadExcel(id){
-
-  document.getElementById(
-    "excel_" + id
-  ).click();
-
-}
-
-function processExcel(e,id){
-
-  const file = e.target.files[0];
-  if(!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = function(evt){
-
-    const data =
-      new Uint8Array(evt.target.result);
-
-    const workbook =
-      XLSX.read(data,{ type:"array" });
-
-    const sheet =
-      workbook.Sheets[
-        workbook.SheetNames[0]
-      ];
-
-    const rows =
-      XLSX.utils.sheet_to_json(sheet);
-
-    const guests = rows.map(r=>({
-      name:r.name || r.Nombre || "",
-      table:r.table || r.Mesa || "",
-      phone:r.phone || r.Telefono || ""
-    }));
-
-    uploadGuests(id,guests);
-
-  };
-
-  reader.readAsArrayBuffer(file);
-
-}
-
-async function uploadGuests(id,guests){
-
-  await fetch("/upload-guests/"+id,{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify({
-      guests:guests
-    })
-  });
-
-  alert("Lista cargada correctamente");
 
   loadEvents();
 
