@@ -129,12 +129,38 @@ button{
   display:none;
 }
 
+/* LOGO ANIMADO */
+
 #venueLogo{
   display:none;
   max-width:220px;
   max-height:90px;
   margin:0 auto 15px auto;
   object-fit:contain;
+  opacity:0;
+  transform:translateY(-15px) scale(.92);
+  filter:drop-shadow(0 0 14px rgba(255,255,255,.18));
+}
+
+#venueLogo.show{
+  animation:logoEnter 1s ease forwards;
+}
+
+@keyframes logoEnter{
+  0%{
+    opacity:0;
+    transform:translateY(-15px) scale(.92);
+  }
+
+  60%{
+    opacity:1;
+    transform:translateY(3px) scale(1.02);
+  }
+
+  100%{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
 }
 
 #eventTitle{
@@ -236,7 +262,7 @@ async function loginEvent(){
  const data = await res.json();
 
  if(!data.success){
-  status.innerText=
+  status.innerText =
   "Evento no encontrado";
   return;
  }
@@ -244,10 +270,10 @@ async function loginEvent(){
  currentEvent = data.event;
 
  document.getElementById("loginBox")
- .style.display="none";
+ .style.display = "none";
 
  document.getElementById("app")
- .style.display="block";
+ .style.display = "block";
 
  if(currentEvent.logoVenue){
 
@@ -257,12 +283,16 @@ async function loginEvent(){
   logo.src =
   currentEvent.logoVenue;
 
-  logo.style.display="block";
+  logo.style.display = "block";
+
+  setTimeout(()=>{
+    logo.classList.add("show");
+  },150);
 
  }
 
  document.getElementById("eventTitle")
- .innerText=currentEvent.name;
+ .innerText = currentEvent.name;
 
  loadGuests();
 
@@ -304,7 +334,7 @@ function renderGuests(){
  .includes(txt)
  );
 
- box.innerHTML="";
+ box.innerHTML = "";
 
  filtered.forEach(g=>{
 
@@ -380,7 +410,7 @@ function showQR(id){
  const box =
  document.getElementById("qr_"+id);
 
- box.innerHTML=`
+ box.innerHTML = `
 
  <div class="qrWrap">
 
