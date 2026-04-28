@@ -2,46 +2,40 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tótem Snoop Box</title>
 
 <style>
 body{
   margin:0;
+  font-family:Arial,sans-serif;
   background:radial-gradient(circle,#111,#000);
-  font-family:Arial;
   color:#fff;
 }
 
-#grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
-  gap:12px;
-  padding:12px;
+header{
+  padding:18px;
+  text-align:center;
+  background:rgba(255,255,255,.05);
 }
 
-.card{
-  position:relative;
-  border-radius:12px;
-  overflow:hidden;
+#logo{
+  max-width:220px;
+  max-height:90px;
+  object-fit:contain;
+  display:none;
+  margin:0 auto 10px auto;
 }
 
-.card img{
-  width:100%;
-  height:260px;
-  object-fit:cover;
+#eventTitle{
+  font-size:34px;
+  font-weight:bold;
 }
 
-.deleteBtn{
-  position:absolute;
-  top:8px;
-  right:8px;
-  background:red;
-  border:none;
-  color:#fff;
-  width:26px;
-  height:26px;
-  border-radius:50%;
-  cursor:pointer;
+#framePreview{
+  font-size:14px;
+  color:#ccc;
+  margin-top:6px;
 }
 
 #cameraBtn{
@@ -49,10 +43,39 @@ body{
   bottom:20px;
   right:20px;
   background:#ff0055;
-  padding:15px 20px;
-  border-radius:12px;
-  font-size:18px;
+  color:#fff;
+  border:none;
+  border-radius:16px;
+  padding:18px 24px;
+  font-size:20px;
   cursor:pointer;
+  z-index:100;
+}
+
+#grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:14px;
+  padding:18px;
+}
+
+.card{
+  background:#1a1a1a;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 10px 25px rgba(0,0,0,.25);
+}
+
+.card img{
+  width:100%;
+  height:280px;
+  object-fit:cover;
+}
+
+.cardInfo{
+  padding:10px;
+  font-size:14px;
+  color:#ddd;
 }
 
 #cameraModal{
@@ -62,19 +85,19 @@ body{
   justify-content:center;
   align-items:center;
   background:rgba(0,0,0,.9);
-  z-index:1000;
+  z-index:500;
 }
 
 #video{
-  width:60%;
-  max-width:700px;
+  width:70%;
+  max-width:800px;
   border-radius:20px;
   transform:scaleX(-1);
 }
 
 #countdown{
   position:absolute;
-  font-size:120px;
+  font-size:140px;
   font-weight:bold;
 }
 
@@ -84,73 +107,54 @@ body{
   background:#fff;
   opacity:0;
   pointer-events:none;
-  z-index:2000;
+  z-index:600;
+}
+
+#ranking{
+  position:fixed;
+  top:15px;
+  right:15px;
+  background:rgba(0,0,0,.8);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:16px;
+  padding:14px;
+  width:220px;
 }
 
 #qrBox{
   position:fixed;
-  bottom:15px;
   left:15px;
+  bottom:15px;
   background:#fff;
   color:#000;
-  padding:10px;
-  border-radius:12px;
+  padding:12px;
+  border-radius:16px;
+  text-align:center;
 }
 
 #qrBox img{
   width:120px;
 }
-
-#rankingBox{
-  position:fixed;
-  top:15px;
-  right:15px;
-  background:rgba(0,0,0,.8);
-  padding:15px;
-  border-radius:12px;
-  border:2px solid gold;
-}
-
-#modal{
-  position:fixed;
-  inset:0;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  background:rgba(0,0,0,.9);
-  z-index:1500;
-}
-
-#modalInner{
-  text-align:center;
-}
-
-#modal img{
-  max-width:320px;
-  border-radius:14px;
-}
-
-#modal button{
-  margin:10px;
-  padding:12px 18px;
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
-}
 </style>
 </head>
 <body>
 
+<header>
+  <img id="logo">
+  <div id="eventTitle">Cargando...</div>
+  <div id="framePreview"></div>
+</header>
+
 <div id="grid"></div>
 
-<div id="rankingBox"></div>
+<div id="ranking">Ranking...</div>
 
 <div id="qrBox">
   <img id="qrImg">
   <div>Subí tus fotos 📸</div>
 </div>
 
-<div id="cameraBtn">📸 Sacar foto</div>
+<button id="cameraBtn">📸 Sacar Foto</button>
 
 <div id="cameraModal">
   <video id="video" autoplay playsinline></video>
@@ -160,43 +164,85 @@ body{
 <canvas id="canvas" style="display:none;"></canvas>
 <div id="flash"></div>
 
-<div id="modal">
-  <div id="modalInner">
-    <img id="modalPhoto">
-    <br>
-    <button onclick="closeModal()">Cerrar</button>
-  </div>
-</div>
-
 <script>
 
-const eventId =
+const eventName =
 new URLSearchParams(location.search)
-.get("event") || "default";
+.get("event") || "";
 
 let stream = null;
-let selectedPhoto = "";
+let frameUrl = "";
+let photos = [];
 
-/* ===================== */
+/* ========================= */
 
-cameraBtn.onclick = startCamera;
+async function init(){
 
-/* ===================== */
+ if(!eventName){
+  document.getElementById("eventTitle")
+  .innerText = "Falta ?event=";
+  return;
+ }
+
+ const res =
+ await fetch("/event/" +
+ encodeURIComponent(eventName));
+
+ const data =
+ await res.json();
+
+ if(!data.success){
+  document.getElementById("eventTitle")
+  .innerText = "Evento no encontrado";
+  return;
+ }
+
+ const ev = data.event;
+
+ document.getElementById("eventTitle")
+ .innerText = ev.name;
+
+ if(ev.logoVenue){
+  const logo =
+  document.getElementById("logo");
+  logo.src = ev.logoVenue;
+  logo.style.display = "block";
+ }
+
+ frameUrl = ev.frame || "";
+
+ document.getElementById("framePreview")
+ .innerText =
+ frameUrl
+ ? "Frame cargado ✔"
+ : "Sin frame";
+
+ buildQR();
+ loadPhotos();
+ loadRanking();
+
+}
+
+/* ========================= */
 
 function buildQR(){
 
  const link =
  location.origin +
  "/?event=" +
- eventId;
+ eventName;
 
- qrImg.src =
+ document.getElementById("qrImg")
+ .src =
  "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" +
  encodeURIComponent(link);
 
 }
 
-/* ===================== */
+/* ========================= */
+
+document.getElementById("cameraBtn")
+.onclick = startCamera;
 
 async function startCamera(){
 
@@ -211,7 +257,7 @@ async function startCamera(){
   cameraModal.style.display =
    "flex";
 
-  startCountdown();
+  countdownStart();
 
  }catch(err){
 
@@ -221,21 +267,20 @@ async function startCamera(){
 
 }
 
-/* ===================== */
+function countdownStart(){
 
-function startCountdown(){
+ let n = 3;
 
- let count = 3;
+ countdown.innerText = n;
 
- countdown.innerText = count;
+ const timer =
+ setInterval(()=>{
 
- const timer = setInterval(()=>{
+  n--;
 
-  count--;
+  if(n>0){
 
-  if(count > 0){
-
-   countdown.innerText = count;
+   countdown.innerText = n;
 
   }else{
 
@@ -243,7 +288,7 @@ function startCountdown(){
 
    countdown.innerText = "";
 
-   takePhoto();
+   capturePhoto();
 
   }
 
@@ -251,9 +296,7 @@ function startCountdown(){
 
 }
 
-/* ===================== */
-
-async function takePhoto(){
+async function capturePhoto(){
 
  const canvas =
  document.getElementById("canvas");
@@ -270,68 +313,31 @@ async function takePhoto(){
  ctx.translate(canvas.width,0);
  ctx.scale(-1,1);
 
- ctx.drawImage(
-  video,
-  0,
-  0
- );
+ ctx.drawImage(video,0,0);
 
  flash.style.opacity = 1;
 
  setTimeout(()=>{
   flash.style.opacity = 0;
- },150);
+ },180);
 
- const blob =
- await (await fetch(
-  canvas.toDataURL(
-   "image/jpeg",
-   0.9
-  )
- )).blob();
-
- const fd =
- new FormData();
-
- fd.append(
-  "photo",
-  blob,
-  "photo.jpg"
+ const image =
+ canvas.toDataURL(
+  "image/jpeg",
+  0.9
  );
 
- fd.append(
-  "name",
-  "Cabina"
- );
-
- fd.append(
-  "table",
-  "Totem"
- );
-
- fd.append(
-  "event",
-  eventId
- );
-
- const upload =
- await fetch("/upload",{
+ await fetch("/upload-photo",{
   method:"POST",
-  body:fd
+  headers:{
+   "Content-Type":"application/json"
+  },
+  body:JSON.stringify({
+   eventName:eventName,
+   user:"Totem",
+   image:image
+  })
  });
-
- const result =
- await upload.json();
-
- if(result.success){
-
-  loadPhotos();
-
- }else{
-
-  alert("Error subiendo foto");
-
- }
 
  cameraModal.style.display =
   "none";
@@ -341,142 +347,92 @@ async function takePhoto(){
   .forEach(t=>t.stop());
  }
 
+ loadPhotos();
+
 }
 
-/* ===================== */
+/* ========================= */
 
 async function loadPhotos(){
 
- try{
+ const res =
+ await fetch("/photos/" +
+ encodeURIComponent(eventName));
 
-  const res =
-   await fetch(
-    "/photos/" + eventId
-   );
+ photos =
+ await res.json();
 
-  const data =
-   await res.json();
+ const grid =
+ document.getElementById("grid");
 
-  grid.innerHTML = "";
+ grid.innerHTML = "";
 
-  if(!Array.isArray(data)){
-   return;
-  }
+ photos.forEach((p,i)=>{
 
-  data.forEach(p=>{
+  const div =
+  document.createElement("div");
 
-   const div =
-    document.createElement("div");
+  div.className = "card";
 
-   div.className = "card";
+  div.innerHTML = `
+   <img src="${p.url || p.image}">
+   <div class="cardInfo">
+   Foto ${photos.length-i}
+   </div>
+  `;
 
-   div.innerHTML = `
-    <img src="${p.url}">
-    <button class="deleteBtn">X</button>
-   `;
+  grid.appendChild(div);
 
-   div.onclick = ()=>{
-    openModal(p.url);
-   };
-
-   div.querySelector(".deleteBtn")
-   .onclick = async(e)=>{
-
-    e.stopPropagation();
-
-    await fetch("/photo",{
-      method:"DELETE",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        url:p.url
-      })
-    });
-
-    loadPhotos();
-
-   };
-
-   grid.appendChild(div);
-
-  });
-
- }catch(err){
-
-  console.log("Error galería");
-
- }
+ });
 
 }
 
-/* ===================== */
+/* ========================= */
 
 async function loadRanking(){
 
- try{
+ const res =
+ await fetch("/ranking/" +
+ encodeURIComponent(eventName));
 
-  const res =
-   await fetch(
-    "/ranking/" + eventId
-   );
+ const data =
+ await res.json();
 
-  const data =
-   await res.json();
+ const box =
+ document.getElementById("ranking");
 
-  let html =
-   "<strong>🏆 Ranking</strong><br>";
+ let html =
+ "<strong>🏆 Ranking</strong><br><br>";
 
-  data.slice(0,3)
+ if(!data.length){
+  html += "Sin datos";
+ }else{
+
+  data.slice(0,5)
   .forEach((r,i)=>{
 
    html +=
-    (i+1) +
-    ". Mesa " +
-    (r.table || "-") +
-    " (" +
-    (r.points || 0) +
-    ")<br>";
+   (i+1) +
+   ". Mesa " +
+   (r.table || "-") +
+   " (" +
+   (r.points || 0) +
+   ")<br>";
 
   });
 
-  rankingBox.innerHTML =
-   html;
+ }
 
- }catch(err){}
-
-}
-
-/* ===================== */
-
-function openModal(url){
-
- selectedPhoto = url;
-
- modal.style.display =
-  "flex";
-
- modalPhoto.src = url;
+ box.innerHTML = html;
 
 }
-
-function closeModal(){
-
- modal.style.display =
-  "none";
-
-}
-
-/* ===================== */
-
-buildQR();
-loadPhotos();
-loadRanking();
 
 setInterval(()=>{
  loadPhotos();
  loadRanking();
 },4000);
+
+init();
 
 </script>
 
