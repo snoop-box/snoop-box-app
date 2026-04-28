@@ -174,11 +174,6 @@ onclick="alert('Próximo paso: trivia')">
 🎮 Trivia
 </button>
 
-<button class="dark menuBtn"
-onclick="openGallery()">
-🖼 Galería
-</button>
-
 <input
 type="file"
 accept="image/*"
@@ -241,6 +236,31 @@ async function init(){
 
  eventData = data.event;
 
+ /* AUTOLOGIN QR */
+
+ const qrName =
+ params.get("name");
+
+ const qrTable =
+ params.get("table");
+
+ if(qrName && qrTable){
+
+  user = {
+   name: qrName,
+   table: qrTable
+  };
+
+  localStorage.setItem(
+   "snoop_" + eventName,
+   JSON.stringify(user)
+  );
+
+  showApp();
+  return;
+
+ }
+
  renderLogin();
 
 }
@@ -249,8 +269,11 @@ async function init(){
 
 function renderLogin(){
 
- login.style.display = "block";
- app.style.display = "none";
+ login.style.display =
+ "block";
+
+ app.style.display =
+ "none";
 
  eventTitle.innerText =
  eventData.name;
@@ -309,8 +332,11 @@ function enterApp(){
 
 function showApp(){
 
- login.style.display = "none";
- app.style.display = "block";
+ login.style.display =
+ "none";
+
+ app.style.display =
+ "block";
 
  eventTitleApp.innerText =
  eventData.name;
@@ -383,14 +409,6 @@ function openRanking(){
 
  location.href =
  "/ranking.html?event=" +
- encodeURIComponent(eventName);
-
-}
-
-function openGallery(){
-
- location.href =
- "/galeria.html?event=" +
  encodeURIComponent(eventName);
 
 }
