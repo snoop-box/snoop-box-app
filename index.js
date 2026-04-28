@@ -5,178 +5,180 @@ const path = require("path");
 const app = express();
 
 app.use(cors());
-app.use(express.json({ limit:"10mb" }));
-app.use(express.urlencoded({ extended:true }));
+app.use(express.json({ limit: "15mb" }));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-console.log("🔥 SNOOP BOX BACKEND V2");
+console.log("🔥 SNOOP BOX MULTIEVENTO ONLINE");
 
-/* ===============================
-   DATA
-================================= */
+/* ==================================
+   BASE EN MEMORIA (multievento)
+================================== */
 
 let events = [];
-
-let currentEvent = {
-  name:"",
-  active:true,
-  background:"",
-  frame:""
-};
-
-let guests = [];
 let photos = [];
 
-function generateToken(){
-  return Math.random().toString(36).substring(2,10);
+/* ==================================
+   HELPERS
+================================== */
+
+function newId() {
+  return Date.now() + Math.floor(Math.random() * 9999);
 }
 
-function resetGuests(){
-  guests = [
-    { id:1, name:"Juan", table:1, checked:false, token:generateToken() },
-    { id:2, name:"Ana", table:2, checked:false, token:generateToken() },
-    { id:3, name:"Pedro", table:3, checked:false, token:generateToken() }
-  ];
+function normalize(text = "") {
+  return text.toString().trim().toLowerCase();
 }
 
-/* ===============================
+/* ==================================
    EVENTOS
-================================= */
+================================== */
 
-app.post("/create-event",(req,res)=>{
+// crear evento
+app.post("/create-event", (req, res) => {
+  try {
+    const { name, background, frame } = req.body;
 
-  const { name, active, background, frame } = req.body;
+    if (!name || !name.trim()) {
+      return res.json({
+        success: false,
+        message: "Nombre requerido"
+      });
+    }
 
-  const newEvent = {
-    id: Date.now(),
-    name: name || "",
-    active: active === true,
-    background: background || "",
-    frame: frame || ""
-  };
+    const exists = events.find(
+      e => normalize(e.name) === normalize(name)
+    );
 
-  events.push(newEvent);
+    if (exists) {
+      return res.json({
+        success: false,
+        message: "Ya existe un evento con ese nombre"
+      });
+    }
 
-  currentEvent = newEvent;
+    const event = {
+      id: newId(),
+      name: name.trim(),
+      background: background || "",
+      frame: frame || "",
+      active: true,
+      createdAt: new Date().toISOString()
+    };
 
-  resetGuests();
+    events.push(event);
 
-  res.json({
-    success:true,
-    event:newEvent
-  });
+    res.json({
+      success: true,
+      event
+    });
 
+  } catch (error) {
+    console.log(error);
+
+    res.json({
+      success: false,
+      message: "Error servidor"
+    });
+  }
 });
 
-app.get("/events",(req,res)=>{
+// listar eventos
+app.get("/events", (req, res) => {
   res.json(events);
 });
 
-app.get("/event",(req,res)=>{
-  res.json(currentEvent);
+// buscar evento por nombre
+app.get("/event/:name", (req, res) => {
+
+  const found = events.find(
+    e => normalize(e.name) === normalize(req.params.name)
+  );
+
+  if (!found) {
+    return res.json({
+      success: false
+    });
+  }
+
+  res.json({
+    success: true,
+    event: found
+  });
 });
 
-app.post("/activate-event/:id",(req,res)=>{
+// activar / desactivar
+app.post("/toggle-event/:id", (req, res) => {
 
   const id = Number(req.params.id);
 
-  events = events.map(ev=>{
-    ev.active = ev.id === id;
-    return ev;
-  });
+  const ev = events.find(e => e.id === id);
 
-  const found = events.find(e=>e.id===id);
-
-  if(found){
-    currentEvent = found;
-  }
-
-  res.json({ success:true });
-});
-
-/* ===============================
-   STATUS
-================================= */
-
-app.get("/event-status",(req,res)=>{
-  res.json({
-    active: currentEvent.active
-  });
-});
-
-/* ===============================
-   INVITADOS
-================================= */
-
-app.get("/guests",(req,res)=>{
-  if(!currentEvent.active) return res.json([]);
-  res.json(guests);
-});
-
-app.post("/checkin/:token",(req,res)=>{
-
-  const guest = guests.find(g => g.token === req.params.token);
-
-  if(!guest){
+  if (!ev) {
     return res.json({ success:false });
   }
 
-  guest.checked = true;
-
-  res.json({ success:true });
-
-});
-
-app.get("/guest/:token",(req,res)=>{
-
-  const guest = guests.find(g => g.token === req.params.token);
-
-  if(!guest){
-    return res.json({ success:false });
-  }
+  ev.active = !ev.active;
 
   res.json({
     success:true,
-    guest
+    active:ev.active
   });
 
 });
 
-/* ===============================
-   FOTOS
-================================= */
+/* ==================================
+   FOTOS POR EVENTO
+================================== */
 
-app.get("/photos",(req,res)=>{
-  res.json(photos);
-});
+// subir foto
+app.post("/upload-photo", (req, res) => {
 
-app.post("/upload-photo",(req,res)=>{
+  const { eventName, user, image } = req.body;
 
-  const { user, image } = req.body;
+  if (!eventName || !image) {
+    return res.json({ success:false });
+  }
 
   photos.unshift({
-    id: Date.now(),
+    id:newId(),
+    eventName:eventName.trim(),
     user:user || "Invitado",
-    image:image || ""
+    image:image,
+    createdAt:Date.now()
   });
 
   res.json({ success:true });
+
 });
 
-/* ===============================
+// listar fotos de un evento
+app.get("/photos/:eventName", (req,res)=>{
+
+  const name = normalize(req.params.eventName);
+
+  const result = photos.filter(
+    p => normalize(p.eventName) === name
+  );
+
+  res.json(result);
+
+});
+
+/* ==================================
    HOME
-================================= */
+================================== */
 
-app.get("/",(req,res)=>{
-  res.sendFile(path.join(__dirname,"public","index.html"));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-/* ===============================
+/* ==================================
    SERVER
-================================= */
+================================== */
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT,()=>{
+app.listen(PORT, () => {
   console.log("🚀 Puerto " + PORT);
 });
