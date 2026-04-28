@@ -123,7 +123,7 @@ header{
   width:120px;
 }
 
-/* POPUP IMPRESIÓN */
+/* POPUP PRO */
 
 #printModal{
   position:fixed;
@@ -131,39 +131,64 @@ header{
   display:none;
   justify-content:center;
   align-items:center;
-  background:rgba(0,0,0,.92);
+  background:rgba(0,0,0,.82);
   z-index:900;
 }
 
 #printInner{
+  background:rgba(255,255,255,.50);
+  backdrop-filter:blur(12px);
+  border-radius:24px;
+  padding:25px;
+  box-shadow:0 25px 60px rgba(0,0,0,.45);
   text-align:center;
+  min-width:340px;
+}
+
+#printTitle{
+  color:#111;
+  font-size:24px;
+  font-weight:bold;
+  margin-bottom:14px;
 }
 
 #printFrame{
   position:relative;
-  width:300px;
-  height:450px;
+  width:260px;
+  height:390px;
   margin:auto;
+  border-radius:18px;
+  overflow:hidden;
+  background:#000;
 }
 
 #printFrame img{
   position:absolute;
+  inset:0;
   width:100%;
   height:100%;
-  object-fit:cover;
+}
+
+#printPhoto{
+  object-fit:contain;
 }
 
 #printFrameOverlay{
+  object-fit:cover;
   pointer-events:none;
 }
 
+.btnRow{
+  margin-top:18px;
+}
+
 .printBtn{
-  margin:12px 6px 0 6px;
   border:none;
-  padding:14px 20px;
+  padding:14px 18px;
   border-radius:12px;
   cursor:pointer;
   font-size:16px;
+  margin:0 6px;
 }
 
 .primary{
@@ -202,26 +227,34 @@ header{
 <canvas id="canvas" style="display:none;"></canvas>
 <div id="flash"></div>
 
-<!-- MODAL IMPRESIÓN -->
+<!-- POPUP PRO -->
 
 <div id="printModal">
 
   <div id="printInner">
+
+    <div id="printTitle">
+      Vista previa impresión
+    </div>
 
     <div id="printFrame">
       <img id="printPhoto">
       <img id="printFrameOverlay">
     </div>
 
-    <button class="printBtn primary"
-    onclick="printCurrentPhoto()">
-    🖨 Imprimir 10x15
-    </button>
+    <div class="btnRow">
 
-    <button class="printBtn dark"
-    onclick="closePrintModal()">
-    Cerrar
-    </button>
+      <button class="printBtn primary"
+      onclick="printCurrentPhoto()">
+      🖨 Imprimir 10x15
+      </button>
+
+      <button class="printBtn dark"
+      onclick="closePrintModal()">
+      Cerrar
+      </button>
+
+    </div>
 
   </div>
 
@@ -300,11 +333,8 @@ async function startCamera(){
  try{
 
   stream =
-   await navigator
-   .mediaDevices
-   .getUserMedia({
-    video:true
-   });
+   await navigator.mediaDevices
+   .getUserMedia({video:true});
 
   video.srcObject =
    stream;
@@ -316,9 +346,7 @@ async function startCamera(){
 
  }catch(err){
 
-  alert(
-   "No se pudo abrir cámara"
-  );
+  alert("No se pudo abrir cámara");
 
  }
 
@@ -356,9 +384,7 @@ function countdownStart(){
 async function capturePhoto(){
 
  const canvas =
- document.getElementById(
- "canvas"
- );
+ document.getElementById("canvas");
 
  canvas.width =
  video.videoWidth || 640;
@@ -369,15 +395,10 @@ async function capturePhoto(){
  const ctx =
  canvas.getContext("2d");
 
- ctx.translate(
- canvas.width,0
- );
-
+ ctx.translate(canvas.width,0);
  ctx.scale(-1,1);
 
- ctx.drawImage(
- video,0,0
- );
+ ctx.drawImage(video,0,0);
 
  flash.style.opacity = 1;
 
@@ -391,9 +412,7 @@ async function capturePhoto(){
  0.9
  );
 
- await fetch(
- "/upload-photo",
- {
+ await fetch("/upload-photo",{
   method:"POST",
   headers:{
    "Content-Type":
@@ -423,11 +442,8 @@ async function capturePhoto(){
 async function loadPhotos(){
 
  const res =
- await fetch(
- "/photos/" +
- encodeURIComponent(
- eventName
- ));
+ await fetch("/photos/" +
+ encodeURIComponent(eventName));
 
  photos =
  await res.json();
@@ -440,12 +456,9 @@ async function loadPhotos(){
   p.url || p.image;
 
   const div =
-  document.createElement(
-  "div"
-  );
+  document.createElement("div");
 
-  div.className =
-  "card";
+  div.className = "card";
 
   div.innerHTML = `
    <img src="${url}">
@@ -455,7 +468,7 @@ async function loadPhotos(){
   `;
 
   div.onclick =
-  ()=>openPrintModal(url);
+   ()=>openPrintModal(url);
 
   grid.appendChild(div);
 
@@ -503,10 +516,7 @@ function closePrintModal(){
 function printCurrentPhoto(){
 
  const win =
- window.open(
- "",
- "_blank"
- );
+ window.open("","_blank");
 
  win.document.write(`
  <html>
@@ -526,19 +536,26 @@ function printCurrentPhoto(){
  }
  .box img{
   position:absolute;
+  inset:0;
   width:100%;
   height:100%;
+ }
+ .photo{
+  object-fit:contain;
+ }
+ .frame{
   object-fit:cover;
  }
  </style>
  </head>
  <body>
    <div class="box">
-    <img src="${selectedPhoto}">
+    <img class="photo"
+    src="${selectedPhoto}">
     ${
-     frameUrl
-     ? `<img src="${frameUrl}">`
-     : ""
+      frameUrl
+      ? `<img class="frame" src="${frameUrl}">`
+      : ""
     }
    </div>
  </body>
@@ -559,11 +576,8 @@ function printCurrentPhoto(){
 async function loadRanking(){
 
  const res =
- await fetch(
- "/ranking/" +
- encodeURIComponent(
- eventName
- ));
+ await fetch("/ranking/" +
+ encodeURIComponent(eventName));
 
  const data =
  await res.json();
@@ -582,18 +596,17 @@ async function loadRanking(){
 
    html +=
    (i+1)+
-   ". Mesa "+
-   (r.table||"-")+
-   " ("+
-   (r.points||0)+
+   ". Mesa " +
+   (r.table||"-") +
+   " (" +
+   (r.points||0) +
    ")<br>";
 
   });
 
  }
 
- ranking.innerHTML =
- html;
+ ranking.innerHTML = html;
 
 }
 
