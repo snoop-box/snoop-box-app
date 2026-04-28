@@ -9,7 +9,7 @@ app.use(express.json({ limit:"20mb" }));
 app.use(express.urlencoded({ extended:true }));
 app.use(express.static("public"));
 
-console.log("🔥 SNOOP BOX EXCEL READY");
+console.log("🔥 SNOOP BOX");
 
 /* ==================================
    BASE EN MEMORIA
@@ -39,7 +39,12 @@ app.post("/create-event",(req,res)=>{
 
   try{
 
-    const { name, background, frame } = req.body;
+    const {
+      name,
+      logoVenue,
+      background,
+      frame
+    } = req.body;
 
     if(!name || !name.trim()){
       return res.json({
@@ -62,12 +67,12 @@ app.post("/create-event",(req,res)=>{
     const event = {
       id:newId(),
       name:name.trim(),
+      logoVenue:logoVenue || "",
       background:background || "",
       frame:frame || "",
       active:true,
       createdAt:new Date().toISOString(),
 
-      // 🔥 invitados
       guests:[],
       arrived:0
     };
@@ -104,7 +109,9 @@ app.get("/event/:name",(req,res)=>{
   );
 
   if(!found){
-    return res.json({ success:false });
+    return res.json({
+      success:false
+    });
   }
 
   res.json({
@@ -122,7 +129,9 @@ app.post("/toggle-event/:id",(req,res)=>{
   const ev = events.find(e => e.id === id);
 
   if(!ev){
-    return res.json({ success:false });
+    return res.json({
+      success:false
+    });
   }
 
   ev.active = !ev.active;
@@ -135,10 +144,10 @@ app.post("/toggle-event/:id",(req,res)=>{
 });
 
 /* ==================================
-   INVITADOS (EXCEL READY)
+   INVITADOS
 ================================== */
 
-// cargar lista invitados
+// cargar invitados
 app.post("/upload-guests/:id",(req,res)=>{
 
   const id = Number(req.params.id);
@@ -146,7 +155,9 @@ app.post("/upload-guests/:id",(req,res)=>{
   const ev = events.find(e => e.id === id);
 
   if(!ev){
-    return res.json({ success:false });
+    return res.json({
+      success:false
+    });
   }
 
   const guests = req.body.guests || [];
@@ -192,14 +203,18 @@ app.post("/arrive/:eventId/:guestId",(req,res)=>{
   const ev = events.find(e => e.id === eventId);
 
   if(!ev){
-    return res.json({ success:false });
+    return res.json({
+      success:false
+    });
   }
 
   const guest =
     ev.guests.find(g => g.id === guestId);
 
   if(!guest){
-    return res.json({ success:false });
+    return res.json({
+      success:false
+    });
   }
 
   if(!guest.arrived){
@@ -221,13 +236,17 @@ app.get("/control/:id",(req,res)=>{
   const ev = events.find(e => e.id === id);
 
   if(!ev){
-    return res.json({ success:false });
+    return res.json({
+      success:false
+    });
   }
 
   const total = ev.guests.length;
 
   const percent =
-    total ? Math.round((ev.arrived/total)*100) : 0;
+    total
+    ? Math.round((ev.arrived/total)*100)
+    : 0;
 
   res.json({
     success:true,
@@ -245,10 +264,16 @@ app.get("/control/:id",(req,res)=>{
 
 app.post("/upload-photo",(req,res)=>{
 
-  const { eventName, user, image } = req.body;
+  const {
+    eventName,
+    user,
+    image
+  } = req.body;
 
   if(!eventName || !image){
-    return res.json({ success:false });
+    return res.json({
+      success:false
+    });
   }
 
   photos.unshift({
@@ -259,17 +284,21 @@ app.post("/upload-photo",(req,res)=>{
     createdAt:Date.now()
   });
 
-  res.json({ success:true });
+  res.json({
+    success:true
+  });
 
 });
 
 app.get("/photos/:eventName",(req,res)=>{
 
-  const name = normalize(req.params.eventName);
+  const name =
+    normalize(req.params.eventName);
 
-  const result = photos.filter(p =>
-    normalize(p.eventName) === name
-  );
+  const result =
+    photos.filter(p =>
+      normalize(p.eventName) === name
+    );
 
   res.json(result);
 
@@ -280,17 +309,26 @@ app.get("/photos/:eventName",(req,res)=>{
 ================================== */
 
 app.get("/",(req,res)=>{
+
   res.sendFile(
-    path.join(__dirname,"public","index.html")
+    path.join(
+      __dirname,
+      "public",
+      "index.html"
+    )
   );
+
 });
 
 /* ==================================
    SERVER
 ================================== */
 
-const PORT = process.env.PORT || 3000;
+const PORT =
+process.env.PORT || 3000;
 
 app.listen(PORT,()=>{
+
   console.log("🚀 Puerto " + PORT);
+
 });
