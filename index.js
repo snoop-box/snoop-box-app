@@ -5,22 +5,22 @@ const path = require("path");
 const app = express();
 
 app.use(cors());
-app.use(express.json({ limit:"20mb" }));
-app.use(express.urlencoded({ extended:true }));
+app.use(express.json({ limit:"50mb" }));
+app.use(express.urlencoded({ extended:true, limit:"50mb" }));
 app.use(express.static("public"));
 
-console.log("🔥 SNOOP BOX");
+console.log("🔥 SNOOP BOX PRO V2");
 
-/* ==================================
+/* ===============================
    BASE EN MEMORIA
-================================== */
+=============================== */
 
 let events = [];
 let photos = [];
 
-/* ==================================
+/* ===============================
    HELPERS
-================================== */
+=============================== */
 
 function newId(){
   return Date.now() + Math.floor(Math.random()*9999);
@@ -30,11 +30,19 @@ function normalize(txt=""){
   return txt.toString().trim().toLowerCase();
 }
 
-/* ==================================
-   EVENTOS
-================================== */
+function cleanFolder(txt=""){
+  return txt
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g,"_")
+    .replace(/[^a-z0-9_]/g,"");
+}
 
-// crear evento
+/* ===============================
+   EVENTOS
+=============================== */
+
 app.post("/create-event",(req,res)=>{
 
   try{
@@ -64,15 +72,18 @@ app.post("/create-event",(req,res)=>{
       });
     }
 
+    const folder =
+      "snoopbox/" + cleanFolder(name);
+
     const event = {
       id:newId(),
       name:name.trim(),
+      folder,
       logoVenue:logoVenue || "",
       background:background || "",
       frame:frame || "",
       active:true,
       createdAt:new Date().toISOString(),
-
       guests:[],
       arrived:0
     };
@@ -95,12 +106,12 @@ app.post("/create-event",(req,res)=>{
 
 });
 
-// listar eventos
+/* =============================== */
+
 app.get("/events",(req,res)=>{
   res.json(events);
 });
 
-// buscar evento por nombre
 app.get("/event/:name",(req,res)=>{
 
   const found = events.find(ev =>
@@ -121,17 +132,14 @@ app.get("/event/:name",(req,res)=>{
 
 });
 
-// activar / desactivar
 app.post("/toggle-event/:id",(req,res)=>{
 
   const id = Number(req.params.id);
 
-  const ev = events.find(e => e.id === id);
+  const ev = events.find(e=>e.id===id);
 
   if(!ev){
-    return res.json({
-      success:false
-    });
+    return res.json({success:false});
   }
 
   ev.active = !ev.active;
@@ -143,21 +151,18 @@ app.post("/toggle-event/:id",(req,res)=>{
 
 });
 
-/* ==================================
+/* ===============================
    INVITADOS
-================================== */
+=============================== */
 
-// cargar invitados
 app.post("/upload-guests/:id",(req,res)=>{
 
   const id = Number(req.params.id);
 
-  const ev = events.find(e => e.id === id);
+  const ev = events.find(e=>e.id===id);
 
   if(!ev){
-    return res.json({
-      success:false
-    });
+    return res.json({success:false});
   }
 
   const guests = req.body.guests || [];
@@ -167,7 +172,8 @@ app.post("/upload-guests/:id",(req,res)=>{
     name:g.name || "",
     table:g.table || "",
     phone:g.phone || "",
-    arrived:false
+    arrived:false,
+    points:0
   }));
 
   ev.arrived = 0;
@@ -179,42 +185,35 @@ app.post("/upload-guests/:id",(req,res)=>{
 
 });
 
-// ver invitados
 app.get("/guests/:id",(req,res)=>{
 
   const id = Number(req.params.id);
 
-  const ev = events.find(e => e.id === id);
+  const ev = events.find(e=>e.id===id);
 
-  if(!ev){
-    return res.json([]);
-  }
+  if(!ev) return res.json([]);
 
   res.json(ev.guests);
 
 });
 
-// marcar llegada
 app.post("/arrive/:eventId/:guestId",(req,res)=>{
 
   const eventId = Number(req.params.eventId);
   const guestId = Number(req.params.guestId);
 
-  const ev = events.find(e => e.id === eventId);
+  const ev =
+    events.find(e=>e.id===eventId);
 
   if(!ev){
-    return res.json({
-      success:false
-    });
+    return res.json({success:false});
   }
 
   const guest =
-    ev.guests.find(g => g.id === guestId);
+    ev.guests.find(g=>g.id===guestId);
 
   if(!guest){
-    return res.json({
-      success:false
-    });
+    return res.json({success:false});
   }
 
   if(!guest.arrived){
@@ -222,23 +221,22 @@ app.post("/arrive/:eventId/:guestId",(req,res)=>{
     ev.arrived++;
   }
 
-  res.json({
-    success:true
-  });
+  res.json({success:true});
 
 });
 
-// panel control
+/* ===============================
+   CONTROL
+=============================== */
+
 app.get("/control/:id",(req,res)=>{
 
   const id = Number(req.params.id);
 
-  const ev = events.find(e => e.id === id);
+  const ev = events.find(e=>e.id===id);
 
   if(!ev){
-    return res.json({
-      success:false
-    });
+    return res.json({success:false});
   }
 
   const total = ev.guests.length;
@@ -253,14 +251,84 @@ app.get("/control/:id",(req,res)=>{
     event:ev.name,
     total,
     arrived:ev.arrived,
+    missing: total - ev.arrived,
     percent
   });
 
 });
 
-/* ==================================
-   FOTOS
-================================== */
+/* ===============================
+   FOTOS NUEVAS
+=============================== */
+
+/* upload tótem / futuro celular */
+
+app.post("/upload",(req,res)=>{
+
+  try{
+
+    const {
+      event,
+      name,
+      table
+    } = req.body;
+
+    if(!event){
+      return res.json({
+        success:false
+      });
+    }
+
+    const ev =
+      events.find(e =>
+        normalize(e.name) === normalize(event)
+      ) || {
+        name:event,
+        folder:"snoopbox/" + cleanFolder(event)
+      };
+
+    const fakeUrl =
+      "https://res.cloudinary.com/demo/image/upload/" +
+      Date.now() + ".jpg";
+
+    photos.unshift({
+      id:newId(),
+      eventName:ev.name,
+      folder:ev.folder,
+      url:fakeUrl,
+      user:name || "Invitado",
+      table:table || "-",
+      createdAt:Date.now()
+    });
+
+    const guest =
+      events
+      .find(e=>e.name===ev.name)
+      ?.guests
+      .find(g=>g.table==table);
+
+    if(guest){
+      guest.points =
+      (guest.points || 0) + 1;
+    }
+
+    res.json({
+      success:true,
+      url:fakeUrl,
+      folder:ev.folder
+    });
+
+  }catch(err){
+
+    res.json({
+      success:false
+    });
+
+  }
+
+});
+
+/* upload desde index nuevo */
 
 app.post("/upload-photo",(req,res)=>{
 
@@ -276,19 +344,34 @@ app.post("/upload-photo",(req,res)=>{
     });
   }
 
+  const ev =
+    events.find(e =>
+      normalize(e.name) ===
+      normalize(eventName)
+    );
+
+  const folder =
+    ev
+    ? ev.folder
+    : "snoopbox/" + cleanFolder(eventName);
+
   photos.unshift({
     id:newId(),
     eventName:eventName,
+    folder:folder,
+    url:image,
     user:user || "Invitado",
-    image:image,
     createdAt:Date.now()
   });
 
   res.json({
-    success:true
+    success:true,
+    folder
   });
 
 });
+
+/* listar fotos */
 
 app.get("/photos/:eventName",(req,res)=>{
 
@@ -304,9 +387,49 @@ app.get("/photos/:eventName",(req,res)=>{
 
 });
 
-/* ==================================
+/* borrar foto */
+
+app.delete("/photo",(req,res)=>{
+
+  const { url } = req.body;
+
+  photos =
+    photos.filter(p => p.url !== url);
+
+  res.json({
+    success:true
+  });
+
+});
+
+/* ranking */
+
+app.get("/ranking/:event",(req,res)=>{
+
+  const ev =
+    events.find(e =>
+      normalize(e.name) ===
+      normalize(req.params.event)
+    );
+
+  if(!ev){
+    return res.json([]);
+  }
+
+  const ranking =
+    [...ev.guests]
+    .sort((a,b)=>
+      (b.points||0) -
+      (a.points||0)
+    );
+
+  res.json(ranking);
+
+});
+
+/* ===============================
    HOME
-================================== */
+=============================== */
 
 app.get("/",(req,res)=>{
 
@@ -320,15 +443,17 @@ app.get("/",(req,res)=>{
 
 });
 
-/* ==================================
+/* ===============================
    SERVER
-================================== */
+=============================== */
 
 const PORT =
 process.env.PORT || 3000;
 
 app.listen(PORT,()=>{
 
-  console.log("🚀 Puerto " + PORT);
+  console.log(
+    "🚀 Puerto " + PORT
+  );
 
 });
