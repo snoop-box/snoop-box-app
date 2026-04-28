@@ -11,12 +11,14 @@ body{
   font-family:Arial,sans-serif;
   background:radial-gradient(circle,#111,#000);
   color:#fff;
+  overflow-x:hidden;
 }
 
 header{
   padding:18px;
   text-align:center;
-  background:rgba(255,255,255,.05);
+  background:rgba(255,255,255,.04);
+  backdrop-filter:blur(8px);
 }
 
 #eventTitle{
@@ -43,14 +45,20 @@ header{
   grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
   gap:14px;
   padding:18px;
+  padding-right:270px;
 }
 
 .card{
   background:#1a1a1a;
-  border-radius:16px;
+  border-radius:18px;
   overflow:hidden;
-  box-shadow:0 10px 25px rgba(0,0,0,.25);
+  box-shadow:0 10px 25px rgba(0,0,0,.35);
   cursor:pointer;
+  transition:.25s;
+}
+
+.card:hover{
+  transform:translateY(-4px);
 }
 
 .card img{
@@ -59,11 +67,74 @@ header{
   object-fit:cover;
 }
 
-.cardInfo{
-  padding:10px;
-  font-size:14px;
-  color:#ddd;
+.info{
+  padding:12px;
 }
+
+.user{
+  font-size:22px;
+  font-weight:bold;
+}
+
+.table{
+  color:#ddd;
+  margin-top:4px;
+}
+
+/* SIDE PANEL */
+
+#side{
+  position:fixed;
+  top:0;
+  right:0;
+  width:250px;
+  height:100%;
+  background:rgba(0,0,0,.82);
+  backdrop-filter:blur(10px);
+  padding:16px;
+  box-sizing:border-box;
+  overflow:auto;
+}
+
+#rankTitle{
+  text-align:center;
+  font-size:26px;
+  font-weight:bold;
+  margin-bottom:14px;
+}
+
+.rankRow{
+  display:flex;
+  justify-content:space-between;
+  padding:12px;
+  border-radius:14px;
+  background:rgba(255,255,255,.06);
+  margin-bottom:10px;
+}
+
+.gold{border:1px solid gold;}
+.silver{border:1px solid silver;}
+.bronze{border:1px solid #cd7f32;}
+
+#qrBox{
+  margin-top:20px;
+  text-align:center;
+  background:#fff;
+  color:#000;
+  padding:12px;
+  border-radius:16px;
+}
+
+#qrBox img{
+  width:140px;
+}
+
+#qrText{
+  font-size:14px;
+  margin-top:8px;
+}
+
+/* CAMERA */
 
 #cameraModal{
   position:fixed;
@@ -71,7 +142,7 @@ header{
   display:none;
   justify-content:center;
   align-items:center;
-  background:rgba(0,0,0,.9);
+  background:rgba(0,0,0,.92);
   z-index:500;
 }
 
@@ -97,33 +168,11 @@ header{
   z-index:600;
 }
 
-#ranking{
-  position:fixed;
-  top:15px;
-  right:15px;
-  background:rgba(0,0,0,.8);
-  border:1px solid rgba(255,255,255,.15);
-  border-radius:16px;
-  padding:14px;
-  width:220px;
+#canvas{
+  display:none;
 }
 
-#qrBox{
-  position:fixed;
-  left:15px;
-  bottom:15px;
-  background:#fff;
-  color:#000;
-  padding:12px;
-  border-radius:16px;
-  text-align:center;
-}
-
-#qrBox img{
-  width:120px;
-}
-
-/* POPUP PRO */
+/* POPUP */
 
 #printModal{
   position:fixed;
@@ -131,34 +180,24 @@ header{
   display:none;
   justify-content:center;
   align-items:center;
-  background:rgba(0,0,0,.82);
+  background:rgba(0,0,0,.88);
   z-index:900;
 }
 
 #printInner{
-  background:rgba(255,255,255,.50);
+  background:rgba(255,255,255,.5);
   backdrop-filter:blur(12px);
   border-radius:24px;
-  padding:25px;
-  box-shadow:0 25px 60px rgba(0,0,0,.45);
+  padding:24px;
   text-align:center;
-  min-width:340px;
-}
-
-#printTitle{
-  color:#111;
-  font-size:24px;
-  font-weight:bold;
-  margin-bottom:14px;
 }
 
 #printFrame{
   position:relative;
   width:260px;
   height:390px;
-  margin:auto;
-  border-radius:18px;
   overflow:hidden;
+  border-radius:18px;
   background:#000;
 }
 
@@ -175,20 +214,15 @@ header{
 
 #printFrameOverlay{
   object-fit:cover;
-  pointer-events:none;
-}
-
-.btnRow{
-  margin-top:18px;
 }
 
 .printBtn{
   border:none;
   padding:14px 18px;
   border-radius:12px;
+  margin-top:14px;
   cursor:pointer;
   font-size:16px;
-  margin:0 6px;
 }
 
 .primary{
@@ -205,58 +239,64 @@ header{
 <body>
 
 <header>
-  <div id="eventTitle">Cargando...</div>
+<div id="eventTitle">Cargando...</div>
 </header>
 
 <div id="grid"></div>
 
-<div id="ranking">Ranking...</div>
+<div id="side">
+
+<div id="rankTitle">
+🏆 Ranking
+</div>
+
+<div id="rankingBox"></div>
 
 <div id="qrBox">
-  <img id="qrImg">
-  <div>Subí tus fotos 📸</div>
+<img id="qrImg">
+<div id="qrText">
+Escaneá y participá
+</div>
 </div>
 
-<button id="cameraBtn">📸 Sacar Foto</button>
+</div>
+
+<button id="cameraBtn">
+📸 Sacar Foto
+</button>
 
 <div id="cameraModal">
-  <video id="video" autoplay playsinline></video>
-  <div id="countdown"></div>
+<video id="video" autoplay playsinline></video>
+<div id="countdown"></div>
 </div>
 
-<canvas id="canvas" style="display:none;"></canvas>
+<canvas id="canvas"></canvas>
 <div id="flash"></div>
-
-<!-- POPUP PRO -->
 
 <div id="printModal">
 
-  <div id="printInner">
+<div id="printInner">
 
-    <div id="printTitle">
-      Vista previa impresión
-    </div>
+<div style="font-size:24px;font-weight:bold;color:#111;margin-bottom:14px;">
+Vista previa impresión
+</div>
 
-    <div id="printFrame">
-      <img id="printPhoto">
-      <img id="printFrameOverlay">
-    </div>
+<div id="printFrame">
+<img id="printPhoto">
+<img id="printFrameOverlay">
+</div>
 
-    <div class="btnRow">
+<button class="printBtn primary"
+onclick="printCurrentPhoto()">
+🖨 Imprimir 10x15
+</button>
 
-      <button class="printBtn primary"
-      onclick="printCurrentPhoto()">
-      🖨 Imprimir 10x15
-      </button>
+<button class="printBtn dark"
+onclick="closePrintModal()">
+Cerrar
+</button>
 
-      <button class="printBtn dark"
-      onclick="closePrintModal()">
-      Cerrar
-      </button>
-
-    </div>
-
-  </div>
+</div>
 
 </div>
 
@@ -266,12 +306,11 @@ const eventName =
 new URLSearchParams(location.search)
 .get("event") || "";
 
-let stream = null;
 let frameUrl = "";
-let photos = [];
+let stream = null;
 let selectedPhoto = "";
 
-/* ========================= */
+/* ===================== */
 
 async function init(){
 
@@ -294,21 +333,18 @@ async function init(){
   return;
  }
 
- const ev = data.event;
-
  eventTitle.innerText =
- ev.name;
+ data.event.name;
 
  frameUrl =
- ev.frame || "";
+ data.event.frame || "";
 
  buildQR();
+
  loadPhotos();
  loadRanking();
 
 }
-
-/* ========================= */
 
 function buildQR(){
 
@@ -318,61 +354,44 @@ function buildQR(){
  eventName;
 
  qrImg.src =
- "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" +
+ "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" +
  encodeURIComponent(link);
 
 }
 
-/* ========================= */
+/* ===================== */
 
 cameraBtn.onclick =
 startCamera;
 
 async function startCamera(){
 
- try{
+ stream =
+ await navigator.mediaDevices
+ .getUserMedia({video:true});
 
-  stream =
-   await navigator.mediaDevices
-   .getUserMedia({video:true});
+ video.srcObject =
+ stream;
 
-  video.srcObject =
-   stream;
+ cameraModal.style.display =
+ "flex";
 
-  cameraModal.style.display =
-   "flex";
+ let n=3;
+ countdown.innerText=n;
 
-  countdownStart();
-
- }catch(err){
-
-  alert("No se pudo abrir cámara");
-
- }
-
-}
-
-function countdownStart(){
-
- let n = 3;
-
- countdown.innerText = n;
-
- const timer =
+ const t =
  setInterval(()=>{
 
   n--;
 
   if(n>0){
 
-   countdown.innerText = n;
+   countdown.innerText=n;
 
   }else{
 
-   clearInterval(timer);
-
-   countdown.innerText = "";
-
+   clearInterval(t);
+   countdown.innerText="";
    capturePhoto();
 
   }
@@ -382,9 +401,6 @@ function countdownStart(){
 }
 
 async function capturePhoto(){
-
- const canvas =
- document.getElementById("canvas");
 
  canvas.width =
  video.videoWidth || 640;
@@ -397,47 +413,45 @@ async function capturePhoto(){
 
  ctx.translate(canvas.width,0);
  ctx.scale(-1,1);
-
  ctx.drawImage(video,0,0);
 
- flash.style.opacity = 1;
+ flash.style.opacity=1;
 
  setTimeout(()=>{
-  flash.style.opacity = 0;
+  flash.style.opacity=0;
  },180);
 
  const image =
  canvas.toDataURL(
- "image/jpeg",
- 0.9
+ "image/jpeg",0.9
  );
 
  await fetch("/upload-photo",{
   method:"POST",
   headers:{
-   "Content-Type":
-   "application/json"
+   "Content-Type":"application/json"
   },
   body:JSON.stringify({
    eventName:eventName,
    user:"Totem",
+   table:"00",
    image:image
   })
  });
-
- cameraModal.style.display =
- "none";
 
  if(stream){
   stream.getTracks()
   .forEach(t=>t.stop());
  }
 
+ cameraModal.style.display="none";
+
  loadPhotos();
+ loadRanking();
 
 }
 
-/* ========================= */
+/* ===================== */
 
 async function loadPhotos(){
 
@@ -445,38 +459,71 @@ async function loadPhotos(){
  await fetch("/photos/" +
  encodeURIComponent(eventName));
 
- photos =
+ const data =
  await res.json();
 
- grid.innerHTML = "";
+ grid.innerHTML="";
 
- photos.forEach((p,i)=>{
+ data.forEach(p=>{
 
   const url =
   p.url || p.image;
 
-  const div =
-  document.createElement("div");
+  grid.innerHTML += `
+  <div class="card"
+  onclick="openPrintModal('${url}')">
 
-  div.className = "card";
+    <img src="${url}">
 
-  div.innerHTML = `
-   <img src="${url}">
-   <div class="cardInfo">
-   Foto ${photos.length-i}
-   </div>
+    <div class="info">
+      <div class="user">
+      ${p.user || "Invitado"}
+      </div>
+      <div class="table">
+      Mesa ${p.table || "-"}
+      </div>
+    </div>
+
+  </div>
   `;
-
-  div.onclick =
-   ()=>openPrintModal(url);
-
-  grid.appendChild(div);
 
  });
 
 }
 
-/* ========================= */
+/* ===================== */
+
+async function loadRanking(){
+
+ const res =
+ await fetch("/ranking/" +
+ encodeURIComponent(eventName));
+
+ const data =
+ await res.json();
+
+ rankingBox.innerHTML="";
+
+ data.slice(0,5).forEach((r,i)=>{
+
+ let cls="";
+
+ if(i===0) cls="gold";
+ if(i===1) cls="silver";
+ if(i===2) cls="bronze";
+
+ rankingBox.innerHTML += `
+ <div class="rankRow ${cls}">
+  <div>${i+1}. Mesa ${r.table}</div>
+  <div>${r.points||0}</div>
+ </div>
+ `;
+
+ });
+
+}
+
+/* ===================== */
 
 function openPrintModal(url){
 
@@ -489,13 +536,13 @@ function openPrintModal(url){
   printFrameOverlay.src =
   frameUrl;
 
-  printFrameOverlay.style
-  .display = "block";
+  printFrameOverlay.style.display=
+  "block";
 
  }else{
 
-  printFrameOverlay.style
-  .display = "none";
+  printFrameOverlay.style.display=
+  "none";
 
  }
 
@@ -511,8 +558,6 @@ function closePrintModal(){
 
 }
 
-/* ========================= */
-
 function printCurrentPhoto(){
 
  const win =
@@ -520,44 +565,15 @@ function printCurrentPhoto(){
 
  win.document.write(`
  <html>
- <head>
- <style>
- body{
-  margin:0;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
+ <body style="margin:0;display:flex;justify-content:center;align-items:center;height:100vh;">
+ <div style="position:relative;width:4in;height:6in;">
+ <img src="${selectedPhoto}" style="position:absolute;width:100%;height:100%;object-fit:contain;">
+ ${
+ frameUrl
+ ? `<img src="${frameUrl}" style="position:absolute;width:100%;height:100%;">`
+ : ""
  }
- .box{
-  position:relative;
-  width:4in;
-  height:6in;
- }
- .box img{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
- }
- .photo{
-  object-fit:contain;
- }
- .frame{
-  object-fit:cover;
- }
- </style>
- </head>
- <body>
-   <div class="box">
-    <img class="photo"
-    src="${selectedPhoto}">
-    ${
-      frameUrl
-      ? `<img class="frame" src="${frameUrl}">`
-      : ""
-    }
-   </div>
+ </div>
  </body>
  </html>
  `);
@@ -571,49 +587,12 @@ function printCurrentPhoto(){
 
 }
 
-/* ========================= */
-
-async function loadRanking(){
-
- const res =
- await fetch("/ranking/" +
- encodeURIComponent(eventName));
-
- const data =
- await res.json();
-
- let html =
- "<strong>🏆 Ranking</strong><br><br>";
-
- if(!data.length){
-
-  html += "Sin datos";
-
- }else{
-
-  data.slice(0,5)
-  .forEach((r,i)=>{
-
-   html +=
-   (i+1)+
-   ". Mesa " +
-   (r.table||"-") +
-   " (" +
-   (r.points||0) +
-   ")<br>";
-
-  });
-
- }
-
- ranking.innerHTML = html;
-
-}
+/* ===================== */
 
 setInterval(()=>{
  loadPhotos();
  loadRanking();
-},4000);
+},5000);
 
 init();
 
