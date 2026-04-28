@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Recepción</title>
+<title>Recepción V2</title>
 
 <style>
 body{
@@ -15,7 +15,7 @@ body{
 }
 
 .wrap{
-  max-width:800px;
+  max-width:850px;
   margin:auto;
 }
 
@@ -51,10 +51,17 @@ button{
   background:#262626;
   padding:14px;
   border-radius:12px;
-  margin-bottom:10px;
+  margin-bottom:12px;
+}
+
+.row{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
 }
 
 .small{
+  flex:1;
   background:#444;
   padding:10px;
   font-size:14px;
@@ -62,6 +69,14 @@ button{
 
 .green{
   color:#00ff99;
+}
+
+.qr{
+  margin-top:10px;
+  background:#fff;
+  padding:8px;
+  border-radius:10px;
+  display:inline-block;
 }
 
 #app{
@@ -109,6 +124,8 @@ oninput="renderGuests()">
 </div>
 
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
 <script>
 
@@ -170,6 +187,25 @@ async function loadGuests(){
 
 }
 
+function guestName(g){
+
+  return g.name ||
+         g.Nombre ||
+         g.NOMBRE ||
+         g.invitado ||
+         "Sin nombre";
+
+}
+
+function guestTable(g){
+
+  return g.table ||
+         g.Mesa ||
+         g.mesa ||
+         "-";
+
+}
+
 function renderGuests(){
 
   const text =
@@ -181,7 +217,8 @@ function renderGuests(){
 
   const filtered =
     guests.filter(g =>
-      g.name.toLowerCase()
+      guestName(g)
+      .toLowerCase()
       .includes(text)
     );
 
@@ -189,23 +226,35 @@ function renderGuests(){
 
   filtered.forEach(g=>{
 
+    const name = guestName(g);
+    const table = guestTable(g);
+
     box.innerHTML += `
       <div class="guest">
 
-        <strong>${g.name}</strong>
+        <strong>${name}</strong>
         <br>
-        Mesa: ${g.table || "-"}
+        Mesa: ${table}
 
-        <br><br>
+        <div class="row">
 
-        ${
-          g.arrived
-          ? '<span class="green">✔ Presente</span>'
-          : `<button class="small"
-              onclick="markArrived(${g.id})">
-              Llegó
-             </button>`
-        }
+          ${
+            g.arrived
+            ? '<span class="green">✔ Presente</span>'
+            : `<button class="small"
+                onclick="markArrived(${g.id})">
+                Llegó
+               </button>`
+          }
+
+          <button class="small"
+            onclick="showQR(${g.id})">
+            QR
+          </button>
+
+        </div>
+
+        <div id="qr_${g.id}"></div>
 
       </div>
     `;
@@ -235,6 +284,35 @@ async function markArrived(id){
   );
 
   loadGuests();
+
+}
+
+function showQR(id){
+
+  const guest =
+    guests.find(g => g.id === id);
+
+  const name =
+    guestName(guest);
+
+  const code =
+    currentEvent.name +
+    "|" +
+    id +
+    "|" +
+    name;
+
+  const box =
+    document.getElementById("qr_"+id);
+
+  box.innerHTML =
+    `<canvas id="canvas_${id}" class="qr"></canvas>`;
+
+  QRCode.toCanvas(
+    document.getElementById("canvas_"+id),
+    code,
+    { width:150 }
+  );
 
 }
 
