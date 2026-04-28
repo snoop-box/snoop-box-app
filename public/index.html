@@ -32,18 +32,11 @@ body{
   text-align:center;
 }
 
-#logo{
-  display:none;
-  max-width:180px;
-  max-height:80px;
-  object-fit:contain;
-  margin:0 auto 12px auto;
-}
-
-#eventTitle{
+#eventTitle,
+#eventTitleApp{
   font-size:34px;
   font-weight:bold;
-  margin-bottom:6px;
+  margin-bottom:8px;
 }
 
 #subText{
@@ -111,6 +104,16 @@ button{
 .section{
   margin-top:18px;
 }
+
+#photoInput{
+  display:none;
+}
+
+#status{
+  margin-top:12px;
+  font-size:14px;
+  color:#fff;
+}
 </style>
 </head>
 <body>
@@ -122,16 +125,17 @@ button{
 <div class="card" id="login">
 
 <div class="center">
-
-<img id="logo">
-
 <div id="eventTitle">Evento</div>
 <div id="subText">Ingresá para participar</div>
-
 </div>
 
 <input id="nameInput" placeholder="Tu nombre">
-<input id="tableInput" placeholder="Mesa">
+
+<input
+id="tableInput"
+type="number"
+inputmode="numeric"
+placeholder="Mesa">
 
 <button class="primary"
 onclick="enterApp()">
@@ -146,8 +150,6 @@ Ingresar
 
 <div class="center">
 
-<img id="logoApp">
-
 <div id="eventTitleApp"></div>
 
 <div class="badge"
@@ -158,7 +160,7 @@ id="userInfo"></div>
 <div class="section">
 
 <button class="primary menuBtn"
-onclick="alert('Próximo paso: subir foto')">
+onclick="openCamera()">
 📸 Subir Foto
 </button>
 
@@ -176,6 +178,15 @@ onclick="alert('Próximo paso: trivia')">
 onclick="openGallery()">
 🖼 Galería
 </button>
+
+<input
+type="file"
+accept="image/*"
+capture="environment"
+id="photoInput"
+onchange="uploadPhoto(event)">
+
+<div id="status"></div>
 
 </div>
 
@@ -238,28 +249,11 @@ async function init(){
 
 function renderLogin(){
 
- document.getElementById("login")
- .style.display = "block";
+ login.style.display = "block";
+ app.style.display = "none";
 
- document.getElementById("app")
- .style.display = "none";
-
- document.getElementById("eventTitle")
- .innerText =
+ eventTitle.innerText =
  eventData.name;
-
- if(eventData.logoVenue){
-
-  const logo =
-  document.getElementById("logo");
-
-  logo.src =
-  eventData.logoVenue;
-
-  logo.style.display =
-  "block";
-
- }
 
  const saved =
  localStorage.getItem(
@@ -282,12 +276,10 @@ function renderLogin(){
 function enterApp(){
 
  const name =
- document.getElementById("nameInput")
- .value.trim();
+ nameInput.value.trim();
 
  const table =
- document.getElementById("tableInput")
- .value.trim();
+ tableInput.value.trim();
 
  if(!name || !table){
 
@@ -317,38 +309,71 @@ function enterApp(){
 
 function showApp(){
 
- document.getElementById("login")
- .style.display = "none";
+ login.style.display = "none";
+ app.style.display = "block";
 
- document.getElementById("app")
- .style.display = "block";
-
- document.getElementById(
- "eventTitleApp"
- ).innerText =
+ eventTitleApp.innerText =
  eventData.name;
 
- document.getElementById(
- "userInfo"
- ).innerText =
+ userInfo.innerText =
  user.name +
  " • Mesa " +
  user.table;
 
- if(eventData.logoVenue){
+}
 
-  const logo =
-  document.getElementById(
-  "logoApp"
+/* ===================== */
+
+function openCamera(){
+
+ photoInput.click();
+
+}
+
+/* ===================== */
+
+function uploadPhoto(e){
+
+ const file =
+ e.target.files[0];
+
+ if(!file) return;
+
+ status.innerText =
+ "Subiendo foto...";
+
+ const reader =
+ new FileReader();
+
+ reader.onload =
+ async function(ev){
+
+  await fetch(
+   "/upload-photo",
+   {
+    method:"POST",
+    headers:{
+     "Content-Type":
+     "application/json"
+    },
+    body:JSON.stringify({
+      eventName:eventName,
+      user:user.name,
+      image:ev.target.result
+    })
+   }
   );
 
-  logo.src =
-  eventData.logoVenue;
+  status.innerText =
+  "✅ Foto subida";
 
-  logo.style.display =
-  "block";
+  setTimeout(()=>{
+   status.innerText = "";
+  },2500);
 
- }
+ };
+
+ reader.readAsDataURL(file);
 
 }
 
