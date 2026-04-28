@@ -22,7 +22,7 @@ body{
 
 .card{
   background:rgba(255,255,255,.08);
-  backdrop-filter:blur(10px);
+  backdrop-filter:blur(12px);
   border-radius:22px;
   padding:22px;
   box-shadow:0 18px 40px rgba(0,0,0,.25);
@@ -35,6 +35,11 @@ body{
   font-size:34px;
   font-weight:bold;
   margin-bottom:8px;
+}
+
+.sub{
+  color:#ddd;
+  font-size:14px;
 }
 
 input,select{
@@ -57,10 +62,19 @@ button{
   cursor:pointer;
 }
 
-.primary{background:#ff0055;color:#fff;}
-.dark{background:#263238;color:#fff;}
+.primary{
+  background:#ff0055;
+  color:#fff;
+}
 
-#login,#app{display:none;}
+.dark{
+  background:#263238;
+  color:#fff;
+}
+
+#login,#app{
+  display:none;
+}
 
 .badge{
   display:inline-block;
@@ -71,8 +85,56 @@ button{
   font-size:14px;
 }
 
-#photoInput{display:none;}
-#status{margin-top:12px;font-size:14px;}
+#photoInput{
+  display:none;
+}
+
+#status{
+  margin-top:12px;
+  font-size:14px;
+}
+
+.podium{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:10px;
+  margin-top:12px;
+}
+
+.place{
+  text-align:center;
+  padding:14px 8px;
+  border-radius:18px;
+  background:rgba(255,255,255,.06);
+}
+
+.first{
+  border:2px solid gold;
+  transform:scale(1.04);
+}
+
+.second{
+  border:2px solid silver;
+}
+
+.third{
+  border:2px solid #cd7f32;
+}
+
+.medal{
+  font-size:28px;
+}
+
+.placeMesa{
+  font-size:18px;
+  font-weight:bold;
+  margin-top:6px;
+}
+
+.placePts{
+  font-size:14px;
+  color:#ddd;
+}
 
 .rankRow{
   display:flex;
@@ -81,6 +143,16 @@ button{
   margin-top:8px;
   border-radius:12px;
   background:rgba(255,255,255,.06);
+}
+
+#myRank{
+  margin-top:14px;
+  padding:14px;
+  border-radius:16px;
+  background:rgba(255,0,85,.18);
+  border:1px solid rgba(255,255,255,.12);
+  text-align:center;
+  font-weight:bold;
 }
 
 .small{
@@ -99,6 +171,7 @@ button{
 
 <div class="center">
 <div id="eventTitle">Evento</div>
+<div class="sub">Ingresá para participar</div>
 </div>
 
 <input id="nameInput" placeholder="Tu nombre">
@@ -144,18 +217,24 @@ onchange="uploadPhoto(event)">
 
 </div>
 
-<!-- RANKING -->
+<!-- RANKING WOW -->
 
 <div class="card">
 
 <div class="center">
-<h2>🏆 Ranking Mesas</h2>
-<div class="small">
-Actualización automática
+<div style="font-size:28px;font-weight:bold;">
+🏆 Ranking en Vivo
+</div>
+<div class="sub">
+Cada foto suma puntos
 </div>
 </div>
 
+<div id="podium"></div>
+
 <div id="rankingBox"></div>
+
+<div id="myRank"></div>
 
 </div>
 
@@ -169,65 +248,78 @@ let eventName="";
 let eventData=null;
 let user=null;
 
+/* ===================== */
+
 async function init(){
 
- const params=
+ const params =
  new URLSearchParams(location.search);
 
- eventName=
- params.get("event")||"";
+ eventName =
+ params.get("event") || "";
 
- if(!eventName)return;
+ if(!eventName) return;
 
- const res=
- await fetch("/event/"+encodeURIComponent(eventName));
+ const res =
+ await fetch("/event/" +
+ encodeURIComponent(eventName));
 
- const data=
+ const data =
  await res.json();
 
- if(!data.success)return;
+ if(!data.success) return;
 
- eventData=data.event;
+ eventData = data.event;
 
- const qrName=params.get("name");
- const qrTable=params.get("table");
+ const qrName =
+ params.get("name");
+
+ const qrTable =
+ params.get("table");
 
  if(qrName && qrTable){
 
-   user={
-    name:qrName,
-    table:qrTable
-   };
+  user = {
+   name:qrName,
+   table:qrTable
+  };
 
-   localStorage.setItem(
-   "snoop_"+eventName,
-   JSON.stringify(user));
+  localStorage.setItem(
+   "snoop_" + eventName,
+   JSON.stringify(user)
+  );
 
-   showApp();
-   return;
+  showApp();
+  return;
+
  }
 
  renderLogin();
 
 }
 
+/* ===================== */
+
 function renderLogin(){
 
  login.style.display="block";
  app.style.display="none";
 
- eventTitle.innerText=
+ eventTitle.innerText =
  eventData.name;
 
  buildTables();
 
- const saved=
+ const saved =
  localStorage.getItem(
- "snoop_"+eventName);
+ "snoop_" + eventName
+ );
 
  if(saved){
 
-  user=JSON.parse(saved);
+  user =
+  JSON.parse(saved);
+
   showApp();
 
  }
@@ -238,53 +330,59 @@ function buildTables(){
 
  for(let i=1;i<=40;i++){
 
-  const n=
+  const n =
   String(i).padStart(2,"0");
 
-  tableInput.innerHTML+=
-  `<option value="${n}">
-   Mesa ${n}
-   </option>`;
+  tableInput.innerHTML += `
+  <option value="${n}">
+  Mesa ${n}
+  </option>`;
+
  }
 
 }
 
 function enterApp(){
 
- const name=
+ const name =
  nameInput.value.trim();
 
- const table=
+ const table =
  tableInput.value;
 
- if(!name || !table)return;
+ if(!name || !table) return;
 
- user={name,table};
+ user = {name,table};
 
  localStorage.setItem(
- "snoop_"+eventName,
- JSON.stringify(user));
+ "snoop_" + eventName,
+ JSON.stringify(user)
+ );
 
  showApp();
 
 }
+
+/* ===================== */
 
 function showApp(){
 
  login.style.display="none";
  app.style.display="block";
 
- eventTitleApp.innerText=
+ eventTitleApp.innerText =
  eventData.name;
 
- userInfo.innerText=
- user.name+
- " • Mesa "+
+ userInfo.innerText =
+ user.name +
+ " • Mesa " +
  user.table;
 
  loadRanking();
 
 }
+
+/* ===================== */
 
 function openCamera(){
  photoInput.click();
@@ -292,16 +390,18 @@ function openCamera(){
 
 function uploadPhoto(e){
 
- const file=e.target.files[0];
- if(!file)return;
+ const file =
+ e.target.files[0];
 
- status.innerText=
+ if(!file) return;
+
+ status.innerText =
  "Subiendo foto...";
 
- const reader=
+ const reader =
  new FileReader();
 
- reader.onload=
+ reader.onload =
  async function(ev){
 
   await fetch("/upload-photo",{
@@ -312,12 +412,13 @@ function uploadPhoto(e){
    body:JSON.stringify({
     eventName:eventName,
     user:user.name,
+    table:user.table,
     image:ev.target.result
    })
   });
 
-  status.innerText=
-  "✅ Foto subida";
+  status.innerText =
+  "✅ Foto subida +1 punto";
 
   loadRanking();
 
@@ -331,36 +432,126 @@ function uploadPhoto(e){
 
 }
 
+/* ===================== */
+
 async function loadRanking(){
 
- const res=
- await fetch("/ranking/"+encodeURIComponent(eventName));
+ const res =
+ await fetch("/ranking/" +
+ encodeURIComponent(eventName));
 
- const data=
+ const data =
  await res.json();
 
+ renderRanking(data);
+
+}
+
+function renderRanking(data){
+
+ podium.innerHTML="";
  rankingBox.innerHTML="";
+ myRank.innerHTML="";
 
  if(!data.length){
 
-  rankingBox.innerHTML=
+  rankingBox.innerHTML =
   "Sin puntos todavía";
 
   return;
+
  }
 
- data.slice(0,5).forEach((r,i)=>{
+ const top =
+ data.slice(0,3);
 
- rankingBox.innerHTML+=`
+ const medals =
+ ["🥇","🥈","🥉"];
+
+ const cls =
+ ["first","second","third"];
+
+ let html =
+ `<div class="podium">`;
+
+ top.forEach((r,i)=>{
+
+ html += `
+ <div class="place ${cls[i]}">
+   <div class="medal">${medals[i]}</div>
+   <div class="placeMesa">
+   Mesa ${r.table}
+   </div>
+   <div class="placePts">
+   ${r.points||0} pts
+   </div>
+ </div>
+ `;
+
+ });
+
+ html += `</div>`;
+
+ podium.innerHTML = html;
+
+ data.slice(3,6).forEach((r,i)=>{
+
+ rankingBox.innerHTML += `
  <div class="rankRow">
-   <div>${i+1}. Mesa ${r.table}</div>
+   <div>${i+4}. Mesa ${r.table}</div>
    <div>${r.points||0} pts</div>
  </div>
  `;
 
  });
 
+ const pos =
+ data.findIndex(r =>
+ String(r.table) ===
+ String(user.table)
+ );
+
+ if(pos >= 0){
+
+  const leader =
+  data[0].points || 0;
+
+  const mine =
+  data[pos].points || 0;
+
+  const diff =
+  leader - mine;
+
+  let msg =
+  "Mesa " + user.table +
+  " va " + (pos+1) + "°";
+
+  if(pos===0){
+
+   msg +=
+   " 🔥 ¡Van primeros!";
+
+  }else if(diff===1){
+
+   msg +=
+   " 🔥 A 1 punto del líder";
+
+  }else{
+
+   msg +=
+   " • A " + diff +
+   " pts del líder";
+
+  }
+
+  myRank.innerText =
+  msg;
+
+ }
+
 }
+
+/* ===================== */
 
 setInterval(()=>{
  if(app.style.display==="block"){
@@ -371,5 +562,6 @@ setInterval(()=>{
 init();
 
 </script>
+
 </body>
 </html>
