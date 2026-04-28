@@ -129,8 +129,6 @@ button{
   display:none;
 }
 
-/* LOGO ANIMADO */
-
 #venueLogo{
   display:none;
   max-width:220px;
@@ -144,23 +142,6 @@ button{
 
 #venueLogo.show{
   animation:logoEnter 1s ease forwards;
-}
-
-@keyframes logoEnter{
-  0%{
-    opacity:0;
-    transform:translateY(-15px) scale(.92);
-  }
-
-  60%{
-    opacity:1;
-    transform:translateY(3px) scale(1.02);
-  }
-
-  100%{
-    opacity:1;
-    transform:translateY(0) scale(1);
-  }
 }
 
 #eventTitle{
@@ -181,6 +162,54 @@ button{
   text-align:center;
 }
 
+/* SCREENSAVER */
+
+#screensaver{
+  position:fixed;
+  inset:0;
+  background:#000;
+  display:none;
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+}
+
+#screensaver img{
+  max-width:420px;
+  max-height:220px;
+  object-fit:contain;
+  animation:pulseLogo 2s ease-in-out infinite;
+}
+
+#screensaverText{
+  margin-top:20px;
+  color:#999;
+  font-size:18px;
+  letter-spacing:1px;
+}
+
+@keyframes pulseLogo{
+  0%{ transform:scale(1); opacity:.85; }
+  50%{ transform:scale(1.03); opacity:1; }
+  100%{ transform:scale(1); opacity:.85; }
+}
+
+@keyframes logoEnter{
+  0%{
+    opacity:0;
+    transform:translateY(-15px) scale(.92);
+  }
+  60%{
+    opacity:1;
+    transform:translateY(3px) scale(1.02);
+  }
+  100%{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+}
+
 @keyframes fadeGlow{
   from{
     text-shadow:0 0 6px rgba(255,255,255,.2);
@@ -192,6 +221,13 @@ button{
 </style>
 </head>
 <body>
+
+<div id="screensaver" onclick="wakeScreen()">
+  <img id="ssLogo">
+  <div id="screensaverText">
+    Tocá la pantalla para continuar
+  </div>
+</div>
 
 <div class="wrap">
 
@@ -240,6 +276,51 @@ oninput="renderGuests()">
 
 let currentEvent = null;
 let guests = [];
+let idleTimer = null;
+
+/* ===================== */
+
+function resetIdle(){
+
+ clearTimeout(idleTimer);
+
+ idleTimer = setTimeout(()=>{
+   startScreensaver();
+ },30000);
+
+}
+
+function startScreensaver(){
+
+ if(!currentEvent) return;
+
+ if(!currentEvent.logoVenue) return;
+
+ const box =
+ document.getElementById("screensaver");
+
+ document.getElementById("ssLogo").src =
+ currentEvent.logoVenue;
+
+ box.style.display="flex";
+
+}
+
+function wakeScreen(){
+
+ document.getElementById("screensaver")
+ .style.display="none";
+
+ resetIdle();
+
+}
+
+["click","touchstart","mousemove","keydown"]
+.forEach(evt=>{
+ document.addEventListener(evt,resetIdle);
+});
+
+/* ===================== */
 
 async function loginEvent(){
 
@@ -270,10 +351,10 @@ async function loginEvent(){
  currentEvent = data.event;
 
  document.getElementById("loginBox")
- .style.display = "none";
+ .style.display="none";
 
  document.getElementById("app")
- .style.display = "block";
+ .style.display="block";
 
  if(currentEvent.logoVenue){
 
@@ -283,20 +364,23 @@ async function loginEvent(){
   logo.src =
   currentEvent.logoVenue;
 
-  logo.style.display = "block";
+  logo.style.display="block";
 
   setTimeout(()=>{
-    logo.classList.add("show");
+   logo.classList.add("show");
   },150);
 
  }
 
  document.getElementById("eventTitle")
- .innerText = currentEvent.name;
+ .innerText=currentEvent.name;
 
  loadGuests();
+ resetIdle();
 
 }
+
+/* ===================== */
 
 async function loadGuests(){
 
@@ -334,7 +418,7 @@ function renderGuests(){
  .includes(txt)
  );
 
- box.innerHTML = "";
+ box.innerHTML="";
 
  filtered.forEach(g=>{
 
@@ -383,6 +467,8 @@ function renderGuests(){
 
 }
 
+/* ===================== */
+
 async function markArrived(id){
 
  await fetch(
@@ -394,6 +480,7 @@ async function markArrived(id){
  );
 
  loadGuests();
+ resetIdle();
 
 }
 
@@ -411,7 +498,6 @@ function showQR(id){
  document.getElementById("qr_"+id);
 
  box.innerHTML = `
-
  <div class="qrWrap">
 
    <canvas id="canvas_${id}"
@@ -438,6 +524,8 @@ function showQR(id){
  code,
  {width:150}
  );
+
+ resetIdle();
 
 }
 
