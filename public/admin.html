@@ -70,7 +70,7 @@ button{
 
 <input type="text" id="eventName" placeholder="Nombre del evento">
 
-<button onclick="createEvent()">Crear Evento</button>
+<button onclick="saveEvent()">Crear Evento</button>
 
 <div id="status"></div>
 
@@ -88,7 +88,7 @@ button{
 
 <script>
 
-async function createEvent(){
+async function saveEvent(){
 
   const name =
     document.getElementById("eventName")
