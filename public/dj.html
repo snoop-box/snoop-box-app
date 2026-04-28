@@ -3,16 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DJ Screen PRO</title>
+<title>DJ Screen Cinema</title>
 
 <style>
 body{
   margin:0;
   font-family:Arial,sans-serif;
   overflow:hidden;
-  background:#000 center center/cover no-repeat;
+  background:#000 center center / cover no-repeat fixed;
   color:#fff;
 }
+
+/* LOGIN */
 
 #login{
   position:fixed;
@@ -46,6 +48,8 @@ button{
   cursor:pointer;
 }
 
+/* APP */
+
 #app{
   display:none;
 }
@@ -53,36 +57,57 @@ button{
 #overlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.38);
+  background:rgba(0,0,0,.42);
+  backdrop-filter:blur(1px);
 }
+
+/* EVENTO CENTRADO */
 
 #eventName{
   position:absolute;
-  top:24px;
-  left:30px;
-  font-size:46px;
+  top:18px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:52px;
   font-weight:bold;
-  z-index:3;
+  z-index:5;
+  text-shadow:0 8px 18px rgba(0,0,0,.45);
 }
+
+/* FOTO PRINCIPAL */
 
 #photoBox{
   position:absolute;
-  top:110px;
+  top:105px;
   left:50%;
   transform:translateX(-50%);
-  width:58vw;
-  height:58vh;
-  border-radius:22px;
-  overflow:hidden;
+  width:62vw;
+  height:62vh;
   display:none;
-  z-index:3;
-  box-shadow:0 20px 45px rgba(0,0,0,.45);
+  z-index:4;
+
+  border-radius:24px;
+  overflow:hidden;
+  background:rgba(0,0,0,.35);
+  box-shadow:0 28px 60px rgba(0,0,0,.45);
 }
 
-#photoBox img{
+#photoImg{
   width:100%;
   height:100%;
-  object-fit:cover;
+  object-fit:contain;
+  background:#000;
+
+  opacity:0;
+  transform:scale(1.04);
+  transition:
+    opacity .9s ease,
+    transform 6s ease;
+}
+
+#photoImg.show{
+  opacity:1;
+  transform:scale(1);
 }
 
 #photoUser{
@@ -90,25 +115,31 @@ button{
   left:0;
   right:0;
   bottom:0;
-  background:rgba(0,0,0,.55);
-  padding:14px;
+  background:linear-gradient(
+    to top,
+    rgba(0,0,0,.72),
+    rgba(0,0,0,.08)
+  );
+  padding:18px;
   font-size:28px;
   text-align:center;
 }
 
+/* RANKING */
+
 #ranking{
   position:absolute;
-  right:30px;
+  right:28px;
   top:120px;
-  width:280px;
-  background:rgba(0,0,0,.48);
+  width:285px;
+  background:rgba(0,0,0,.46);
   padding:18px;
   border-radius:22px;
-  z-index:3;
+  z-index:5;
 }
 
 #ranking h2{
-  margin-top:0;
+  margin:0 0 14px 0;
   text-align:center;
 }
 
@@ -126,31 +157,37 @@ button{
 .silver{border:1px solid silver;}
 .bronze{border:1px solid #cd7f32;}
 
+/* QR */
+
 #qrBox{
   position:absolute;
-  left:30px;
-  bottom:30px;
+  left:28px;
+  bottom:28px;
   background:rgba(0,0,0,.45);
   padding:16px;
   border-radius:18px;
-  z-index:3;
+  z-index:5;
   text-align:center;
 }
 
+/* BOTON */
+
 #sortBtn{
   position:absolute;
-  right:30px;
-  bottom:30px;
+  right:28px;
+  bottom:28px;
   background:#ff0055;
   color:#fff;
   padding:16px 26px;
   font-size:24px;
-  z-index:3;
+  z-index:5;
 }
+
+/* ALERTA */
 
 #newPhotoAlert{
   position:fixed;
-  top:28px;
+  top:90px;
   left:50%;
   transform:translateX(-50%);
   background:#ff0055;
@@ -160,6 +197,8 @@ button{
   display:none;
   z-index:10;
 }
+
+/* GANADOR */
 
 #winnerBox{
   position:fixed;
@@ -180,26 +219,24 @@ button{
 <!-- LOGIN -->
 
 <div id="login">
+  <div class="loginBox">
 
-<div class="loginBox">
+    <h1>DJ Screen</h1>
 
-<h1>DJ Screen</h1>
+    <input
+    type="text"
+    id="eventInput"
+    placeholder="Nombre del evento">
 
-<input
-type="text"
-id="eventInput"
-placeholder="Nombre del evento">
+    <button
+    onclick="loginEvent()"
+    style="width:100%;padding:15px;background:#ff0055;color:#fff;font-size:18px;">
+    Entrar
+    </button>
 
-<button
-onclick="loginEvent()"
-style="width:100%;padding:15px;background:#ff0055;color:#fff;font-size:18px;">
-Entrar
-</button>
+    <div id="status"></div>
 
-<div id="status"></div>
-
-</div>
-
+  </div>
 </div>
 
 <!-- APP -->
@@ -211,8 +248,8 @@ Entrar
 <div id="eventName"></div>
 
 <div id="photoBox">
-<img id="photoImg">
-<div id="photoUser"></div>
+  <img id="photoImg">
+  <div id="photoUser"></div>
 </div>
 
 <div id="ranking">
@@ -221,9 +258,7 @@ Entrar
 </div>
 
 <div id="qrBox">
-<div style="margin-bottom:8px;">
-Escaneá y participá
-</div>
+<div style="margin-bottom:8px;">Escaneá y participá</div>
 <canvas id="qr"></canvas>
 </div>
 
@@ -244,10 +279,10 @@ onclick="runDraw()">
 
 <script>
 
-let selectedEvent = null;
-let photos = [];
-let photoIndex = 0;
-let lastCount = 0;
+let selectedEvent=null;
+let photos=[];
+let photoIndex=0;
+let lastCount=0;
 
 /* ===================== */
 
@@ -279,11 +314,8 @@ async function loginEvent(){
 
  selectedEvent = found;
 
- login.style.display =
- "none";
-
- app.style.display =
- "block";
+ login.style.display="none";
+ app.style.display="block";
 
  eventName.innerText =
  selectedEvent.name;
@@ -305,7 +337,7 @@ async function loginEvent(){
  QRCode.toCanvas(
  qr,
  qrLink,
- {width:170}
+ { width:170 }
  );
 
  loadPhotos();
@@ -313,7 +345,7 @@ async function loginEvent(){
 
  setInterval(loadPhotos,4000);
  setInterval(loadRanking,5000);
- setInterval(rotatePhotos,6000);
+ setInterval(rotatePhotos,7000);
 
 }
 
@@ -332,16 +364,11 @@ async function loadPhotos(){
  await res.json();
 
  if(data.length > lastCount){
-
   showAlert();
-
  }
 
- lastCount =
- data.length;
-
- photos =
- data;
+ lastCount = data.length;
+ photos = data;
 
 }
 
@@ -351,13 +378,10 @@ function rotatePhotos(){
 
  if(!photos.length) return;
 
- photoBox.style.display =
- "block";
+ photoBox.style.display="block";
 
  if(photoIndex >= photos.length){
-
   photoIndex = 0;
-
  }
 
  const p =
@@ -366,12 +390,20 @@ function rotatePhotos(){
  const img =
  p.url || p.image;
 
- photoImg.src = img;
+ photoImg.classList.remove("show");
 
- photoUser.innerText =
- (p.user || "Invitado") +
- " • Mesa " +
- (p.table || "-");
+ setTimeout(()=>{
+
+  photoImg.src = img;
+
+  photoUser.innerText =
+  (p.user || "Invitado") +
+  " • Mesa " +
+  (p.table || "-");
+
+  photoImg.classList.add("show");
+
+ },250);
 
  photoIndex++;
 
@@ -385,10 +417,8 @@ function showAlert(){
  "block";
 
  setTimeout(()=>{
-
   newPhotoAlert.style.display =
   "none";
-
  },2500);
 
 }
@@ -407,8 +437,7 @@ async function loadRanking(){
  const data =
  await res.json();
 
- rankingBox.innerHTML =
- "";
+ rankingBox.innerHTML="";
 
  data.slice(0,5)
  .forEach((r,i)=>{
@@ -421,8 +450,8 @@ async function loadRanking(){
 
  rankingBox.innerHTML += `
  <div class="rankRow ${cls}">
-  <div>${i+1}. Mesa ${r.table}</div>
-  <div>${r.points||0}</div>
+   <div>${i+1}. Mesa ${r.table}</div>
+   <div>${r.points||0}</div>
  </div>
  `;
 
@@ -435,13 +464,8 @@ async function loadRanking(){
 function runDraw(){
 
  if(!photos.length){
-
-  alert(
-   "Todavía no hay participantes"
-  );
-
+  alert("Todavía no hay participantes");
   return;
-
  }
 
  const random =
@@ -464,18 +488,14 @@ function runDraw(){
  </div>
  `;
 
- winnerBox.style.display =
- "flex";
+ winnerBox.style.display="flex";
 
- winnerBox.onclick =
- ()=>{
-  winnerBox.style.display =
-  "none";
+ winnerBox.onclick=()=>{
+  winnerBox.style.display="none";
  };
 
 }
 
 </script>
-
 </body>
 </html>
