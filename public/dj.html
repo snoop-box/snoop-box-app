@@ -1,124 +1,103 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DJ Screen V5 Showtime</title>
-
 <style>
 body{
   margin:0;
   font-family:Arial,sans-serif;
-  overflow:hidden;
-  background:#000 center center / cover no-repeat fixed;
+  background:radial-gradient(circle,#111,#000);
   color:#fff;
+  overflow-x:hidden;
 }
 
-#login{
-  position:fixed;
-  inset:0;
-  background:#111;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-
-.loginBox{
-  width:420px;
-  background:#1c1c1c;
-  padding:30px;
-  border-radius:22px;
+header{
+  padding:18px;
   text-align:center;
+  background:rgba(255,255,255,.04);
+  backdrop-filter:blur(8px);
 }
 
-input{
-  width:100%;
-  padding:15px;
-  border:none;
-  border-radius:12px;
-  margin:10px 0;
-  box-sizing:border-box;
-}
-
-button{
-  border:none;
-  border-radius:14px;
-  cursor:pointer;
-}
-
-#app{
-  display:none;
-}
-
-#overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.42);
-}
-
-#eventName{
-  position:absolute;
-  top:18px;
-  left:50%;
-  transform:translateX(-50%);
-  font-size:52px;
+#eventTitle{
+  font-size:34px;
   font-weight:bold;
-  z-index:5;
-  text-shadow:0 8px 18px rgba(0,0,0,.45);
 }
 
-/* FOTO */
+#cameraBtn{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#ff0055;
+  color:#fff;
+  border:none;
+  border-radius:16px;
+  padding:18px 24px;
+  font-size:20px;
+  cursor:pointer;
+  z-index:100;
+}
 
-#photoBox{
-  position:absolute;
-  top:105px;
-  left:50%;
-  transform:translateX(-50%);
-  display:none;
-  z-index:4;
-  border-radius:24px;
+#grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:14px;
+  padding:18px;
+  padding-right:270px;
+}
+
+/* CAMBIO PEDIDO */
+
+.card{
+  background:rgba(255,255,255,.50);
+  backdrop-filter:blur(10px);
+  border-radius:18px;
   overflow:hidden;
-  background:rgba(0,0,0,.35);
-  box-shadow:0 28px 60px rgba(0,0,0,.45);
-  width:58vw;
-  height:62vh;
+  box-shadow:0 10px 25px rgba(0,0,0,.35);
+  cursor:pointer;
+  transition:.25s;
 }
 
-#photoImg{
+.card:hover{
+  transform:translateY(-4px) scale(1.01);
+}
+
+.card img{
   width:100%;
-  height:100%;
-  object-fit:contain;
-  background:#000;
-  opacity:1;
+  height:280px;
+  object-fit:cover;
 }
 
-#photoUser{
-  position:absolute;
-  left:0;
+.info{
+  padding:12px;
+}
+
+.user{
+  font-size:22px;
+  font-weight:bold;
+  color:#111;
+}
+
+.table{
+  color:#222;
+  margin-top:4px;
+}
+
+/* SIDE PANEL */
+
+#side{
+  position:fixed;
+  top:0;
   right:0;
-  bottom:0;
-  background:linear-gradient(to top,rgba(0,0,0,.8),rgba(0,0,0,.05));
-  padding:18px;
-  font-size:28px;
-  text-align:center;
+  width:250px;
+  height:100%;
+  background:rgba(0,0,0,.82);
+  backdrop-filter:blur(10px);
+  padding:16px;
+  box-sizing:border-box;
+  overflow:auto;
 }
 
-/* RANKING */
-
-#ranking{
-  position:absolute;
-  right:28px;
-  top:120px;
-  width:285px;
-  background:rgba(0,0,0,.46);
-  padding:18px;
-  border-radius:22px;
-  z-index:5;
-}
-
-#ranking h2{
-  margin:0 0 14px 0;
+#rankTitle{
   text-align:center;
+  font-size:26px;
+  font-weight:bold;
+  margin-bottom:14px;
 }
 
 .rankRow{
@@ -128,417 +107,128 @@ button{
   border-radius:14px;
   background:rgba(255,255,255,.06);
   margin-bottom:10px;
-  font-size:20px;
 }
 
-/* QR */
+.gold{border:1px solid gold;}
+.silver{border:1px solid silver;}
+.bronze{border:1px solid #cd7f32;}
 
 #qrBox{
-  position:absolute;
-  left:28px;
-  bottom:28px;
-  background:rgba(0,0,0,.45);
-  padding:16px;
-  border-radius:18px;
-  z-index:5;
+  margin-top:20px;
   text-align:center;
-}
-
-/* BOTON */
-
-#sortBtn{
-  position:absolute;
-  right:28px;
-  bottom:28px;
-  background:#ff0055;
-  color:#fff;
-  padding:16px 26px;
-  font-size:24px;
-  z-index:5;
-}
-
-/* ALERTAS */
-
-#newPhotoAlert{
-  position:fixed;
-  top:90px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#ff0055;
-  padding:16px 28px;
+  background:#fff;
+  color:#000;
+  padding:12px;
   border-radius:16px;
-  font-size:28px;
-  display:none;
-  z-index:10;
 }
 
-/* GANADOR */
+#qrBox img{
+  width:140px;
+}
 
-#winnerBox{
+#qrText{
+  font-size:14px;
+  margin-top:8px;
+}
+
+/* CAMERA */
+
+#cameraModal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.86);
   display:none;
   justify-content:center;
   align-items:center;
-  flex-direction:column;
-  z-index:100;
-  text-align:center;
+  background:rgba(0,0,0,.92);
+  z-index:500;
 }
 
-#winnerTitle{
-  font-size:74px;
+#video{
+  width:70%;
+  max-width:800px;
+  border-radius:20px;
+  transform:scaleX(-1);
+}
+
+#countdown{
+  position:absolute;
+  font-size:140px;
   font-weight:bold;
 }
 
-#winnerName{
-  font-size:64px;
-  margin-top:18px;
-}
-
-#winnerMesa{
-  font-size:42px;
-  margin-top:10px;
-}
-
-/* CONFETTI */
-
-.confetti{
+#flash{
   position:fixed;
-  width:12px;
-  height:12px;
-  top:-20px;
-  z-index:200;
-  animation:fall 3s linear forwards;
+  inset:0;
+  background:#fff;
+  opacity:0;
+  pointer-events:none;
+  z-index:600;
 }
 
-@keyframes fall{
-  to{
-    transform:translateY(110vh) rotate(720deg);
-    opacity:0;
-  }
+#canvas{
+  display:none;
+}
+
+/* POPUP */
+
+#printModal{
+  position:fixed;
+  inset:0;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  background:rgba(0,0,0,.88);
+  z-index:900;
+}
+
+#printInner{
+  background:rgba(255,255,255,.5);
+  backdrop-filter:blur(12px);
+  border-radius:24px;
+  padding:24px;
+  text-align:center;
+}
+
+#printFrame{
+  position:relative;
+  width:260px;
+  height:390px;
+  overflow:hidden;
+  border-radius:18px;
+  background:#000;
+}
+
+#printFrame img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+}
+
+#printPhoto{
+  object-fit:contain;
+}
+
+#printFrameOverlay{
+  object-fit:cover;
+}
+
+.printBtn{
+  border:none;
+  padding:14px 18px;
+  border-radius:12px;
+  margin-top:14px;
+  cursor:pointer;
+  font-size:16px;
+}
+
+.primary{
+  background:#ff0055;
+  color:#fff;
+}
+
+.dark{
+  background:#333;
+  color:#fff;
 }
 </style>
-</head>
-<body>
-
-<div id="login">
-<div class="loginBox">
-
-<h1>DJ Screen</h1>
-
-<input id="eventInput"
-placeholder="Nombre del evento">
-
-<button onclick="loginEvent()"
-style="width:100%;padding:15px;background:#ff0055;color:#fff;font-size:18px;">
-Entrar
-</button>
-
-<div id="status"></div>
-
-</div>
-</div>
-
-<div id="app">
-
-<div id="overlay"></div>
-
-<div id="eventName"></div>
-
-<div id="photoBox">
-<img id="photoImg">
-<div id="photoUser"></div>
-</div>
-
-<div id="ranking">
-<h2>🏆 Ranking</h2>
-<div id="rankingBox"></div>
-</div>
-
-<div id="qrBox">
-<div style="margin-bottom:8px;">Escaneá y participá</div>
-<canvas id="qr"></canvas>
-</div>
-
-<button id="sortBtn"
-onclick="runDrawShow()">
-🎁 Sorteo
-</button>
-
-<div id="newPhotoAlert">
-📸 Nueva foto subida
-</div>
-
-</div>
-
-<div id="winnerBox">
-<div id="winnerTitle">🎉 GANADOR 🎉</div>
-<div id="winnerName"></div>
-<div id="winnerMesa"></div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-
-<script>
-
-let selectedEvent=null;
-let photos=[];
-let photoIndex=0;
-let lastCount=0;
-let rotating=true;
-
-/* ===================== */
-
-async function loginEvent(){
-
- const name=
- eventInput.value.trim().toLowerCase();
-
- const res=
- await fetch("/events");
-
- const events=
- await res.json();
-
- const found=
- events.find(ev =>
- ev.name.toLowerCase()===name
- );
-
- if(!found){
-  status.innerText="Evento no encontrado";
-  return;
- }
-
- selectedEvent=found;
-
- login.style.display="none";
- app.style.display="block";
-
- eventName.innerText=
- selectedEvent.name;
-
- if(found.background){
-  document.body.style.backgroundImage=
-  `url('${found.background}')`;
- }
-
- const qrLink=
- location.origin+
- "/?event="+
- encodeURIComponent(found.name);
-
- QRCode.toCanvas(qr,qrLink,{width:170});
-
- loadPhotos();
- loadRanking();
-
- setInterval(loadPhotos,4000);
- setInterval(loadRanking,5000);
- setInterval(()=>{
-   if(rotating) rotatePhotos();
- },7000);
-
-}
-
-/* ===================== */
-
-async function loadPhotos(){
-
- const res=
- await fetch("/photos/" +
- encodeURIComponent(selectedEvent.name));
-
- const data=
- await res.json();
-
- if(data.length > lastCount){
-  showAlert();
- }
-
- lastCount=data.length;
- photos=data;
-
-}
-
-/* ===================== */
-
-function rotatePhotos(){
-
- if(!photos.length)return;
-
- photoBox.style.display="block";
-
- if(photoIndex>=photos.length){
-  photoIndex=0;
- }
-
- showPhoto(photos[photoIndex]);
-
- photoIndex++;
-
-}
-
-function showPhoto(p){
-
- const img=
- p.url || p.image;
-
- photoImg.src=img;
-
- photoUser.innerText=
- (p.user || "Invitado") +
- " • Mesa " +
- (p.table || "-");
-
-}
-
-/* ===================== */
-
-function showAlert(){
-
- newPhotoAlert.style.display="block";
-
- setTimeout(()=>{
-  newPhotoAlert.style.display="none";
- },2500);
-
-}
-
-/* ===================== */
-
-async function loadRanking(){
-
- const res=
- await fetch("/ranking/" +
- encodeURIComponent(selectedEvent.name));
-
- const data=
- await res.json();
-
- rankingBox.innerHTML="";
-
- data.slice(0,5).forEach((r,i)=>{
-
- rankingBox.innerHTML += `
- <div class="rankRow">
- <div>${i+1}. Mesa ${r.table}</div>
- <div>${r.points||0}</div>
- </div>
- `;
-
- });
-
-}
-
-/* ===================== */
-/* SHOWTIME DRAW */
-/* ===================== */
-
-async function runDrawShow(){
-
- if(!photos.length){
-  alert("Todavía no hay participantes");
-  return;
- }
-
- rotating=false;
-
- let duration=4000;
- let start=Date.now();
- let delay=80;
- let index=0;
-
- function spin(){
-
-   const elapsed=
-   Date.now()-start;
-
-   if(elapsed >= duration){
-
-     const winner=
-     photos[
-      Math.floor(
-       Math.random()*photos.length
-      )
-     ];
-
-     showWinner(winner);
-     rotating=true;
-     return;
-   }
-
-   showPhoto(
-    photos[index % photos.length]
-   );
-
-   index++;
-
-   delay += 12;
-
-   setTimeout(spin,delay);
-
- }
-
- spin();
-
-}
-
-/* ===================== */
-
-function showWinner(w){
-
- winnerName.innerText=
- w.user || "Invitado";
-
- winnerMesa.innerText=
- "Mesa " +
- (w.table || "-");
-
- winnerBox.style.display="flex";
-
- launchConfetti();
-
- winnerBox.onclick=()=>{
-  winnerBox.style.display="none";
- };
-
-}
-
-/* ===================== */
-
-function launchConfetti(){
-
- for(let i=0;i<120;i++){
-
-   const c=
-   document.createElement("div");
-
-   c.className="confetti";
-
-   c.style.left=
-   Math.random()*100+"vw";
-
-   c.style.background=
-   `hsl(${Math.random()*360},90%,60%)`;
-
-   c.style.animationDelay=
-   (Math.random()*1.2)+"s";
-
-   c.style.transform=
-   `rotate(${Math.random()*360}deg)`;
-
-   document.body.appendChild(c);
-
-   setTimeout(()=>{
-    c.remove();
-   },3200);
-
- }
-
-}
-
-</script>
-</body>
-</html>
