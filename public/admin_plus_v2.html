@@ -1,119 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Admin Plus V2</title>
-
-<style>
-body{
-  margin:0;
-  background:#111;
-  color:#fff;
-  font-family:Arial;
-  padding:30px;
-}
-.wrap{
-  max-width:820px;
-  margin:auto;
-}
-.box{
-  background:#1d1d1d;
-  padding:25px;
-  border-radius:18px;
-  margin-bottom:25px;
-}
-input[type=text],
-input[type=file]{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:10px;
-  margin:10px 0;
-  box-sizing:border-box;
-}
-button{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:12px;
-  background:#ff0055;
-  color:white;
-  font-size:16px;
-  cursor:pointer;
-  margin-top:10px;
-}
-button:disabled{
-  opacity:.5;
-  cursor:not-allowed;
-}
-.preview{
-  max-width:100%;
-  max-height:140px;
-  border-radius:10px;
-  margin-top:8px;
-}
-.event{
-  background:#262626;
-  padding:14px;
-  border-radius:12px;
-  margin-bottom:10px;
-}
-.row{
-  display:flex;
-  gap:10px;
-  margin-top:10px;
-}
-.smallBtn{
-  flex:1;
-  background:#444;
-  padding:10px;
-  font-size:14px;
-}
-#status{
-  min-height:24px;
-  margin-top:12px;
-}
-</style>
-</head>
-<body>
-
-<div class="wrap">
-
-<div class="box">
-
-<h1>Admin Plus V2</h1>
-
-<input type="text" id="eventName" placeholder="Nombre del evento">
-
-<label>Fondo DJ</label>
-<input type="file" id="bgFile" accept="image/*">
-<img id="bgPreview" class="preview" style="display:none;">
-
-<label>Frame</label>
-<input type="file" id="frameFile" accept="image/*">
-<img id="framePreview" class="preview" style="display:none;">
-
-<button id="saveBtn" onclick="saveEvent()">Crear Evento</button>
-
-<div id="status"></div>
-
-</div>
-
-<div class="box">
-
-<h2>Eventos</h2>
-
-<div id="list">Cargando...</div>
-
-</div>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
 <script>
-
 const CLOUD_NAME = "daxf4enjn";
 const UPLOAD_PRESET = "snoopbox";
 
@@ -363,7 +248,7 @@ async function toggleEvent(id){
 }
 
 /* ======================
-   EXCEL
+   EXCEL FIX V3
 ====================== */
 
 function openExcel(id){
@@ -387,7 +272,7 @@ function processExcel(e,id){
       new Uint8Array(evt.target.result);
 
     const workbook =
-      XLSX.read(data,{type:"array"});
+      XLSX.read(data,{ type:"array" });
 
     const sheet =
       workbook.Sheets[
@@ -397,11 +282,43 @@ function processExcel(e,id){
     const rows =
       XLSX.utils.sheet_to_json(sheet);
 
-    const guests = rows.map(r=>({
-      name:r.Nombre || r.name || "",
-      table:r.Mesa || r.table || "",
-      phone:r.Telefono || r.phone || ""
-    }));
+    const guests = rows.map(r=>{
+
+      const clean = {};
+
+      Object.keys(r).forEach(key=>{
+
+        const k =
+          key.toString()
+          .trim()
+          .toLowerCase();
+
+        clean[k] = r[key];
+
+      });
+
+      return {
+
+        name:
+          clean.nombre ||
+          clean.name ||
+          clean.invitado ||
+          "",
+
+        table:
+          clean.mesa ||
+          clean.table ||
+          "",
+
+        phone:
+          clean.telefono ||
+          clean.teléfono ||
+          clean.phone ||
+          ""
+
+      };
+
+    });
 
     uploadGuests(id,guests);
 
@@ -433,6 +350,3 @@ loadEvents();
 btnState();
 
 </script>
-
-</body>
-</html>
