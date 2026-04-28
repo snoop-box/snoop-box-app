@@ -2,115 +2,379 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Snoop Box</title>
 
 <style>
-body {
+body{
   margin:0;
-  font-family: Arial;
-  background: linear-gradient(135deg,#111,#000);
-  color:white;
+  font-family:Arial,sans-serif;
+  min-height:100vh;
+  color:#fff;
+  background:linear-gradient(135deg,#0b1f5e,#111,#7f1d1d);
+}
+
+.wrap{
+  max-width:520px;
+  margin:auto;
+  padding:24px;
+}
+
+.card{
+  background:rgba(255,255,255,.08);
+  backdrop-filter:blur(10px);
+  border-radius:22px;
+  padding:22px;
+  box-shadow:0 18px 40px rgba(0,0,0,.25);
+}
+
+.center{
   text-align:center;
 }
 
-.screen { display:none; }
-.active { display:block; }
-
-.btn {
-  background:#ff0055;
-  border:none;
-  color:white;
-  padding:18px;
-  font-size:18px;
-  border-radius:12px;
-  width:80%;
-  margin:10px auto;
-  display:block;
-}
-
-input {
-  width:80%;
-  padding:15px;
-  margin:10px;
-  border-radius:10px;
-  border:none;
-}
-
-#blocked {
+#logo{
   display:none;
-  position:fixed;
+  max-width:180px;
+  max-height:80px;
+  object-fit:contain;
+  margin:0 auto 12px auto;
+}
+
+#eventTitle{
+  font-size:34px;
+  font-weight:bold;
+  margin-bottom:6px;
+}
+
+#subText{
+  color:#ddd;
+  margin-bottom:18px;
+}
+
+input{
   width:100%;
-  height:100%;
-  background:black;
-  justify-content:center;
-  align-items:center;
+  padding:15px;
+  margin:8px 0;
+  border:none;
+  border-radius:14px;
+  font-size:16px;
+  box-sizing:border-box;
+}
+
+button{
+  width:100%;
+  padding:16px;
+  margin-top:10px;
+  border:none;
+  border-radius:14px;
+  font-size:17px;
+  cursor:pointer;
+}
+
+.primary{
+  background:#ff0055;
+  color:#fff;
+}
+
+.dark{
+  background:#263238;
+  color:#fff;
+}
+
+.menuBtn{
+  margin-top:12px;
+  font-size:18px;
+}
+
+#app{
+  display:none;
+}
+
+#login{
+  display:none;
+}
+
+.badge{
+  display:inline-block;
+  padding:8px 12px;
+  border-radius:30px;
+  background:rgba(255,255,255,.08);
+  margin-top:8px;
+  font-size:14px;
+}
+
+.small{
+  font-size:14px;
+  color:#ddd;
+}
+
+.section{
+  margin-top:18px;
 }
 </style>
 </head>
-
 <body>
 
-<div id="blocked">🚫 Evento no disponible</div>
+<div class="wrap">
 
-<div id="login" class="screen active">
-  <h1>Ingresar</h1>
-  <input id="nameInput" placeholder="Nombre">
-  <input id="tableInput" placeholder="Mesa">
-  <button class="btn" onclick="login()">Ingresar</button>
+<!-- LOGIN -->
+
+<div class="card" id="login">
+
+<div class="center">
+
+<img id="logo">
+
+<div id="eventTitle">Evento</div>
+<div id="subText">Ingresá para participar</div>
+
 </div>
 
-<div id="app" class="screen">
-  <h1 id="welcome"></h1>
+<input id="nameInput" placeholder="Tu nombre">
+<input id="tableInput" placeholder="Mesa">
+
+<button class="primary"
+onclick="enterApp()">
+Ingresar
+</button>
+
+</div>
+
+<!-- APP -->
+
+<div class="card" id="app">
+
+<div class="center">
+
+<img id="logoApp">
+
+<div id="eventTitleApp"></div>
+
+<div class="badge"
+id="userInfo"></div>
+
+</div>
+
+<div class="section">
+
+<button class="primary menuBtn"
+onclick="alert('Próximo paso: subir foto')">
+📸 Subir Foto
+</button>
+
+<button class="dark menuBtn"
+onclick="openRanking()">
+🏆 Ranking Mesas
+</button>
+
+<button class="dark menuBtn"
+onclick="alert('Próximo paso: trivia')">
+🎮 Trivia
+</button>
+
+<button class="dark menuBtn"
+onclick="openGallery()">
+🖼 Galería
+</button>
+
+</div>
+
+<div class="section center small">
+Snoop Box Experience
+</div>
+
+</div>
+
 </div>
 
 <script>
 
-let user = {};
+let eventName = "";
+let eventData = null;
+let user = null;
 
-fetch("/event-status")
-.then(r=>r.json())
-.then(data=>{
-  if(!data.active){
-    document.getElementById("blocked").style.display="flex";
-    return;
-  }
+/* ===================== */
 
-  const token = new URLSearchParams(location.search).get("token");
+async function init(){
 
-  if(token){
-    fetch("/guest/"+token)
-    .then(r=>r.json())
-    .then(data=>{
-      if(data.success){
-        user = data.guest;
-        localStorage.setItem("user", JSON.stringify(user));
-        goApp();
-      }
-    });
-  }
-});
+ const params =
+ new URLSearchParams(location.search);
 
-function login(){
-  user = {
-    name: document.getElementById("nameInput").value,
-    table: document.getElementById("tableInput").value
-  };
+ eventName =
+ params.get("event") || "";
 
-  localStorage.setItem("user", JSON.stringify(user));
-  goApp();
+ if(!eventName){
+
+  document.body.innerHTML =
+  "<div style='padding:30px;color:white;font-family:Arial'>Falta ?event=nombre</div>";
+
+  return;
+
+ }
+
+ const res =
+ await fetch("/event/" +
+ encodeURIComponent(eventName));
+
+ const data =
+ await res.json();
+
+ if(!data.success){
+
+  document.body.innerHTML =
+  "<div style='padding:30px;color:white;font-family:Arial'>Evento no encontrado</div>";
+
+  return;
+
+ }
+
+ eventData = data.event;
+
+ renderLogin();
+
 }
 
-function goApp(){
-  document.getElementById("login").classList.remove("active");
-  document.getElementById("app").classList.add("active");
+/* ===================== */
 
-  const saved = JSON.parse(localStorage.getItem("user"));
-  if(saved) user = saved;
+function renderLogin(){
 
-  document.getElementById("welcome").innerText = "Hola " + user.name;
+ document.getElementById("login")
+ .style.display = "block";
+
+ document.getElementById("app")
+ .style.display = "none";
+
+ document.getElementById("eventTitle")
+ .innerText =
+ eventData.name;
+
+ if(eventData.logoVenue){
+
+  const logo =
+  document.getElementById("logo");
+
+  logo.src =
+  eventData.logoVenue;
+
+  logo.style.display =
+  "block";
+
+ }
+
+ const saved =
+ localStorage.getItem(
+ "snoop_" + eventName
+ );
+
+ if(saved){
+
+  user =
+  JSON.parse(saved);
+
+  showApp();
+
+ }
+
 }
+
+/* ===================== */
+
+function enterApp(){
+
+ const name =
+ document.getElementById("nameInput")
+ .value.trim();
+
+ const table =
+ document.getElementById("tableInput")
+ .value.trim();
+
+ if(!name || !table){
+
+  alert(
+   "Completá nombre y mesa"
+  );
+
+  return;
+
+ }
+
+ user = {
+  name,
+  table
+ };
+
+ localStorage.setItem(
+ "snoop_" + eventName,
+ JSON.stringify(user)
+ );
+
+ showApp();
+
+}
+
+/* ===================== */
+
+function showApp(){
+
+ document.getElementById("login")
+ .style.display = "none";
+
+ document.getElementById("app")
+ .style.display = "block";
+
+ document.getElementById(
+ "eventTitleApp"
+ ).innerText =
+ eventData.name;
+
+ document.getElementById(
+ "userInfo"
+ ).innerText =
+ user.name +
+ " • Mesa " +
+ user.table;
+
+ if(eventData.logoVenue){
+
+  const logo =
+  document.getElementById(
+  "logoApp"
+  );
+
+  logo.src =
+  eventData.logoVenue;
+
+  logo.style.display =
+  "block";
+
+ }
+
+}
+
+/* ===================== */
+
+function openRanking(){
+
+ location.href =
+ "/ranking.html?event=" +
+ encodeURIComponent(eventName);
+
+}
+
+function openGallery(){
+
+ location.href =
+ "/galeria.html?event=" +
+ encodeURIComponent(eventName);
+
+}
+
+/* ===================== */
+
+init();
 
 </script>
+
 </body>
 </html>
