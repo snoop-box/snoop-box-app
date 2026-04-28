@@ -258,64 +258,65 @@ app.get("/control/:id",(req,res)=>{
 });
 
 /* ===============================
-   FOTOS NUEVAS
+   FOTOS TÓTEM + FUTURO CELU
 =============================== */
-
-/* upload tótem / futuro celular */
 
 app.post("/upload",(req,res)=>{
 
   try{
 
-    const {
-      event,
-      name,
-      table
-    } = req.body;
+    const event =
+      req.body.event || "default";
 
-    if(!event){
-      return res.json({
-        success:false
-      });
-    }
+    const name =
+      req.body.name || "Invitado";
 
-    const ev =
-      events.find(e =>
-        normalize(e.name) === normalize(event)
-      ) || {
-        name:event,
-        folder:"snoopbox/" + cleanFolder(event)
-      };
+    const table =
+      req.body.table || "-";
+
+    const folder =
+      "snoopbox/" +
+      cleanFolder(event);
 
     const fakeUrl =
-      "https://res.cloudinary.com/demo/image/upload/" +
-      Date.now() + ".jpg";
+      "https://picsum.photos/seed/" +
+      Date.now() +
+      "/800/1200";
 
     photos.unshift({
       id:newId(),
-      eventName:ev.name,
-      folder:ev.folder,
+      eventName:event,
+      folder:folder,
       url:fakeUrl,
-      user:name || "Invitado",
-      table:table || "-",
+      user:name,
+      table:table,
       createdAt:Date.now()
     });
 
-    const guest =
-      events
-      .find(e=>e.name===ev.name)
-      ?.guests
-      .find(g=>g.table==table);
+    const ev =
+      events.find(e =>
+        normalize(e.name) ===
+        normalize(event)
+      );
 
-    if(guest){
-      guest.points =
-      (guest.points || 0) + 1;
+    if(ev){
+
+      const guest =
+        ev.guests.find(g =>
+          g.table == table
+        );
+
+      if(guest){
+        guest.points =
+          (guest.points || 0) + 1;
+      }
+
     }
 
     res.json({
       success:true,
       url:fakeUrl,
-      folder:ev.folder
+      folder:folder
     });
 
   }catch(err){
@@ -328,7 +329,7 @@ app.post("/upload",(req,res)=>{
 
 });
 
-/* upload desde index nuevo */
+/* upload futuro index */
 
 app.post("/upload-photo",(req,res)=>{
 
@@ -344,16 +345,9 @@ app.post("/upload-photo",(req,res)=>{
     });
   }
 
-  const ev =
-    events.find(e =>
-      normalize(e.name) ===
-      normalize(eventName)
-    );
-
   const folder =
-    ev
-    ? ev.folder
-    : "snoopbox/" + cleanFolder(eventName);
+    "snoopbox/" +
+    cleanFolder(eventName);
 
   photos.unshift({
     id:newId(),
@@ -371,7 +365,9 @@ app.post("/upload-photo",(req,res)=>{
 
 });
 
-/* listar fotos */
+/* ===============================
+   FOTOS
+=============================== */
 
 app.get("/photos/:eventName",(req,res)=>{
 
@@ -387,14 +383,14 @@ app.get("/photos/:eventName",(req,res)=>{
 
 });
 
-/* borrar foto */
-
 app.delete("/photo",(req,res)=>{
 
   const { url } = req.body;
 
   photos =
-    photos.filter(p => p.url !== url);
+    photos.filter(p =>
+      p.url !== url
+    );
 
   res.json({
     success:true
@@ -402,7 +398,9 @@ app.delete("/photo",(req,res)=>{
 
 });
 
-/* ranking */
+/* ===============================
+   RANKING
+=============================== */
 
 app.get("/ranking/:event",(req,res)=>{
 
