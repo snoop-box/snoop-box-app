@@ -19,23 +19,9 @@ header{
   background:rgba(255,255,255,.05);
 }
 
-#logo{
-  max-width:220px;
-  max-height:90px;
-  object-fit:contain;
-  display:none;
-  margin:0 auto 10px auto;
-}
-
 #eventTitle{
   font-size:34px;
   font-weight:bold;
-}
-
-#framePreview{
-  font-size:14px;
-  color:#ccc;
-  margin-top:6px;
 }
 
 #cameraBtn{
@@ -64,6 +50,7 @@ header{
   border-radius:16px;
   overflow:hidden;
   box-shadow:0 10px 25px rgba(0,0,0,.25);
+  cursor:pointer;
 }
 
 .card img{
@@ -135,14 +122,65 @@ header{
 #qrBox img{
   width:120px;
 }
+
+/* POPUP IMPRESIÓN */
+
+#printModal{
+  position:fixed;
+  inset:0;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  background:rgba(0,0,0,.92);
+  z-index:900;
+}
+
+#printInner{
+  text-align:center;
+}
+
+#printFrame{
+  position:relative;
+  width:300px;
+  height:450px;
+  margin:auto;
+}
+
+#printFrame img{
+  position:absolute;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+#printFrameOverlay{
+  pointer-events:none;
+}
+
+.printBtn{
+  margin:12px 6px 0 6px;
+  border:none;
+  padding:14px 20px;
+  border-radius:12px;
+  cursor:pointer;
+  font-size:16px;
+}
+
+.primary{
+  background:#ff0055;
+  color:#fff;
+}
+
+.dark{
+  background:#333;
+  color:#fff;
+}
 </style>
 </head>
 <body>
 
 <header>
-  <img id="logo">
   <div id="eventTitle">Cargando...</div>
-  <div id="framePreview"></div>
 </header>
 
 <div id="grid"></div>
@@ -164,6 +202,31 @@ header{
 <canvas id="canvas" style="display:none;"></canvas>
 <div id="flash"></div>
 
+<!-- MODAL IMPRESIÓN -->
+
+<div id="printModal">
+
+  <div id="printInner">
+
+    <div id="printFrame">
+      <img id="printPhoto">
+      <img id="printFrameOverlay">
+    </div>
+
+    <button class="printBtn primary"
+    onclick="printCurrentPhoto()">
+    🖨 Imprimir 10x15
+    </button>
+
+    <button class="printBtn dark"
+    onclick="closePrintModal()">
+    Cerrar
+    </button>
+
+  </div>
+
+</div>
+
 <script>
 
 const eventName =
@@ -173,14 +236,15 @@ new URLSearchParams(location.search)
 let stream = null;
 let frameUrl = "";
 let photos = [];
+let selectedPhoto = "";
 
 /* ========================= */
 
 async function init(){
 
  if(!eventName){
-  document.getElementById("eventTitle")
-  .innerText = "Falta ?event=";
+  eventTitle.innerText =
+  "Falta ?event=";
   return;
  }
 
@@ -192,30 +256,18 @@ async function init(){
  await res.json();
 
  if(!data.success){
-  document.getElementById("eventTitle")
-  .innerText = "Evento no encontrado";
+  eventTitle.innerText =
+  "Evento no encontrado";
   return;
  }
 
  const ev = data.event;
 
- document.getElementById("eventTitle")
- .innerText = ev.name;
+ eventTitle.innerText =
+ ev.name;
 
- if(ev.logoVenue){
-  const logo =
-  document.getElementById("logo");
-  logo.src = ev.logoVenue;
-  logo.style.display = "block";
- }
-
- frameUrl = ev.frame || "";
-
- document.getElementById("framePreview")
- .innerText =
- frameUrl
- ? "Frame cargado ✔"
- : "Sin frame";
+ frameUrl =
+ ev.frame || "";
 
  buildQR();
  loadPhotos();
@@ -232,8 +284,7 @@ function buildQR(){
  "/?event=" +
  eventName;
 
- document.getElementById("qrImg")
- .src =
+ qrImg.src =
  "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" +
  encodeURIComponent(link);
 
@@ -241,18 +292,22 @@ function buildQR(){
 
 /* ========================= */
 
-document.getElementById("cameraBtn")
-.onclick = startCamera;
+cameraBtn.onclick =
+startCamera;
 
 async function startCamera(){
 
  try{
 
   stream =
-   await navigator.mediaDevices
-   .getUserMedia({video:true});
+   await navigator
+   .mediaDevices
+   .getUserMedia({
+    video:true
+   });
 
-  video.srcObject = stream;
+  video.srcObject =
+   stream;
 
   cameraModal.style.display =
    "flex";
@@ -261,7 +316,9 @@ async function startCamera(){
 
  }catch(err){
 
-  alert("No se pudo abrir cámara");
+  alert(
+   "No se pudo abrir cámara"
+  );
 
  }
 
@@ -299,7 +356,9 @@ function countdownStart(){
 async function capturePhoto(){
 
  const canvas =
- document.getElementById("canvas");
+ document.getElementById(
+ "canvas"
+ );
 
  canvas.width =
  video.videoWidth || 640;
@@ -310,10 +369,15 @@ async function capturePhoto(){
  const ctx =
  canvas.getContext("2d");
 
- ctx.translate(canvas.width,0);
+ ctx.translate(
+ canvas.width,0
+ );
+
  ctx.scale(-1,1);
 
- ctx.drawImage(video,0,0);
+ ctx.drawImage(
+ video,0,0
+ );
 
  flash.style.opacity = 1;
 
@@ -323,14 +387,17 @@ async function capturePhoto(){
 
  const image =
  canvas.toDataURL(
-  "image/jpeg",
-  0.9
+ "image/jpeg",
+ 0.9
  );
 
- await fetch("/upload-photo",{
+ await fetch(
+ "/upload-photo",
+ {
   method:"POST",
   headers:{
-   "Content-Type":"application/json"
+   "Content-Type":
+   "application/json"
   },
   body:JSON.stringify({
    eventName:eventName,
@@ -340,7 +407,7 @@ async function capturePhoto(){
  });
 
  cameraModal.style.display =
-  "none";
+ "none";
 
  if(stream){
   stream.getTracks()
@@ -356,30 +423,39 @@ async function capturePhoto(){
 async function loadPhotos(){
 
  const res =
- await fetch("/photos/" +
- encodeURIComponent(eventName));
+ await fetch(
+ "/photos/" +
+ encodeURIComponent(
+ eventName
+ ));
 
  photos =
  await res.json();
-
- const grid =
- document.getElementById("grid");
 
  grid.innerHTML = "";
 
  photos.forEach((p,i)=>{
 
-  const div =
-  document.createElement("div");
+  const url =
+  p.url || p.image;
 
-  div.className = "card";
+  const div =
+  document.createElement(
+  "div"
+  );
+
+  div.className =
+  "card";
 
   div.innerHTML = `
-   <img src="${p.url || p.image}">
+   <img src="${url}">
    <div class="cardInfo">
    Foto ${photos.length-i}
    </div>
   `;
+
+  div.onclick =
+  ()=>openPrintModal(url);
 
   grid.appendChild(div);
 
@@ -389,41 +465,135 @@ async function loadPhotos(){
 
 /* ========================= */
 
+function openPrintModal(url){
+
+ selectedPhoto = url;
+
+ printPhoto.src = url;
+
+ if(frameUrl){
+
+  printFrameOverlay.src =
+  frameUrl;
+
+  printFrameOverlay.style
+  .display = "block";
+
+ }else{
+
+  printFrameOverlay.style
+  .display = "none";
+
+ }
+
+ printModal.style.display =
+ "flex";
+
+}
+
+function closePrintModal(){
+
+ printModal.style.display =
+ "none";
+
+}
+
+/* ========================= */
+
+function printCurrentPhoto(){
+
+ const win =
+ window.open(
+ "",
+ "_blank"
+ );
+
+ win.document.write(`
+ <html>
+ <head>
+ <style>
+ body{
+  margin:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+ }
+ .box{
+  position:relative;
+  width:4in;
+  height:6in;
+ }
+ .box img{
+  position:absolute;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+ }
+ </style>
+ </head>
+ <body>
+   <div class="box">
+    <img src="${selectedPhoto}">
+    ${
+     frameUrl
+     ? `<img src="${frameUrl}">`
+     : ""
+    }
+   </div>
+ </body>
+ </html>
+ `);
+
+ win.document.close();
+
+ setTimeout(()=>{
+  win.print();
+  win.close();
+ },600);
+
+}
+
+/* ========================= */
+
 async function loadRanking(){
 
  const res =
- await fetch("/ranking/" +
- encodeURIComponent(eventName));
+ await fetch(
+ "/ranking/" +
+ encodeURIComponent(
+ eventName
+ ));
 
  const data =
  await res.json();
-
- const box =
- document.getElementById("ranking");
 
  let html =
  "<strong>🏆 Ranking</strong><br><br>";
 
  if(!data.length){
+
   html += "Sin datos";
+
  }else{
 
   data.slice(0,5)
   .forEach((r,i)=>{
 
    html +=
-   (i+1) +
-   ". Mesa " +
-   (r.table || "-") +
-   " (" +
-   (r.points || 0) +
+   (i+1)+
+   ". Mesa "+
+   (r.table||"-")+
+   " ("+
+   (r.points||0)+
    ")<br>";
 
   });
 
  }
 
- box.innerHTML = html;
+ ranking.innerHTML =
+ html;
 
 }
 
