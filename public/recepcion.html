@@ -8,10 +8,12 @@
 <style>
 body{
   margin:0;
-  background:#111;
-  color:#fff;
-  font-family:Arial;
+  font-family:Arial,sans-serif;
   padding:25px;
+  color:#fff;
+  background:
+  linear-gradient(135deg,#0f0f0f,#1a1030,#111827);
+  min-height:100vh;
 }
 
 .wrap{
@@ -20,19 +22,22 @@ body{
 }
 
 .box{
-  background:#1d1d1d;
+  background:rgba(255,255,255,0.06);
+  backdrop-filter:blur(10px);
   padding:22px;
-  border-radius:18px;
+  border-radius:20px;
   margin-bottom:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
 }
 
 input{
   width:100%;
   padding:14px;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
   margin:10px 0;
   box-sizing:border-box;
+  font-size:16px;
 }
 
 button{
@@ -45,13 +50,19 @@ button{
   font-size:16px;
   cursor:pointer;
   margin-top:8px;
+  transition:.2s;
+}
+
+button:hover{
+  transform:translateY(-1px);
 }
 
 .guest{
-  background:#262626;
-  padding:14px;
-  border-radius:12px;
+  background:rgba(255,255,255,0.05);
+  padding:16px;
+  border-radius:16px;
   margin-bottom:12px;
+  box-shadow:0 5px 18px rgba(0,0,0,.18);
 }
 
 .row{
@@ -62,13 +73,14 @@ button{
 
 .small{
   flex:1;
-  background:#444;
+  background:#374151;
   padding:10px;
   font-size:14px;
 }
 
 .green{
   color:#00ff99;
+  font-weight:bold;
 }
 
 .qr{
@@ -81,6 +93,38 @@ button{
 
 #app{
   display:none;
+}
+
+#eventTitle{
+  text-align:center;
+  font-size:32px;
+  margin:0 0 10px 0;
+  font-weight:bold;
+  letter-spacing:1px;
+  animation:fadeGlow 2s ease-in-out infinite alternate;
+}
+
+#counter{
+  text-align:center;
+  font-size:18px;
+  margin-bottom:10px;
+  color:#d1d5db;
+}
+
+#loginBox h1{
+  text-align:center;
+  margin-top:0;
+}
+
+@keyframes fadeGlow{
+  from{
+    text-shadow:0 0 5px rgba(255,255,255,.15);
+    transform:scale(1);
+  }
+  to{
+    text-shadow:0 0 18px rgba(255,0,120,.55);
+    transform:scale(1.02);
+  }
 }
 </style>
 </head>
