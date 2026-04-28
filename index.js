@@ -106,8 +106,6 @@ app.post("/create-event",(req,res)=>{
 
 });
 
-/* =============================== */
-
 app.get("/events",(req,res)=>{
   res.json(events);
 });
@@ -139,7 +137,9 @@ app.post("/toggle-event/:id",(req,res)=>{
   const ev = events.find(e=>e.id===id);
 
   if(!ev){
-    return res.json({success:false});
+    return res.json({
+      success:false
+    });
   }
 
   ev.active = !ev.active;
@@ -162,7 +162,9 @@ app.post("/upload-guests/:id",(req,res)=>{
   const ev = events.find(e=>e.id===id);
 
   if(!ev){
-    return res.json({success:false});
+    return res.json({
+      success:false
+    });
   }
 
   const guests = req.body.guests || [];
@@ -202,18 +204,21 @@ app.post("/arrive/:eventId/:guestId",(req,res)=>{
   const eventId = Number(req.params.eventId);
   const guestId = Number(req.params.guestId);
 
-  const ev =
-    events.find(e=>e.id===eventId);
+  const ev = events.find(e=>e.id===eventId);
 
   if(!ev){
-    return res.json({success:false});
+    return res.json({
+      success:false
+    });
   }
 
   const guest =
     ev.guests.find(g=>g.id===guestId);
 
   if(!guest){
-    return res.json({success:false});
+    return res.json({
+      success:false
+    });
   }
 
   if(!guest.arrived){
@@ -221,7 +226,9 @@ app.post("/arrive/:eventId/:guestId",(req,res)=>{
     ev.arrived++;
   }
 
-  res.json({success:true});
+  res.json({
+    success:true
+  });
 
 });
 
@@ -236,7 +243,9 @@ app.get("/control/:id",(req,res)=>{
   const ev = events.find(e=>e.id===id);
 
   if(!ev){
-    return res.json({success:false});
+    return res.json({
+      success:false
+    });
   }
 
   const total = ev.guests.length;
@@ -258,7 +267,7 @@ app.get("/control/:id",(req,res)=>{
 });
 
 /* ===============================
-   FOTOS TÓTEM + FUTURO CELU
+   FOTOS
 =============================== */
 
 app.post("/upload",(req,res)=>{
@@ -329,8 +338,6 @@ app.post("/upload",(req,res)=>{
 
 });
 
-/* upload futuro index */
-
 app.post("/upload-photo",(req,res)=>{
 
   const {
@@ -366,17 +373,23 @@ app.post("/upload-photo",(req,res)=>{
 });
 
 /* ===============================
-   FOTOS
+   GALERÍA FIX
 =============================== */
 
 app.get("/photos/:eventName",(req,res)=>{
 
   const name =
-    normalize(req.params.eventName);
+    req.params.eventName
+    .toString()
+    .trim()
+    .toLowerCase();
 
   const result =
     photos.filter(p =>
-      normalize(p.eventName) === name
+      (p.eventName || "")
+      .toString()
+      .trim()
+      .toLowerCase() === name
     );
 
   res.json(result);
