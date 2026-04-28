@@ -14,7 +14,7 @@ body{
   padding:30px;
 }
 .wrap{
-  max-width:820px;
+  max-width:850px;
   margin:auto;
 }
 .box{
@@ -45,11 +45,10 @@ button{
 }
 button:disabled{
   opacity:.5;
-  cursor:not-allowed;
 }
 .preview{
   max-width:100%;
-  max-height:140px;
+  max-height:120px;
   border-radius:10px;
   margin-top:8px;
 }
@@ -67,12 +66,8 @@ button:disabled{
 .smallBtn{
   flex:1;
   background:#444;
-  font-size:14px;
   padding:10px;
-}
-#status{
-  min-height:24px;
-  margin-top:12px;
+  font-size:14px;
 }
 </style>
 </head>
@@ -81,9 +76,14 @@ button:disabled{
 <div class="wrap">
 
 <div class="box">
-<h1>Admin Plus V2</h1>
+
+<h1>Admin Plus</h1>
 
 <input type="text" id="eventName" placeholder="Nombre del evento">
+
+<label>Logo del salón</label>
+<input type="file" id="venueFile" accept="image/*">
+<img id="venuePreview" class="preview" style="display:none;">
 
 <label>Fondo DJ</label>
 <input type="file" id="bgFile" accept="image/*">
@@ -96,11 +96,15 @@ button:disabled{
 <button id="saveBtn" onclick="saveEvent()">Crear Evento</button>
 
 <div id="status"></div>
+
 </div>
 
 <div class="box">
+
 <h2>Eventos</h2>
+
 <div id="list">Cargando...</div>
+
 </div>
 
 </div>
@@ -108,352 +112,322 @@ button:disabled{
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script>
+
 const CLOUD_NAME = "daxf4enjn";
 const UPLOAD_PRESET = "snoopbox";
 
+let venueLogo = "";
 let bgUrl = "";
 let frameUrl = "";
 let uploading = 0;
 
-/* =======================
-   HELPERS
-======================= */
+/* =================== */
 
 function btnState(){
-  const btn = document.getElementById("saveBtn");
 
-  if(uploading > 0){
-    btn.disabled = true;
-    btn.innerText = "Subiendo imágenes...";
-  }else{
-    btn.disabled = false;
-    btn.innerText = "Crear Evento";
-  }
+ const btn =
+ document.getElementById("saveBtn");
+
+ if(uploading>0){
+  btn.disabled=true;
+  btn.innerText="Subiendo...";
+ }else{
+  btn.disabled=false;
+  btn.innerText="Crear Evento";
+ }
+
 }
 
 function preview(file,id){
-  const reader = new FileReader();
 
-  reader.onload = function(e){
-    const img = document.getElementById(id);
-    img.src = e.target.result;
-    img.style.display = "block";
-  };
+ const reader = new FileReader();
 
-  reader.readAsDataURL(file);
+ reader.onload = e=>{
+  const img =
+  document.getElementById(id);
+
+  img.src = e.target.result;
+  img.style.display="block";
+ };
+
+ reader.readAsDataURL(file);
+
 }
 
 function resetForm(){
 
-  document.getElementById("eventName").value = "";
-  document.getElementById("bgFile").value = "";
-  document.getElementById("frameFile").value = "";
+ document.getElementById("eventName").value="";
+ document.getElementById("venueFile").value="";
+ document.getElementById("bgFile").value="";
+ document.getElementById("frameFile").value="";
 
-  document.getElementById("bgPreview").style.display = "none";
-  document.getElementById("framePreview").style.display = "none";
+ document.getElementById("venuePreview").style.display="none";
+ document.getElementById("bgPreview").style.display="none";
+ document.getElementById("framePreview").style.display="none";
 
-  bgUrl = "";
-  frameUrl = "";
+ venueLogo="";
+ bgUrl="";
+ frameUrl="";
 
 }
 
-/* =======================
-   CLOUDINARY
-======================= */
+/* =================== */
 
 async function uploadImage(file){
 
-  const form = new FormData();
+ const form = new FormData();
 
-  form.append("file",file);
-  form.append("upload_preset",UPLOAD_PRESET);
+ form.append("file",file);
+ form.append("upload_preset",UPLOAD_PRESET);
 
-  const res = await fetch(
-    "https://api.cloudinary.com/v1_1/" +
-    CLOUD_NAME +
-    "/image/upload",
-    {
-      method:"POST",
-      body:form
-    }
-  );
+ const res = await fetch(
+ "https://api.cloudinary.com/v1_1/" +
+ CLOUD_NAME +
+ "/image/upload",
+ {
+  method:"POST",
+  body:form
+ });
 
-  const data = await res.json();
+ const data = await res.json();
 
-  return data.secure_url || "";
+ return data.secure_url || "";
 
 }
 
-/* =======================
-   FILE INPUTS
-======================= */
+/* =================== */
+
+async function doUpload(file,varName,id){
+
+ if(!file) return;
+
+ preview(file,id);
+
+ uploading++;
+ btnState();
+
+ const url = await uploadImage(file);
+
+ if(varName==="venue") venueLogo=url;
+ if(varName==="bg") bgUrl=url;
+ if(varName==="frame") frameUrl=url;
+
+ uploading--;
+ btnState();
+
+}
+
+document.getElementById("venueFile").onchange =
+function(){
+ doUpload(this.files[0],"venue","venuePreview");
+};
 
 document.getElementById("bgFile").onchange =
-async function(){
-
-  const file = this.files[0];
-  if(!file) return;
-
-  preview(file,"bgPreview");
-
-  uploading++;
-  btnState();
-
-  bgUrl = await uploadImage(file);
-
-  uploading--;
-  btnState();
-
+function(){
+ doUpload(this.files[0],"bg","bgPreview");
 };
 
 document.getElementById("frameFile").onchange =
-async function(){
-
-  const file = this.files[0];
-  if(!file) return;
-
-  preview(file,"framePreview");
-
-  uploading++;
-  btnState();
-
-  frameUrl = await uploadImage(file);
-
-  uploading--;
-  btnState();
-
+function(){
+ doUpload(this.files[0],"frame","framePreview");
 };
 
-/* =======================
-   SAVE EVENT
-======================= */
+/* =================== */
 
 async function saveEvent(){
 
-  if(uploading > 0) return;
+ if(uploading>0) return;
 
-  const name =
-    document.getElementById("eventName")
-    .value.trim();
+ const name =
+ document.getElementById("eventName")
+ .value.trim();
 
-  const status =
-    document.getElementById("status");
+ const status =
+ document.getElementById("status");
 
-  if(!name){
-    status.innerText = "Escribí nombre";
-    return;
-  }
+ if(!name){
+  status.innerText="Escribí nombre";
+  return;
+ }
 
-  status.innerText = "Creando...";
+ status.innerText="Creando...";
 
-  try{
+ const res = await fetch("/create-event",{
+  method:"POST",
+  headers:{
+   "Content-Type":"application/json"
+  },
+  body:JSON.stringify({
+   name:name,
+   logoVenue:venueLogo,
+   background:bgUrl,
+   frame:frameUrl
+  })
+ });
 
-    const res = await fetch("/create-event",{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body: JSON.stringify({
-        name:name,
-        background:bgUrl,
-        frame:frameUrl
-      })
-    });
+ const data = await res.json();
 
-    const data = await res.json();
+ if(data.success){
 
-    if(data.success){
+  status.innerText="✅ Evento creado";
 
-      status.innerText = "✅ Evento creado";
+  resetForm();
+  loadEvents();
 
-      resetForm();
-      loadEvents();
+ }else{
 
-    }else{
+  status.innerText=
+  data.message || "Error";
 
-      status.innerText =
-        data.message || "Error";
-
-    }
-
-  }catch(err){
-
-    status.innerText = "❌ Error conexión";
-
-  }
+ }
 
 }
 
-/* =======================
-   EVENTS LIST
-======================= */
+/* =================== */
 
 async function loadEvents(){
 
-  const box =
-    document.getElementById("list");
+ const box =
+ document.getElementById("list");
 
-  try{
+ const res = await fetch("/events");
+ const data = await res.json();
 
-    const res = await fetch("/events");
-    const data = await res.json();
+ if(!data.length){
+  box.innerHTML="Sin eventos";
+  return;
+ }
 
-    if(!data.length){
-      box.innerHTML = "Sin eventos";
-      return;
-    }
+ box.innerHTML="";
 
-    box.innerHTML = "";
+ data.slice().reverse().forEach(ev=>{
 
-    data.slice().reverse().forEach(function(ev){
+ box.innerHTML += `
+ <div class="event">
 
-      box.innerHTML += `
-        <div class="event">
+   <strong>${ev.name}</strong><br>
+   ${ev.active ? "🟢 Activo":"⚪ Inactivo"}<br>
+   Invitados: ${(ev.guests||[]).length}
 
-          <strong>${ev.name}</strong>
-          <br>
-          ${ev.active ? "🟢 Activo" : "⚪ Inactivo"}
-          <br>
-          Invitados: ${(ev.guests || []).length}
+   <div class="row">
 
-          <div class="row">
+    <button class="smallBtn"
+    onclick="toggleEvent(${ev.id})">
+    Activar
+    </button>
 
-            <button class="smallBtn"
-            onclick="toggleEvent(${ev.id})">
-            Activar
-            </button>
+    <button class="smallBtn"
+    onclick="openExcel(${ev.id})">
+    Excel
+    </button>
 
-            <button class="smallBtn"
-            onclick="openExcel(${ev.id})">
-            Excel
-            </button>
+   </div>
 
-          </div>
+   <input type="file"
+   id="excel_${ev.id}"
+   accept=".xlsx,.xls,.csv"
+   style="display:none"
+   onchange="processExcel(event,${ev.id})">
 
-          <input
-            type="file"
-            id="excel_${ev.id}"
-            accept=".xlsx,.xls,.csv"
-            style="display:none"
-            onchange="processExcel(event,${ev.id})">
+ </div>
+ `;
 
-        </div>
-      `;
-
-    });
-
-  }catch(err){
-
-    box.innerHTML = "Error cargando";
-
-  }
+ });
 
 }
 
 async function toggleEvent(id){
 
-  await fetch("/toggle-event/" + id,{
-    method:"POST"
-  });
+ await fetch("/toggle-event/"+id,{
+  method:"POST"
+ });
 
-  loadEvents();
+ loadEvents();
 
 }
 
-/* =======================
-   EXCEL
-======================= */
+/* =================== */
 
 function openExcel(id){
-
-  document
-    .getElementById("excel_" + id)
-    .click();
-
+ document.getElementById(
+ "excel_"+id
+ ).click();
 }
 
 function processExcel(e,id){
 
-  const file = e.target.files[0];
-  if(!file) return;
+ const file = e.target.files[0];
+ if(!file) return;
 
-  const reader = new FileReader();
+ const reader = new FileReader();
 
-  reader.onload = function(evt){
+ reader.onload = function(evt){
 
-    const data =
-      new Uint8Array(evt.target.result);
+ const data =
+ new Uint8Array(evt.target.result);
 
-    const workbook =
-      XLSX.read(data,{type:"array"});
+ const workbook =
+ XLSX.read(data,{type:"array"});
 
-    const sheet =
-      workbook.Sheets[
-        workbook.SheetNames[0]
-      ];
+ const sheet =
+ workbook.Sheets[
+ workbook.SheetNames[0]
+ ];
 
-    const rows =
-      XLSX.utils.sheet_to_json(sheet);
+ const rows =
+ XLSX.utils.sheet_to_json(sheet);
 
-    const guests = rows.map(function(r){
+ const guests = rows.map(r=>{
 
-      const clean = {};
+ const clean={};
 
-      Object.keys(r).forEach(function(key){
+ Object.keys(r).forEach(k=>{
+ clean[
+ k.toString()
+ .trim()
+ .toLowerCase()
+ ] = r[k];
+ });
 
-        const k =
-          key.toString()
-          .trim()
-          .toLowerCase();
+ return{
+  name:
+  clean.nombre ||
+  clean.name || "",
 
-        clean[k] = r[key];
+  table:
+  clean.mesa ||
+  clean.table || "",
 
-      });
+  phone:
+  clean.telefono ||
+  clean.phone || ""
+ };
 
-      return {
-        name:
-          clean.nombre ||
-          clean.name ||
-          clean.invitado ||
-          "",
+ });
 
-        table:
-          clean.mesa ||
-          clean.table ||
-          "",
+ uploadGuests(id,guests);
 
-        phone:
-          clean.telefono ||
-          clean["teléfono"] ||
-          clean.phone ||
-          ""
-      };
+ };
 
-    });
-
-    uploadGuests(id,guests);
-
-  };
-
-  reader.readAsArrayBuffer(file);
+ reader.readAsArrayBuffer(file);
 
 }
 
 async function uploadGuests(id,guests){
 
-  await fetch("/upload-guests/" + id,{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify({
-      guests:guests
-    })
-  });
+ await fetch("/upload-guests/"+id,{
+ method:"POST",
+ headers:{
+ "Content-Type":"application/json"
+ },
+ body:JSON.stringify({
+ guests:guests
+ })
+ });
 
-  alert("Excel cargado");
+ alert("Excel cargado");
 
-  loadEvents();
+ loadEvents();
 
 }
 
