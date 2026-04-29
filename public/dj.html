@@ -1,234 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DJ Screen Recovery</title>
+
 <style>
 body{
   margin:0;
   font-family:Arial,sans-serif;
-  background:radial-gradient(circle,#111,#000);
+  background:#000 center center/cover no-repeat fixed;
   color:#fff;
-  overflow-x:hidden;
+  overflow:hidden;
 }
 
-header{
-  padding:18px;
-  text-align:center;
-  background:rgba(255,255,255,.04);
-  backdrop-filter:blur(8px);
-}
+/* LOGIN */
 
-#eventTitle{
-  font-size:34px;
-  font-weight:bold;
-}
-
-#cameraBtn{
+#login{
   position:fixed;
-  bottom:20px;
-  right:20px;
+  inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#111;
+}
+
+.loginBox{
+  width:420px;
+  max-width:92%;
+  background:#1c1c1c;
+  padding:30px;
+  border-radius:22px;
+  text-align:center;
+}
+
+.loginBox h1{
+  margin-top:0;
+}
+
+input{
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:12px;
+  margin:10px 0;
+  box-sizing:border-box;
+  font-size:16px;
+}
+
+button{
+  border:none;
+  border-radius:14px;
+  cursor:pointer;
+}
+
+.mainBtn{
+  width:100%;
+  padding:15px;
   background:#ff0055;
   color:#fff;
-  border:none;
-  border-radius:16px;
-  padding:18px 24px;
-  font-size:20px;
-  cursor:pointer;
-  z-index:100;
+  font-size:18px;
 }
 
-#grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
-  gap:14px;
-  padding:18px;
-  padding-right:270px;
+/* APP */
+
+#app{
+  display:none;
 }
 
-/* CAMBIO PEDIDO */
-
-.card{
-  background:rgba(255,255,255,.50);
-  backdrop-filter:blur(10px);
-  border-radius:18px;
-  overflow:hidden;
-  box-shadow:0 10px 25px rgba(0,0,0,.35);
-  cursor:pointer;
-  transition:.25s;
-}
-
-.card:hover{
-  transform:translateY(-4px) scale(1.01);
-}
-
-.card img{
-  width:100%;
-  height:280px;
-  object-fit:cover;
-}
-
-.info{
-  padding:12px;
-}
-
-.user{
-  font-size:22px;
-  font-weight:bold;
-  color:#111;
-}
-
-.table{
-  color:#222;
-  margin-top:4px;
-}
-
-/* SIDE PANEL */
-
-#side{
+#overlay{
   position:fixed;
-  top:0;
-  right:0;
-  width:250px;
-  height:100%;
-  background:rgba(0,0,0,.82);
-  backdrop-filter:blur(10px);
-  padding:16px;
-  box-sizing:border-box;
-  overflow:auto;
+  inset:0;
+  background:rgba(0,0,0,.40);
 }
 
-#rankTitle{
-  text-align:center;
-  font-size:26px;
+#eventName{
+  position:absolute;
+  top:18px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:48px;
   font-weight:bold;
-  margin-bottom:14px;
+  z-index:5;
+}
+
+#photoBox{
+  position:absolute;
+  top:105px;
+  left:50%;
+  transform:translateX(-50%);
+  width:60vw;
+  height:62vh;
+  background:rgba(0,0,0,.35);
+  border-radius:24px;
+  overflow:hidden;
+  display:none;
+  z-index:4;
+}
+
+#photoImg{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  background:#000;
+}
+
+#photoUser{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  background:rgba(0,0,0,.65);
+  padding:16px;
+  font-size:26px;
+  text-align:center;
+}
+
+#ranking{
+  position:absolute;
+  right:28px;
+  top:120px;
+  width:280px;
+  background:rgba(0,0,0,.45);
+  padding:18px;
+  border-radius:22px;
+  z-index:5;
+}
+
+#ranking h2{
+  margin:0 0 12px 0;
+  text-align:center;
 }
 
 .rankRow{
   display:flex;
   justify-content:space-between;
-  padding:12px;
-  border-radius:14px;
-  background:rgba(255,255,255,.06);
+  padding:10px;
   margin-bottom:10px;
+  border-radius:12px;
+  background:rgba(255,255,255,.06);
 }
-
-.gold{border:1px solid gold;}
-.silver{border:1px solid silver;}
-.bronze{border:1px solid #cd7f32;}
 
 #qrBox{
-  margin-top:20px;
-  text-align:center;
-  background:#fff;
-  color:#000;
-  padding:12px;
-  border-radius:16px;
-}
-
-#qrBox img{
-  width:140px;
-}
-
-#qrText{
-  font-size:14px;
-  margin-top:8px;
-}
-
-/* CAMERA */
-
-#cameraModal{
-  position:fixed;
-  inset:0;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  background:rgba(0,0,0,.92);
-  z-index:500;
-}
-
-#video{
-  width:70%;
-  max-width:800px;
-  border-radius:20px;
-  transform:scaleX(-1);
-}
-
-#countdown{
   position:absolute;
-  font-size:140px;
-  font-weight:bold;
-}
-
-#flash{
-  position:fixed;
-  inset:0;
-  background:#fff;
-  opacity:0;
-  pointer-events:none;
-  z-index:600;
-}
-
-#canvas{
-  display:none;
-}
-
-/* POPUP */
-
-#printModal{
-  position:fixed;
-  inset:0;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  background:rgba(0,0,0,.88);
-  z-index:900;
-}
-
-#printInner{
-  background:rgba(255,255,255,.5);
-  backdrop-filter:blur(12px);
-  border-radius:24px;
-  padding:24px;
-  text-align:center;
-}
-
-#printFrame{
-  position:relative;
-  width:260px;
-  height:390px;
-  overflow:hidden;
+  left:28px;
+  bottom:28px;
+  background:rgba(0,0,0,.45);
+  padding:16px;
   border-radius:18px;
-  background:#000;
+  z-index:5;
+  text-align:center;
 }
 
-#printFrame img{
+#sortBtn{
   position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-}
-
-#printPhoto{
-  object-fit:contain;
-}
-
-#printFrameOverlay{
-  object-fit:cover;
-}
-
-.printBtn{
-  border:none;
-  padding:14px 18px;
-  border-radius:12px;
-  margin-top:14px;
-  cursor:pointer;
-  font-size:16px;
-}
-
-.primary{
+  right:28px;
+  bottom:28px;
   background:#ff0055;
   color:#fff;
+  padding:16px 26px;
+  font-size:24px;
+  z-index:5;
 }
 
-.dark{
-  background:#333;
-  color:#fff;
+#alertBox{
+  position:fixed;
+  top:90px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#ff0055;
+  padding:14px 24px;
+  border-radius:16px;
+  font-size:26px;
+  display:none;
+  z-index:10;
+}
+
+#winnerBox{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.88);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  z-index:50;
+  text-align:center;
+}
+
+#winnerBox h1{
+  font-size:72px;
+  margin:0;
 }
 </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+
+<div id="login">
+  <div class="loginBox">
+    <h1>DJ Screen</h1>
+
+    <input id="eventInput" placeholder="Nombre del evento">
+
+    <button class="mainBtn" id="enterBtn">
+      Entrar
+    </button>
+
+    <div id="status" style="margin-top:12px;color:#ddd;"></div>
+  </div>
+</div>
+
+<!-- APP -->
+
+<div id="app">
+
+<div id="overlay"></div>
+
+<div id="eventName"></div>
+
+<div id="photoBox">
+  <img id="photoImg">
+  <div id="photoUser"></div>
+</div>
+
+<div id="ranking">
+  <h2>🏆 Ranking</h2>
+  <div id="rankingBox"></div>
+</div>
+
+<div id="qrBox">
+  <div style="margin-bottom:8px;">Escaneá y participá</div>
+  <canvas id="qr"></canvas>
+</div>
+
+<button id="sortBtn">🎁 Sorteo</button>
+
+<div id="alertBox">📸 Nueva foto subida</div>
+
+</div>
+
+<div id="winnerBox"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+<script>
+let selectedEvent=null;
+let photos=[];
+let photoIndex=0;
+let lastCount=0;
+let autoRotate=null;
+
+/* refs */
+const loginBox = document.getElementById("login");
+const appBox = document.getElementById("app");
+const eventInput = document.getElementById("eventInput");
+const enterBtn = document.getElementById("enterBtn");
+const statusBox = document.getElementById("status");
+const eventTitle = document.getElementById("eventName");
+const photoBox = document.getElementById("photoBox");
+const photoImg = document.getElementById("photoImg");
+const photoUser = document.getElementById("photoUser");
+const rankingBox = document.getElementById("rankingBox");
+const qrCanvas = document.getElementById("qr");
+const alertBox = document.getElementById("alertBox");
+const winnerBox = document.getElementById("winnerBox");
+const sortBtn = document.getElementById("sortBtn");
+
+enterBtn.onclick = loginEvent;
+sortBtn.onclick = runDraw;
+
+async function loginEvent(){
+
+  const name = eventInput.value.trim().toLowerCase();
+
+  if(!name){
+    statusBox.innerText="Escribí el evento";
+    return;
+  }
+
+  try{
+
+    const res = await fetch("/events");
+    const events = await res.json();
+
+    const found = events.find(ev =>
+      ev.name.toLowerCase() === name
+    );
+
+    if(!found){
+      statusBox.innerText="Evento no encontrado";
+      return;
+    }
+
+    selectedEvent = found;
+
+    loginBox.style.display="none";
+    appBox.style.display="block";
+
+    eventTitle.innerText = found.name;
+
+    if(found.background){
+      document.body.style.backgroundImage =
+        `url('${found.background}')`;
+    }
+
+    const qrLink =
+      location.origin +
+      "/?event=" +
+      encodeURIComponent(found.name);
+
+    QRCode.toCanvas(qrCanvas, qrLink, {width:170});
+
+    await loadPhotos();
+    await loadRanking();
+
+    autoRotate = setInterval(rotatePhotos,6000);
+    setInterval(loadPhotos,4000);
+    setInterval(loadRanking,5000);
+
+  }catch(e){
+    statusBox.innerText="Error al cargar";
+  }
+
+}
+
+async function loadPhotos(){
+
+  if(!selectedEvent) return;
+
+  const res = await fetch(
+    "/photos/" +
+    encodeURIComponent(selectedEvent.name)
+  );
+
+  const data = await res.json();
+
+  if(data.length > lastCount){
+    showAlert();
+  }
+
+  lastCount = data.length;
+  photos = data;
+
+  if(photos.length && photoBox.style.display==="none"){
+    rotatePhotos();
+  }
+
+}
+
+function rotatePhotos(){
+
+  if(!photos.length) return;
+
+  photoBox.style.display="block";
+
+  if(photoIndex >= photos.length){
+    photoIndex = 0;
+  }
+
+  const p = photos[photoIndex];
+
+  photoImg.src = p.url || p.image || "";
+  photoUser.innerText =
+    (p.user || "Invitado") +
+    " • Mesa " +
+    (p.table || "-");
+
+  photoIndex++;
+
+}
+
+async function loadRanking(){
+
+  if(!selectedEvent) return;
+
+  const res = await fetch(
+    "/ranking/" +
+    encodeURIComponent(selectedEvent.name)
+  );
+
+  const data = await res.json();
+
+  rankingBox.innerHTML="";
+
+  data.slice(0,5).forEach((r,i)=>{
+
+    rankingBox.innerHTML += `
+      <div class="rankRow">
+        <div>${i+1}. Mesa ${r.table}</div>
+        <div>${r.points || 0}</div>
+      </div>
+    `;
+
+  });
+
+}
+
+function showAlert(){
+
+  alertBox.style.display="block";
+
+  setTimeout(()=>{
+    alertBox.style.display="none";
+  },2200);
+
+}
+
+function runDraw(){
+
+  if(!photos.length){
+    alert("Todavía no hay participantes");
+    return;
+  }
+
+  const winner =
+    photos[Math.floor(Math.random()*photos.length)];
+
+  winnerBox.innerHTML = `
+    <h1>🎉 GANADOR 🎉</h1>
+    <div style="font-size:60px;margin-top:18px;">
+      ${winner.user || "Invitado"}
+    </div>
+    <div style="font-size:38px;margin-top:12px;">
+      Mesa ${winner.table || "-"}
+    </div>
+    <div style="font-size:22px;margin-top:26px;">
+      Tocá para cerrar
+    </div>
+  `;
+
+  winnerBox.style.display="flex";
+
+  winnerBox.onclick = ()=>{
+    winnerBox.style.display="none";
+  };
+
+}
+</script>
+
+</body>
+</html>
