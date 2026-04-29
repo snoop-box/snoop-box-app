@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DJ FINAL WOW PATCH</title>
+<title>DJ FINAL WOW SMART SIZE</title>
 
 <style>
 *{box-sizing:border-box}
@@ -15,6 +15,8 @@ body{
   background:#000 center center/cover no-repeat fixed;
   color:#fff;
 }
+
+/* LOGIN */
 
 #login{
   position:fixed;
@@ -57,6 +59,8 @@ button{
   font-size:18px;
 }
 
+/* APP */
+
 #app{display:none;}
 
 #overlay{
@@ -82,8 +86,8 @@ button{
   top:105px;
   left:50%;
   transform:translateX(-50%);
-  width:60vw;
-  height:62vh;
+  width:38vw;
+  height:50vh;
   background:rgba(255,255,255,.50);
   backdrop-filter:blur(12px);
   border-radius:26px;
@@ -91,14 +95,15 @@ button{
   display:none;
   z-index:5;
   box-shadow:0 25px 55px rgba(0,0,0,.40);
+  transition:
+    width .45s ease,
+    height .45s ease;
 }
 
 #photoImg{
   width:100%;
   height:100%;
   object-fit:contain;
-
-  /* FIX PEDIDO */
   background:rgba(0,0,0,.50);
 
   opacity:0;
@@ -125,7 +130,11 @@ button{
   padding:16px;
   font-size:26px;
   text-align:center;
-  background:linear-gradient(to top,rgba(0,0,0,.72),rgba(0,0,0,0));
+  background:linear-gradient(
+    to top,
+    rgba(0,0,0,.72),
+    rgba(0,0,0,0)
+  );
 }
 
 /* RANKING */
@@ -314,6 +323,8 @@ const winnerMesa=document.getElementById("winnerMesa");
 enterBtn.onclick=loginEvent;
 sortBtn.onclick=runDraw;
 
+/* LOGIN */
+
 async function loginEvent(){
 
  const name=eventInput.value.trim().toLowerCase();
@@ -358,6 +369,8 @@ async function loginEvent(){
  },6500);
 }
 
+/* FOTOS */
+
 async function loadPhotos(){
 
  const res=await fetch(
@@ -392,26 +405,61 @@ function rotatePhotos(){
  photoIndex++;
 }
 
+/* SMART SIZE */
+
 function showPhoto(p){
 
  photoBox.style.display="block";
 
  photoImg.classList.remove("show");
 
- setTimeout(()=>{
+ const src =
+ p.url || p.image || "";
 
-  photoImg.src=
-  p.url || p.image || "";
+ const probe =
+ new Image();
 
-  photoUser.innerText=
-  (p.user||"Invitado")+
-  " • Mesa "+
-  (p.table||"-");
+ probe.onload = function(){
 
-  photoImg.classList.add("show");
+   const ratio =
+   probe.width / probe.height;
 
- },180);
+   if(ratio > 1.18){
+
+     photoBox.style.width  = "48vw";
+     photoBox.style.height = "46vh";
+
+   }else if(ratio < 0.82){
+
+     photoBox.style.width  = "30vw";
+     photoBox.style.height = "58vh";
+
+   }else{
+
+     photoBox.style.width  = "38vw";
+     photoBox.style.height = "50vh";
+
+   }
+
+   setTimeout(()=>{
+
+     photoImg.src = src;
+
+     photoUser.innerText =
+     (p.user || "Invitado") +
+     " • Mesa " +
+     (p.table || "-");
+
+     photoImg.classList.add("show");
+
+   },180);
+
+ };
+
+ probe.src = src;
 }
+
+/* RANKING */
 
 async function loadRanking(){
 
@@ -432,7 +480,6 @@ async function loadRanking(){
    <div>${r.points||0}</div>
  </div>
  `;
-
  });
 }
 
@@ -445,9 +492,7 @@ function showAlert(){
  },2200);
 }
 
-/* =======================
-   SORTEO EXCLUYE MESA 00
-======================= */
+/* SORTEO */
 
 function runDraw(){
 
