@@ -1,15 +1,26 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const cloudinary = require("cloudinary").v2;
 
 const app = express();
+
+/* ===============================
+   CLOUDINARY
+=============================== */
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 app.use(cors());
 app.use(express.json({ limit:"50mb" }));
 app.use(express.urlencoded({ extended:true, limit:"50mb" }));
 app.use(express.static("public"));
 
-console.log("🔥 SNOOP BOX PRO V2");
+console.log("🔥 SNOOP BOX PRO CLOUDINARY");
 
 /* ===============================
    BASE EN MEMORIA
@@ -178,12 +189,14 @@ app.post("/upload-guests/:id",(req,res)=>{
   const guests = req.body.guests || [];
 
   ev.guests = guests.map((g,i)=>({
+
     id:i+1,
     name:g.name || "",
     table:g.table || "",
     phone:g.phone || "",
     arrived:false,
     points:0
+
   }));
 
   ev.arrived = 0;
@@ -275,7 +288,7 @@ app.get("/control/:id",(req,res)=>{
 });
 
 /* ===============================
-   SUBIDA LEGACY
+   UPLOAD LEGACY
 =============================== */
 
 app.post("/upload",(req,res)=>{
@@ -350,82 +363,120 @@ app.post("/upload",(req,res)=>{
 });
 
 /* ===============================
-   SUBIDA NUEVA + LOCK
+   UPLOAD REAL CLOUDINARY SAFE
 =============================== */
 
-app.post("/upload-photo",(req,res)=>{
+app.post("/upload-photo", async (req,res)=>{
 
-  const {
-    eventName,
-    user,
-    image,
-    table
-  } = req.body;
+  try{
 
-  if(!eventName || !image){
-    return res.json({
-      success:false
-    });
-  }
+    const {
+      eventName,
+      user,
+      image,
+      table
+    } = req.body;
 
-  const ev =
-    events.find(e =>
-      normalize(e.name) ===
-      normalize(eventName)
-    );
+    if(!eventName || !image){
+      return res.json({
+        success:false
+      });
+    }
 
-  if(!ev || !ev.active){
-    return res.json({
-      success:false,
-      inactive:true
-    });
-  }
-
-  const folder =
-    "snoopbox/" +
-    cleanFolder(eventName);
-
-  photos.unshift({
-    id:newId(),
-    eventName:eventName,
-    folder,
-    url:image,
-    user:user || "Invitado",
-    table:table || "-",
-    createdAt:Date.now()
-  });
-
-  let guest =
-    ev.guests.find(g =>
-      normalize(g.name) ===
-      normalize(user)
-    );
-
-  if(!guest && table){
-
-    guest =
-      ev.guests.find(g =>
-        g.table == table
+    const ev =
+      events.find(e =>
+        normalize(e.name) ===
+        normalize(eventName)
       );
 
+    if(!ev || !ev.active){
+      return res.json({
+        success:false,
+        inactive:true
+      });
+    }
+
+    const folder =
+      "snoopbox/" +
+      cleanFolder(eventName);
+
+    let finalUrl = image;
+
+    try{
+
+      const uploaded =
+        await cloudinary.uploader.upload(
+          image,
+          {
+            folder: folder,
+            resource_type:"image"
+          }
+        );
+
+      finalUrl =
+        uploaded.secure_url;
+
+      console.log("☁ Cloudinary OK");
+
+    }catch(err){
+
+      console.log("⚠ Fallback local");
+
+      finalUrl = image;
+    }
+
+    photos.unshift({
+      id:newId(),
+      eventName:eventName,
+      folder,
+      url:finalUrl,
+      user:user || "Invitado",
+      table:table || "-",
+      createdAt:Date.now()
+    });
+
+    let guest =
+      ev.guests.find(g =>
+        normalize(g.name) ===
+        normalize(user)
+      );
+
+    if(!guest && table){
+
+      guest =
+        ev.guests.find(g =>
+          g.table == table
+        );
+
+    }
+
+    if(guest){
+
+      guest.points =
+        (guest.points || 0) + 1;
+
+    }
+
+    res.json({
+      success:true,
+      folder,
+      url:finalUrl
+    });
+
+  }catch(err){
+
+    console.log(err);
+
+    res.json({
+      success:false
+    });
+
   }
-
-  if(guest){
-
-    guest.points =
-      (guest.points || 0) + 1;
-
-  }
-
-  res.json({
-    success:true,
-    folder
-  });
 
 });
 
 /* ===============================
-   GALERÍA
+   GALERIA
 =============================== */
 
 app.get("/photos/:eventName",(req,res)=>{
