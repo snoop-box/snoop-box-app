@@ -3,15 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DJ Screen Recovery</title>
+<title>DJ FINAL WOW</title>
 
 <style>
+*{box-sizing:border-box}
+
 body{
   margin:0;
   font-family:Arial,sans-serif;
+  overflow:hidden;
   background:#000 center center/cover no-repeat fixed;
   color:#fff;
-  overflow:hidden;
 }
 
 /* LOGIN */
@@ -19,10 +21,10 @@ body{
 #login{
   position:fixed;
   inset:0;
+  background:#111;
   display:flex;
   justify-content:center;
   align-items:center;
-  background:#111;
 }
 
 .loginBox{
@@ -30,12 +32,8 @@ body{
   max-width:92%;
   background:#1c1c1c;
   padding:30px;
-  border-radius:22px;
+  border-radius:24px;
   text-align:center;
-}
-
-.loginBox h1{
-  margin-top:0;
 }
 
 input{
@@ -44,7 +42,6 @@ input{
   border:none;
   border-radius:12px;
   margin:10px 0;
-  box-sizing:border-box;
   font-size:16px;
 }
 
@@ -64,14 +61,12 @@ button{
 
 /* APP */
 
-#app{
-  display:none;
-}
+#app{display:none;}
 
 #overlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.40);
+  background:rgba(0,0,0,.38);
 }
 
 #eventName{
@@ -81,8 +76,11 @@ button{
   transform:translateX(-50%);
   font-size:48px;
   font-weight:bold;
-  z-index:5;
+  z-index:10;
+  text-shadow:0 8px 18px rgba(0,0,0,.45);
 }
+
+/* FOTO */
 
 #photoBox{
   position:absolute;
@@ -91,11 +89,13 @@ button{
   transform:translateX(-50%);
   width:60vw;
   height:62vh;
-  background:rgba(0,0,0,.35);
-  border-radius:24px;
+  background:rgba(255,255,255,.50);
+  backdrop-filter:blur(12px);
+  border-radius:26px;
   overflow:hidden;
   display:none;
-  z-index:4;
+  z-index:5;
+  box-shadow:0 25px 55px rgba(0,0,0,.40);
 }
 
 #photoImg{
@@ -103,6 +103,19 @@ button{
   height:100%;
   object-fit:contain;
   background:#000;
+  opacity:0;
+  transform:scale(1.08) translateX(35px);
+  filter:blur(12px) brightness(.8);
+  transition:
+    opacity .8s ease,
+    transform 1s ease,
+    filter .9s ease;
+}
+
+#photoImg.show{
+  opacity:1;
+  transform:scale(1) translateX(0);
+  filter:blur(0) brightness(1);
 }
 
 #photoUser{
@@ -110,21 +123,23 @@ button{
   left:0;
   right:0;
   bottom:0;
-  background:rgba(0,0,0,.65);
   padding:16px;
   font-size:26px;
   text-align:center;
+  background:linear-gradient(to top,rgba(0,0,0,.72),rgba(0,0,0,0));
 }
+
+/* RANKING */
 
 #ranking{
   position:absolute;
-  right:28px;
+  right:24px;
   top:120px;
   width:280px;
   background:rgba(0,0,0,.45);
   padding:18px;
   border-radius:22px;
-  z-index:5;
+  z-index:10;
 }
 
 #ranking h2{
@@ -141,27 +156,33 @@ button{
   background:rgba(255,255,255,.06);
 }
 
+/* QR */
+
 #qrBox{
   position:absolute;
-  left:28px;
-  bottom:28px;
+  left:24px;
+  bottom:24px;
   background:rgba(0,0,0,.45);
   padding:16px;
   border-radius:18px;
-  z-index:5;
   text-align:center;
+  z-index:10;
 }
+
+/* BOTON */
 
 #sortBtn{
   position:absolute;
-  right:28px;
-  bottom:28px;
+  right:24px;
+  bottom:24px;
   background:#ff0055;
   color:#fff;
   padding:16px 26px;
   font-size:24px;
-  z-index:5;
+  z-index:10;
 }
+
+/* ALERTA */
 
 #alertBox{
   position:fixed;
@@ -171,10 +192,12 @@ button{
   background:#ff0055;
   padding:14px 24px;
   border-radius:16px;
-  font-size:26px;
+  font-size:24px;
   display:none;
-  z-index:10;
+  z-index:50;
 }
+
+/* GANADOR */
 
 #winnerBox{
   position:fixed;
@@ -184,13 +207,41 @@ button{
   justify-content:center;
   align-items:center;
   flex-direction:column;
-  z-index:50;
   text-align:center;
+  z-index:100;
 }
 
 #winnerBox h1{
-  font-size:72px;
+  font-size:78px;
   margin:0;
+}
+
+#winnerName{
+  font-size:62px;
+  margin-top:18px;
+}
+
+#winnerMesa{
+  font-size:38px;
+  margin-top:10px;
+}
+
+/* CONFETTI */
+
+.confetti{
+  position:fixed;
+  top:-20px;
+  width:12px;
+  height:12px;
+  z-index:150;
+  animation:fall 3s linear forwards;
+}
+
+@keyframes fall{
+  to{
+    transform:translateY(110vh) rotate(720deg);
+    opacity:0;
+  }
 }
 </style>
 </head>
@@ -201,14 +252,9 @@ button{
 <div id="login">
   <div class="loginBox">
     <h1>DJ Screen</h1>
-
     <input id="eventInput" placeholder="Nombre del evento">
-
-    <button class="mainBtn" id="enterBtn">
-      Entrar
-    </button>
-
-    <div id="status" style="margin-top:12px;color:#ddd;"></div>
+    <button class="mainBtn" id="enterBtn">Entrar</button>
+    <div id="status"></div>
   </div>
 </div>
 
@@ -241,7 +287,11 @@ button{
 
 </div>
 
-<div id="winnerBox"></div>
+<div id="winnerBox">
+  <h1>🎉 GANADOR 🎉</h1>
+  <div id="winnerName"></div>
+  <div id="winnerMesa"></div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
@@ -251,194 +301,222 @@ let photos=[];
 let photoIndex=0;
 let lastCount=0;
 let autoRotate=null;
+let spinning=false;
 
 /* refs */
-const loginBox = document.getElementById("login");
-const appBox = document.getElementById("app");
-const eventInput = document.getElementById("eventInput");
-const enterBtn = document.getElementById("enterBtn");
-const statusBox = document.getElementById("status");
-const eventTitle = document.getElementById("eventName");
-const photoBox = document.getElementById("photoBox");
-const photoImg = document.getElementById("photoImg");
-const photoUser = document.getElementById("photoUser");
-const rankingBox = document.getElementById("rankingBox");
-const qrCanvas = document.getElementById("qr");
-const alertBox = document.getElementById("alertBox");
-const winnerBox = document.getElementById("winnerBox");
-const sortBtn = document.getElementById("sortBtn");
+const login=document.getElementById("login");
+const app=document.getElementById("app");
+const eventInput=document.getElementById("eventInput");
+const enterBtn=document.getElementById("enterBtn");
+const status=document.getElementById("status");
+const eventName=document.getElementById("eventName");
+const photoBox=document.getElementById("photoBox");
+const photoImg=document.getElementById("photoImg");
+const photoUser=document.getElementById("photoUser");
+const rankingBox=document.getElementById("rankingBox");
+const qr=document.getElementById("qr");
+const sortBtn=document.getElementById("sortBtn");
+const alertBox=document.getElementById("alertBox");
+const winnerBox=document.getElementById("winnerBox");
+const winnerName=document.getElementById("winnerName");
+const winnerMesa=document.getElementById("winnerMesa");
 
-enterBtn.onclick = loginEvent;
-sortBtn.onclick = runDraw;
+enterBtn.onclick=loginEvent;
+sortBtn.onclick=runDraw;
 
 async function loginEvent(){
 
-  const name = eventInput.value.trim().toLowerCase();
+ const name=eventInput.value.trim().toLowerCase();
+ if(!name) return;
 
-  if(!name){
-    statusBox.innerText="Escribí el evento";
-    return;
-  }
+ const res=await fetch("/events");
+ const events=await res.json();
 
-  try{
+ const found=events.find(e=>e.name.toLowerCase()===name);
 
-    const res = await fetch("/events");
-    const events = await res.json();
+ if(!found){
+   status.innerText="Evento no encontrado";
+   return;
+ }
 
-    const found = events.find(ev =>
-      ev.name.toLowerCase() === name
-    );
+ selectedEvent=found;
 
-    if(!found){
-      statusBox.innerText="Evento no encontrado";
-      return;
-    }
+ login.style.display="none";
+ app.style.display="block";
 
-    selectedEvent = found;
+ eventName.innerText=found.name;
 
-    loginBox.style.display="none";
-    appBox.style.display="block";
+ if(found.background){
+   document.body.style.backgroundImage=`url('${found.background}')`;
+ }
 
-    eventTitle.innerText = found.name;
+ QRCode.toCanvas(
+   qr,
+   location.origin + "/?event=" + encodeURIComponent(found.name),
+   {width:170}
+ );
 
-    if(found.background){
-      document.body.style.backgroundImage =
-        `url('${found.background}')`;
-    }
+ await loadPhotos();
+ await loadRanking();
 
-    const qrLink =
-      location.origin +
-      "/?event=" +
-      encodeURIComponent(found.name);
+ autoRotate=setInterval(()=>{
+   if(!spinning) rotatePhotos();
+ },6500);
 
-    QRCode.toCanvas(qrCanvas, qrLink, {width:170});
-
-    await loadPhotos();
-    await loadRanking();
-
-    autoRotate = setInterval(rotatePhotos,6000);
-    setInterval(loadPhotos,4000);
-    setInterval(loadRanking,5000);
-
-  }catch(e){
-    statusBox.innerText="Error al cargar";
-  }
-
+ setInterval(loadPhotos,4000);
+ setInterval(loadRanking,5000);
 }
 
 async function loadPhotos(){
 
-  if(!selectedEvent) return;
+ const res=await fetch("/photos/" + encodeURIComponent(selectedEvent.name));
+ const data=await res.json();
 
-  const res = await fetch(
-    "/photos/" +
-    encodeURIComponent(selectedEvent.name)
-  );
+ if(data.length > lastCount){
+   showAlert();
+ }
 
-  const data = await res.json();
+ lastCount=data.length;
+ photos=data;
 
-  if(data.length > lastCount){
-    showAlert();
-  }
-
-  lastCount = data.length;
-  photos = data;
-
-  if(photos.length && photoBox.style.display==="none"){
-    rotatePhotos();
-  }
-
+ if(photos.length && photoBox.style.display==="none"){
+   rotatePhotos();
+ }
 }
 
 function rotatePhotos(){
 
-  if(!photos.length) return;
+ if(!photos.length) return;
 
-  photoBox.style.display="block";
+ if(photoIndex>=photos.length) photoIndex=0;
 
-  if(photoIndex >= photos.length){
-    photoIndex = 0;
-  }
+ showPhoto(photos[photoIndex]);
+ photoIndex++;
+}
 
-  const p = photos[photoIndex];
+function showPhoto(p){
 
-  photoImg.src = p.url || p.image || "";
-  photoUser.innerText =
-    (p.user || "Invitado") +
-    " • Mesa " +
-    (p.table || "-");
+ photoBox.style.display="block";
 
-  photoIndex++;
+ photoImg.classList.remove("show");
 
+ setTimeout(()=>{
+   photoImg.src=p.url || p.image || "";
+   photoUser.innerText=(p.user||"Invitado")+" • Mesa "+(p.table||"-");
+   photoImg.classList.add("show");
+ },180);
 }
 
 async function loadRanking(){
 
-  if(!selectedEvent) return;
+ const res=await fetch("/ranking/" + encodeURIComponent(selectedEvent.name));
+ const data=await res.json();
 
-  const res = await fetch(
-    "/ranking/" +
-    encodeURIComponent(selectedEvent.name)
-  );
+ rankingBox.innerHTML="";
 
-  const data = await res.json();
+ data.slice(0,5).forEach((r,i)=>{
 
-  rankingBox.innerHTML="";
-
-  data.slice(0,5).forEach((r,i)=>{
-
-    rankingBox.innerHTML += `
-      <div class="rankRow">
-        <div>${i+1}. Mesa ${r.table}</div>
-        <div>${r.points || 0}</div>
-      </div>
-    `;
-
-  });
-
+   rankingBox.innerHTML += `
+   <div class="rankRow">
+     <div>${i+1}. Mesa ${r.table}</div>
+     <div>${r.points||0}</div>
+   </div>`;
+ });
 }
 
 function showAlert(){
 
-  alertBox.style.display="block";
+ alertBox.style.display="block";
 
-  setTimeout(()=>{
-    alertBox.style.display="none";
-  },2200);
-
+ setTimeout(()=>{
+   alertBox.style.display="none";
+ },2200);
 }
+
+/* ======================
+   SORTEO WOW
+====================== */
 
 function runDraw(){
 
-  if(!photos.length){
-    alert("Todavía no hay participantes");
-    return;
-  }
+ if(spinning) return;
 
-  const winner =
-    photos[Math.floor(Math.random()*photos.length)];
+ if(!photos.length){
+   alert("Todavía no hay participantes");
+   return;
+ }
 
-  winnerBox.innerHTML = `
-    <h1>🎉 GANADOR 🎉</h1>
-    <div style="font-size:60px;margin-top:18px;">
-      ${winner.user || "Invitado"}
-    </div>
-    <div style="font-size:38px;margin-top:12px;">
-      Mesa ${winner.table || "-"}
-    </div>
-    <div style="font-size:22px;margin-top:26px;">
-      Tocá para cerrar
-    </div>
-  `;
+ spinning=true;
 
-  winnerBox.style.display="flex";
+ let duration=4000;
+ let start=Date.now();
+ let delay=70;
+ let i=0;
 
-  winnerBox.onclick = ()=>{
-    winnerBox.style.display="none";
-  };
+ function spin(){
 
+   const elapsed=Date.now()-start;
+
+   if(elapsed>=duration){
+
+     const winner=photos[
+       Math.floor(Math.random()*photos.length)
+     ];
+
+     showPhoto(winner);
+     showWinner(winner);
+     spinning=false;
+     return;
+   }
+
+   showPhoto(
+     photos[i % photos.length]
+   );
+
+   i++;
+   delay += 12;
+
+   setTimeout(spin,delay);
+ }
+
+ spin();
+}
+
+function showWinner(w){
+
+ winnerName.innerText=w.user || "Invitado";
+ winnerMesa.innerText="Mesa " + (w.table||"-");
+
+ winnerBox.style.display="flex";
+
+ launchConfetti();
+
+ winnerBox.onclick=()=>{
+   winnerBox.style.display="none";
+ };
+}
+
+function launchConfetti(){
+
+ for(let i=0;i<120;i++){
+
+   const c=document.createElement("div");
+   c.className="confetti";
+
+   c.style.left=Math.random()*100+"vw";
+   c.style.background=
+   `hsl(${Math.random()*360},90%,60%)`;
+
+   c.style.animationDelay=
+   (Math.random()*1.1)+"s";
+
+   document.body.appendChild(c);
+
+   setTimeout(()=>{
+     c.remove();
+   },3200);
+ }
 }
 </script>
-
 </body>
 </html>
