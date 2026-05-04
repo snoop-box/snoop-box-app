@@ -3,17 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DJ FINAL WOW SMART SIZE</title>
+<title>DJ PRO</title>
 
 <style>
-*{box-sizing:border-box}
-
 body{
   margin:0;
-  font-family:Arial,sans-serif;
+  font-family:Arial;
   overflow:hidden;
-  background:#000 center center/cover no-repeat fixed;
-  color:#fff;
+  background:#000 center center/cover no-repeat;
+  color:white;
 }
 
 /* LOGIN */
@@ -23,16 +21,15 @@ body{
   inset:0;
   background:#111;
   display:flex;
-  justify-content:center;
   align-items:center;
+  justify-content:center;
 }
 
 .loginBox{
   width:420px;
-  max-width:92%;
-  background:#1c1c1c;
+  background:#1d1d1d;
   padding:30px;
-  border-radius:24px;
+  border-radius:18px;
   text-align:center;
 }
 
@@ -40,23 +37,18 @@ input{
   width:100%;
   padding:15px;
   border:none;
-  border-radius:12px;
+  border-radius:10px;
   margin:10px 0;
-  font-size:16px;
 }
 
 button{
-  border:none;
-  border-radius:14px;
-  cursor:pointer;
-}
-
-.mainBtn{
   width:100%;
   padding:15px;
   background:#ff0055;
-  color:#fff;
-  font-size:18px;
+  color:white;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
 }
 
 /* APP */
@@ -66,198 +58,77 @@ button{
 #overlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.38);
+  background:rgba(0,0,0,.35);
 }
 
 #eventName{
   position:absolute;
-  top:18px;
+  top:20px;
   left:50%;
   transform:translateX(-50%);
-  font-size:48px;
+  font-size:40px;
   font-weight:bold;
-  z-index:10;
 }
 
 /* FOTO */
 
 #photoBox{
   position:absolute;
-  top:105px;
+  top:120px;
   left:50%;
   transform:translateX(-50%);
-  width:38vw;
-  height:50vh;
-  background:rgba(255,255,255,.50);
-  backdrop-filter:blur(12px);
-  border-radius:26px;
+  border-radius:20px;
   overflow:hidden;
   display:none;
-  z-index:5;
-  box-shadow:0 25px 55px rgba(0,0,0,.40);
-  transition:
-    width .45s ease,
-    height .45s ease;
+  background:rgba(255,255,255,.5);
+  backdrop-filter:blur(10px);
 }
 
 #photoImg{
   width:100%;
   height:100%;
   object-fit:contain;
-  background:rgba(0,0,0,.50);
-
-  opacity:0;
-  transform:scale(1.08) translateX(35px);
-  filter:blur(12px) brightness(.8);
-
-  transition:
-    opacity .8s ease,
-    transform 1s ease,
-    filter .9s ease;
-}
-
-#photoImg.show{
-  opacity:1;
-  transform:scale(1) translateX(0);
-  filter:blur(0) brightness(1);
 }
 
 #photoUser{
   position:absolute;
+  bottom:0;
   left:0;
   right:0;
-  bottom:0;
-  padding:16px;
-  font-size:26px;
+  background:rgba(0,0,0,.6);
+  padding:12px;
   text-align:center;
-  background:linear-gradient(
-    to top,
-    rgba(0,0,0,.72),
-    rgba(0,0,0,0)
-  );
 }
 
-/* RANKING */
+/* DELETE */
 
-#ranking{
+#deleteBtn{
   position:absolute;
-  right:24px;
-  top:120px;
-  width:280px;
-  background:rgba(0,0,0,.45);
-  padding:18px;
-  border-radius:22px;
-  z-index:10;
-}
-
-#ranking h2{
-  margin:0 0 12px 0;
-  text-align:center;
-}
-
-.rankRow{
+  top:10px;
+  right:10px;
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:rgba(0,0,0,.6);
   display:flex;
-  justify-content:space-between;
-  padding:10px;
-  margin-bottom:10px;
-  border-radius:12px;
-  background:rgba(255,255,255,.06);
-}
-
-/* QR */
-
-#qrBox{
-  position:absolute;
-  left:24px;
-  bottom:24px;
-  background:rgba(0,0,0,.45);
-  padding:16px;
-  border-radius:18px;
-  text-align:center;
-  z-index:10;
-}
-
-/* BOTON */
-
-#sortBtn{
-  position:absolute;
-  right:24px;
-  bottom:24px;
-  background:#ff0055;
-  color:#fff;
-  padding:16px 26px;
-  font-size:24px;
-  z-index:10;
-}
-
-#alertBox{
-  position:fixed;
-  top:90px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#ff0055;
-  padding:14px 24px;
-  border-radius:16px;
-  font-size:24px;
-  display:none;
-  z-index:50;
-}
-
-/* GANADOR */
-
-#winnerBox{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.88);
-  display:none;
-  justify-content:center;
   align-items:center;
-  flex-direction:column;
-  text-align:center;
-  z-index:100;
+  justify-content:center;
+  cursor:pointer;
 }
 
-#winnerBox h1{
-  font-size:78px;
-  margin:0;
-}
-
-#winnerName{
-  font-size:62px;
-  margin-top:18px;
-}
-
-#winnerMesa{
-  font-size:38px;
-  margin-top:10px;
-}
-
-/* CONFETTI */
-
-.confetti{
-  position:fixed;
-  top:-20px;
-  width:12px;
-  height:12px;
-  z-index:150;
-  animation:fall 3s linear forwards;
-}
-
-@keyframes fall{
-  to{
-    transform:translateY(110vh) rotate(720deg);
-    opacity:0;
-  }
+#deleteBtn:hover{
+  background:#ff0055;
 }
 </style>
 </head>
+
 <body>
 
 <div id="login">
   <div class="loginBox">
-    <h1>DJ Screen</h1>
+    <h2>Ingresar Evento</h2>
     <input id="eventInput" placeholder="Nombre del evento">
-    <button class="mainBtn" id="enterBtn">Entrar</button>
+    <button onclick="loginEvent()">Entrar</button>
     <div id="status"></div>
   </div>
 </div>
@@ -270,128 +141,56 @@ button{
 <div id="photoBox">
   <img id="photoImg">
   <div id="photoUser"></div>
+  <div id="deleteBtn">✖</div>
 </div>
 
-<div id="ranking">
-<h2>🏆 Ranking</h2>
-<div id="rankingBox"></div>
 </div>
-
-<div id="qrBox">
-<div style="margin-bottom:8px;">Escaneá y participá</div>
-<canvas id="qr"></canvas>
-</div>
-
-<button id="sortBtn">🎁 Sorteo</button>
-
-<div id="alertBox">📸 Nueva foto subida</div>
-
-</div>
-
-<div id="winnerBox">
-<h1>🎉 GANADOR 🎉</h1>
-<div id="winnerName"></div>
-<div id="winnerMesa"></div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
 <script>
+
 let selectedEvent=null;
 let photos=[];
 let photoIndex=0;
-let lastCount=0;
-let spinning=false;
-
-const login=document.getElementById("login");
-const app=document.getElementById("app");
-const eventInput=document.getElementById("eventInput");
-const enterBtn=document.getElementById("enterBtn");
-const status=document.getElementById("status");
-const eventName=document.getElementById("eventName");
-const photoBox=document.getElementById("photoBox");
-const photoImg=document.getElementById("photoImg");
-const photoUser=document.getElementById("photoUser");
-const rankingBox=document.getElementById("rankingBox");
-const qr=document.getElementById("qr");
-const sortBtn=document.getElementById("sortBtn");
-const alertBox=document.getElementById("alertBox");
-const winnerBox=document.getElementById("winnerBox");
-const winnerName=document.getElementById("winnerName");
-const winnerMesa=document.getElementById("winnerMesa");
-
-enterBtn.onclick=loginEvent;
-sortBtn.onclick=runDraw;
+let currentPhoto=null;
 
 /* LOGIN */
 
 async function loginEvent(){
 
- const name=eventInput.value.trim().toLowerCase();
+ const name=document.getElementById("eventInput").value.trim().toLowerCase();
 
  const res=await fetch("/events");
  const events=await res.json();
 
- const found=events.find(e =>
- e.name.toLowerCase()===name);
+ const ev=events.find(e=>e.name.toLowerCase()===name);
 
- if(!found){
-  status.innerText="Evento no encontrado";
+ if(!ev){
+  document.getElementById("status").innerText="Evento no encontrado";
   return;
  }
 
- selectedEvent=found;
+ selectedEvent=ev;
 
- login.style.display="none";
- app.style.display="block";
+ document.getElementById("login").style.display="none";
+ document.getElementById("app").style.display="block";
 
- eventName.innerText=found.name;
-
- if(found.background){
-  document.body.style.backgroundImage=
-  `url('${found.background}')`;
- }
-
- QRCode.toCanvas(
-  qr,
-  location.origin + "/?event=" +
-  encodeURIComponent(found.name),
-  {width:170}
- );
+ document.getElementById("eventName").innerText=ev.name;
 
  loadPhotos();
- loadRanking();
 
  setInterval(loadPhotos,4000);
- setInterval(loadRanking,5000);
- setInterval(()=>{
-  if(!spinning) rotatePhotos();
- },6500);
+ setInterval(rotatePhotos,5000);
 }
 
-/* FOTOS */
+/* CARGAR FOTOS */
 
 async function loadPhotos(){
 
- const res=await fetch(
- "/photos/" +
- encodeURIComponent(selectedEvent.name)
- );
-
- const data=await res.json();
-
- if(data.length > lastCount){
-  showAlert();
- }
-
- lastCount=data.length;
- photos=data;
-
- if(photos.length &&
- photoBox.style.display==="none"){
-  rotatePhotos();
- }
+ const res=await fetch("/photos/"+selectedEvent.name);
+ photos=await res.json();
 }
+
+/* ROTAR */
 
 function rotatePhotos(){
 
@@ -405,197 +204,65 @@ function rotatePhotos(){
  photoIndex++;
 }
 
-/* SMART SIZE */
+/* MOSTRAR */
 
 function showPhoto(p){
 
- photoBox.style.display="block";
+ currentPhoto=p;
 
- photoImg.classList.remove("show");
+ const box=document.getElementById("photoBox");
 
- const src =
- p.url || p.image || "";
+ const img=new Image();
 
- const probe =
- new Image();
+ img.onload=function(){
 
- probe.onload = function(){
+  const ratio=img.width/img.height;
 
-   const ratio =
-   probe.width / probe.height;
-
-   if(ratio > 1.18){
-
-     photoBox.style.width  = "48vw";
-     photoBox.style.height = "46vh";
-
-   }else if(ratio < 0.82){
-
-     photoBox.style.width  = "30vw";
-     photoBox.style.height = "58vh";
-
-   }else{
-
-     photoBox.style.width  = "38vw";
-     photoBox.style.height = "50vh";
-
-   }
-
-   setTimeout(()=>{
-
-     photoImg.src = src;
-
-     photoUser.innerText =
-     (p.user || "Invitado") +
-     " • Mesa " +
-     (p.table || "-");
-
-     photoImg.classList.add("show");
-
-   },180);
-
- };
-
- probe.src = src;
-}
-
-/* RANKING */
-
-async function loadRanking(){
-
- const res=await fetch(
- "/ranking/" +
- encodeURIComponent(selectedEvent.name)
- );
-
- const data=await res.json();
-
- rankingBox.innerHTML="";
-
- data.slice(0,5).forEach((r,i)=>{
-
- rankingBox.innerHTML += `
- <div class="rankRow">
-   <div>${i+1}. Mesa ${r.table}</div>
-   <div>${r.points||0}</div>
- </div>
- `;
- });
-}
-
-function showAlert(){
-
- alertBox.style.display="block";
-
- setTimeout(()=>{
-  alertBox.style.display="none";
- },2200);
-}
-
-/* SORTEO */
-
-function runDraw(){
-
- if(spinning) return;
-
- const validPhotos =
- photos.filter(p =>
- String(p.table||"") !== "00"
- );
-
- if(!validPhotos.length){
-  alert("No hay participantes válidos");
-  return;
- }
-
- spinning=true;
-
- let duration=4000;
- let start=Date.now();
- let delay=70;
- let i=0;
-
- function spin(){
-
-  const elapsed=
-  Date.now()-start;
-
-  if(elapsed>=duration){
-
-   const winner =
-   validPhotos[
-    Math.floor(
-     Math.random() *
-     validPhotos.length
-    )
-   ];
-
-   showPhoto(winner);
-   showWinner(winner);
-
-   spinning=false;
-   return;
+  if(ratio>1.2){
+    box.style.width="50vw";
+    box.style.height="45vh";
+  }else if(ratio<0.8){
+    box.style.width="28vw";
+    box.style.height="60vh";
+  }else{
+    box.style.width="38vw";
+    box.style.height="50vh";
   }
 
-  showPhoto(
-   validPhotos[
-    i % validPhotos.length
-   ]
-  );
+  document.getElementById("photoImg").src=p.url;
+  document.getElementById("photoUser").innerText=p.user+" • Mesa "+p.table;
 
-  i++;
-  delay += 12;
-
-  setTimeout(spin,delay);
-
+  box.style.display="block";
  }
 
- spin();
+ img.src=p.url;
 }
 
-function showWinner(w){
+/* ELIMINAR */
 
- winnerName.innerText=
- w.user || "Invitado";
+document.getElementById("deleteBtn").onclick=async()=>{
 
- winnerMesa.innerText=
- "Mesa " +
- (w.table||"-");
+ if(!currentPhoto) return;
 
- winnerBox.style.display="flex";
+ const ok=confirm("¿Eliminar foto?");
+ if(!ok) return;
 
- launchConfetti();
+ await fetch("/photo",{
+  method:"DELETE",
+  headers:{
+    "Content-Type":"application/json"
+  },
+  body:JSON.stringify({
+    url:currentPhoto.url
+  })
+ });
 
- winnerBox.onclick=()=>{
-  winnerBox.style.display="none";
- };
-}
+ photos=photos.filter(p=>p.url!==currentPhoto.url);
 
-function launchConfetti(){
+ document.getElementById("photoBox").style.display="none";
+};
 
- for(let i=0;i<120;i++){
-
-  const c=
-  document.createElement("div");
-
-  c.className="confetti";
-
-  c.style.left=
-  Math.random()*100+"vw";
-
-  c.style.background=
-  `hsl(${Math.random()*360},90%,60%)`;
-
-  c.style.animationDelay=
-  (Math.random()*1.1)+"s";
-
-  document.body.appendChild(c);
-
-  setTimeout(()=>{
-   c.remove();
-  },3200);
- }
-}
 </script>
+
 </body>
 </html>
