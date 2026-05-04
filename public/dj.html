@@ -3,14 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DJ WOW</title>
+<title>DJ PRO FINAL</title>
 
 <style>
 body{
   margin:0;
   font-family:Arial;
   overflow:hidden;
-  background:#000 center center/cover no-repeat;
+  background:#000;
+  background-position:center center;
+  background-size:cover;
+  background-repeat:no-repeat;
   color:white;
 }
 
@@ -55,7 +58,6 @@ button{
   background:rgba(0,0,0,.35);
 }
 
-/* EVENT NAME */
 #eventName{
   position:absolute;
   top:20px;
@@ -65,7 +67,7 @@ button{
   font-weight:bold;
 }
 
-/* FOTO WOW */
+/* FOTO */
 #photoBox{
   position:absolute;
   top:110px;
@@ -76,25 +78,18 @@ button{
   display:none;
   background:rgba(255,255,255,.5);
   backdrop-filter:blur(10px);
-  transition: all .6s ease;
+  transition:.5s;
 }
 
 #photoImg{
   width:100%;
   height:100%;
   object-fit:contain;
-  transition: opacity .6s ease, transform .6s ease;
+  transition:.5s;
 }
 
-.fadeOut{
-  opacity:0;
-  transform:scale(.95);
-}
-
-.fadeIn{
-  opacity:1;
-  transform:scale(1);
-}
+.fadeOut{opacity:0; transform:scale(.95);}
+.fadeIn{opacity:1; transform:scale(1);}
 
 #photoUser{
   position:absolute;
@@ -121,7 +116,7 @@ button{
   cursor:pointer;
 }
 
-/* RANKING */
+/* RANKING WOW */
 #ranking{
   position:absolute;
   right:30px;
@@ -130,6 +125,24 @@ button{
   background:rgba(0,0,0,.45);
   padding:18px;
   border-radius:18px;
+  animation:fadeInUp .8s ease;
+}
+
+.rankItem{
+  margin:6px 0;
+  padding:6px;
+  border-radius:8px;
+  transition:.3s;
+}
+
+.rankItem:hover{
+  background:rgba(255,255,255,.1);
+  transform:scale(1.05);
+}
+
+@keyframes fadeInUp{
+  from{transform:translateY(30px); opacity:0;}
+  to{transform:translateY(0); opacity:1;}
 }
 
 /* QR */
@@ -150,20 +163,40 @@ button{
   font-size:22px;
 }
 
+/* GANADOR */
+#winnerOverlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  z-index:20;
+}
+
+#winnerText{
+  font-size:60px;
+  text-align:center;
+  animation:pop .6s ease;
+}
+
+@keyframes pop{
+  from{transform:scale(.6);opacity:0;}
+  to{transform:scale(1);opacity:1;}
+}
+
 /* CONFETTI */
 .confetti{
   position:fixed;
   width:10px;
   height:10px;
-  background:red;
   top:-10px;
   animation:fall linear forwards;
 }
 
 @keyframes fall{
-  to{
-    transform:translateY(100vh) rotate(720deg);
-  }
+  to{transform:translateY(100vh) rotate(720deg);}
 }
 </style>
 </head>
@@ -197,6 +230,10 @@ button{
 </div>
 
 <button id="sortBtn">🎁 Sorteo</button>
+
+<div id="winnerOverlay">
+  <div id="winnerText"></div>
+</div>
 
 </div>
 
@@ -252,6 +289,7 @@ async function loadPhotos(){
 }
 
 function rotatePhotos(){
+
  if(!photos.length) return;
 
  if(photoIndex>=photos.length){
@@ -302,8 +340,9 @@ function showPhoto(p){
  },300);
 }
 
-/* DELETE */
+/* DELETE FIX */
 document.getElementById("deleteBtn").onclick=async()=>{
+
  if(!currentPhoto) return;
 
  await fetch("/photo",{
@@ -312,28 +351,34 @@ document.getElementById("deleteBtn").onclick=async()=>{
   body:JSON.stringify({url:currentPhoto.url})
  });
 
- photos=photos.filter(p=>p.url!==currentPhoto.url);
+ photos = photos.filter(p=>p.url!==currentPhoto.url);
+
+ currentPhoto=null;
+ photoIndex=0;
+
+ document.getElementById("photoBox").style.display="none";
 };
 
 /* RANKING */
 async function loadRanking(){
+
  const res=await fetch("/ranking/"+selectedEvent.name);
  const data=await res.json();
 
  let html="<h2>🏆 Ranking</h2>";
+
  data.slice(0,5).forEach((g,i)=>{
-   html+=`${i+1}. Mesa ${g.table} (${g.points})<br>`;
+   html+=`<div class="rankItem">${i+1}. Mesa ${g.table} (${g.points})</div>`;
  });
 
  document.getElementById("ranking").innerHTML=html;
 }
 
 /* SORTEO WOW */
-document.getElementById("sortBtn").onclick=async()=>{
+document.getElementById("sortBtn").onclick=()=>{
 
  if(!photos.length) return;
 
- let speed=80;
  let cycles=0;
 
  const interval=setInterval(()=>{
@@ -347,17 +392,29 @@ document.getElementById("sortBtn").onclick=async()=>{
      clearInterval(interval);
 
      const winner=photos[Math.floor(Math.random()*photos.length)];
+
      showPhoto(winner);
-
+     showWinner(winner);
      launchConfetti();
-
-     setTimeout(()=>{
-       alert("🎉 Ganador: "+winner.user+" Mesa "+winner.table);
-     },500);
    }
 
- },speed);
+ },80);
 };
+
+/* WINNER */
+function showWinner(w){
+
+ const overlay=document.getElementById("winnerOverlay");
+ const text=document.getElementById("winnerText");
+
+ text.innerHTML=`🎉 ${w.user}<br>Mesa ${w.table}`;
+
+ overlay.style.display="flex";
+
+ setTimeout(()=>{
+   overlay.style.display="none";
+ },4000);
+}
 
 /* CONFETTI */
 function launchConfetti(){
