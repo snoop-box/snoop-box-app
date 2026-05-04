@@ -116,33 +116,27 @@ button{
   cursor:pointer;
 }
 
-/* RANKING WOW */
+/* RANKING PRO */
 #ranking{
   position:absolute;
   right:30px;
   top:120px;
   width:260px;
-  background:rgba(0,0,0,.45);
-  padding:18px;
-  border-radius:18px;
-  animation:fadeInUp .8s ease;
 }
 
-.rankItem{
-  margin:6px 0;
-  padding:6px;
-  border-radius:8px;
+.rankCard{
+  background:rgba(255,255,255,.08);
+  padding:10px;
+  border-radius:12px;
+  margin-bottom:8px;
+  display:flex;
+  justify-content:space-between;
+  font-weight:bold;
   transition:.3s;
 }
 
-.rankItem:hover{
-  background:rgba(255,255,255,.1);
+.rankCard:hover{
   transform:scale(1.05);
-}
-
-@keyframes fadeInUp{
-  from{transform:translateY(30px); opacity:0;}
-  to{transform:translateY(0); opacity:1;}
 }
 
 /* QR */
@@ -163,6 +157,20 @@ button{
   font-size:22px;
 }
 
+/* ALERT FOTO */
+#newPhotoAlert{
+  position:fixed;
+  top:30px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#ff0055;
+  padding:14px 28px;
+  border-radius:14px;
+  font-size:22px;
+  display:none;
+  z-index:50;
+}
+
 /* GANADOR */
 #winnerOverlay{
   position:fixed;
@@ -178,12 +186,6 @@ button{
 #winnerText{
   font-size:60px;
   text-align:center;
-  animation:pop .6s ease;
-}
-
-@keyframes pop{
-  from{transform:scale(.6);opacity:0;}
-  to{transform:scale(1);opacity:1;}
 }
 
 /* CONFETTI */
@@ -235,6 +237,8 @@ button{
   <div id="winnerText"></div>
 </div>
 
+<div id="newPhotoAlert"></div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
@@ -245,6 +249,7 @@ let selectedEvent=null;
 let photos=[];
 let photoIndex=0;
 let currentPhoto=null;
+let lastPhotoCount=0;
 
 /* LOGIN */
 async function loginEvent(){
@@ -272,7 +277,10 @@ async function loginEvent(){
   document.body.style.backgroundImage=`url('${ev.background}')`;
  }
 
- QRCode.toCanvas(document.getElementById("qr"), window.location.origin);
+ QRCode.toCanvas(
+   document.getElementById("qr"),
+   window.location.origin + "/?event=" + ev.name
+ );
 
  loadPhotos();
  loadRanking();
@@ -284,8 +292,16 @@ async function loginEvent(){
 
 /* FOTOS */
 async function loadPhotos(){
+
  const res=await fetch("/photos/"+selectedEvent.name);
- photos=await res.json();
+ const data=await res.json();
+
+ if(data.length > lastPhotoCount){
+   showNewPhotoAlert(data[0]);
+ }
+
+ lastPhotoCount = data.length;
+ photos = data;
 }
 
 function rotatePhotos(){
@@ -340,7 +356,7 @@ function showPhoto(p){
  },300);
 }
 
-/* DELETE FIX */
+/* DELETE */
 document.getElementById("deleteBtn").onclick=async()=>{
 
  if(!currentPhoto) return;
@@ -359,6 +375,20 @@ document.getElementById("deleteBtn").onclick=async()=>{
  document.getElementById("photoBox").style.display="none";
 };
 
+/* ALERT FOTO */
+function showNewPhotoAlert(p){
+
+ const box=document.getElementById("newPhotoAlert");
+
+ box.innerText="📸 Nueva foto de Mesa "+p.table;
+
+ box.style.display="block";
+
+ setTimeout(()=>{
+  box.style.display="none";
+ },2500);
+}
+
 /* RANKING */
 async function loadRanking(){
 
@@ -368,13 +398,16 @@ async function loadRanking(){
  let html="<h2>🏆 Ranking</h2>";
 
  data.slice(0,5).forEach((g,i)=>{
-   html+=`<div class="rankItem">${i+1}. Mesa ${g.table} (${g.points})</div>`;
+   html+=`<div class="rankCard">
+     <span>${i+1}. Mesa ${g.table}</span>
+     <span>${g.points}</span>
+   </div>`;
  });
 
  document.getElementById("ranking").innerHTML=html;
 }
 
-/* SORTEO WOW */
+/* SORTEO */
 document.getElementById("sortBtn").onclick=()=>{
 
  if(!photos.length) return;
@@ -401,7 +434,6 @@ document.getElementById("sortBtn").onclick=()=>{
  },80);
 };
 
-/* WINNER */
 function showWinner(w){
 
  const overlay=document.getElementById("winnerOverlay");
