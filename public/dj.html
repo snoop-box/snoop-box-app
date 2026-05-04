@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DJ PRO</title>
+<title>DJ PRO FINAL</title>
 
 <style>
 body{
@@ -42,13 +42,9 @@ input{
 }
 
 button{
-  width:100%;
-  padding:15px;
-  background:#ff0055;
-  color:white;
   border:none;
-  border-radius:10px;
-  font-size:16px;
+  border-radius:12px;
+  cursor:pointer;
 }
 
 /* APP */
@@ -66,22 +62,24 @@ button{
   top:20px;
   left:50%;
   transform:translateX(-50%);
-  font-size:40px;
+  font-size:44px;
   font-weight:bold;
+  z-index:3;
 }
 
 /* FOTO */
 
 #photoBox{
   position:absolute;
-  top:120px;
+  top:110px;
   left:50%;
   transform:translateX(-50%);
   border-radius:20px;
   overflow:hidden;
+  z-index:3;
   display:none;
-  background:rgba(255,255,255,.5);
   backdrop-filter:blur(10px);
+  background:rgba(255,255,255,.5);
 }
 
 #photoImg{
@@ -92,11 +90,12 @@ button{
 
 #photoUser{
   position:absolute;
-  bottom:0;
   left:0;
   right:0;
+  bottom:0;
   background:rgba(0,0,0,.6);
-  padding:12px;
+  padding:14px;
+  font-size:24px;
   text-align:center;
 }
 
@@ -106,19 +105,59 @@ button{
   position:absolute;
   top:10px;
   right:10px;
-  width:36px;
-  height:36px;
+  width:38px;
+  height:38px;
   border-radius:50%;
   background:rgba(0,0,0,.6);
   display:flex;
   align-items:center;
   justify-content:center;
   cursor:pointer;
+  z-index:10;
 }
 
 #deleteBtn:hover{
   background:#ff0055;
 }
+
+/* RANKING */
+
+#ranking{
+  position:absolute;
+  right:30px;
+  top:120px;
+  width:260px;
+  background:rgba(0,0,0,.45);
+  padding:18px;
+  border-radius:18px;
+  z-index:3;
+}
+
+/* QR */
+
+#qrBox{
+  position:absolute;
+  left:30px;
+  bottom:30px;
+  background:rgba(0,0,0,.45);
+  padding:16px;
+  border-radius:16px;
+  z-index:3;
+}
+
+/* SORTEO */
+
+#sortBtn{
+  position:absolute;
+  right:30px;
+  bottom:30px;
+  background:#ff0055;
+  color:white;
+  padding:16px 24px;
+  font-size:22px;
+  z-index:3;
+}
+
 </style>
 </head>
 
@@ -126,7 +165,7 @@ button{
 
 <div id="login">
   <div class="loginBox">
-    <h2>Ingresar Evento</h2>
+    <h1>Ingresar Evento</h1>
     <input id="eventInput" placeholder="Nombre del evento">
     <button onclick="loginEvent()">Entrar</button>
     <div id="status"></div>
@@ -136,6 +175,7 @@ button{
 <div id="app">
 
 <div id="overlay"></div>
+
 <div id="eventName"></div>
 
 <div id="photoBox">
@@ -144,7 +184,17 @@ button{
   <div id="deleteBtn">✖</div>
 </div>
 
+<div id="ranking"></div>
+
+<div id="qrBox">
+<canvas id="qr"></canvas>
 </div>
+
+<button id="sortBtn">🎁 Sorteo</button>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
 <script>
 
@@ -157,7 +207,7 @@ let currentPhoto=null;
 
 async function loginEvent(){
 
- const name=document.getElementById("eventInput").value.trim().toLowerCase();
+ const name=document.getElementById("eventInput").value.toLowerCase();
 
  const res=await fetch("/events");
  const events=await res.json();
@@ -176,21 +226,26 @@ async function loginEvent(){
 
  document.getElementById("eventName").innerText=ev.name;
 
+ if(ev.background){
+  document.body.style.backgroundImage = `url('${ev.background}')`;
+ }
+
+ QRCode.toCanvas(document.getElementById("qr"), window.location.origin);
+
  loadPhotos();
+ loadRanking();
 
  setInterval(loadPhotos,4000);
  setInterval(rotatePhotos,5000);
+ setInterval(loadRanking,5000);
 }
 
-/* CARGAR FOTOS */
+/* FOTOS */
 
 async function loadPhotos(){
-
  const res=await fetch("/photos/"+selectedEvent.name);
  photos=await res.json();
 }
-
-/* ROTAR */
 
 function rotatePhotos(){
 
@@ -203,8 +258,6 @@ function rotatePhotos(){
  showPhoto(photos[photoIndex]);
  photoIndex++;
 }
-
-/* MOSTRAR */
 
 function showPhoto(p){
 
@@ -238,7 +291,7 @@ function showPhoto(p){
  img.src=p.url;
 }
 
-/* ELIMINAR */
+/* DELETE */
 
 document.getElementById("deleteBtn").onclick=async()=>{
 
@@ -249,17 +302,40 @@ document.getElementById("deleteBtn").onclick=async()=>{
 
  await fetch("/photo",{
   method:"DELETE",
-  headers:{
-    "Content-Type":"application/json"
-  },
-  body:JSON.stringify({
-    url:currentPhoto.url
-  })
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({url:currentPhoto.url})
  });
 
  photos=photos.filter(p=>p.url!==currentPhoto.url);
 
  document.getElementById("photoBox").style.display="none";
+};
+
+/* RANKING */
+
+async function loadRanking(){
+
+ const res=await fetch("/ranking/"+selectedEvent.name);
+ const data=await res.json();
+
+ let html="<h2>🏆 Ranking</h2>";
+
+ data.slice(0,5).forEach((g,i)=>{
+   html+=`${i+1}. Mesa ${g.table} (${g.points})<br>`;
+ });
+
+ document.getElementById("ranking").innerHTML=html;
+}
+
+/* SORTEO SIMPLE */
+
+document.getElementById("sortBtn").onclick=()=>{
+
+ if(!photos.length) return;
+
+ const winner=photos[Math.floor(Math.random()*photos.length)];
+
+ alert("🎉 Ganador: "+winner.user+" (Mesa "+winner.table+")");
 };
 
 </script>
