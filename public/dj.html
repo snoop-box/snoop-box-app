@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DJ PRO FINAL</title>
+<title>DJ WOW</title>
 
 <style>
 body{
@@ -15,7 +15,6 @@ body{
 }
 
 /* LOGIN */
-
 #login{
   position:fixed;
   inset:0;
@@ -48,7 +47,6 @@ button{
 }
 
 /* APP */
-
 #app{display:none;}
 
 #overlay{
@@ -57,6 +55,7 @@ button{
   background:rgba(0,0,0,.35);
 }
 
+/* EVENT NAME */
 #eventName{
   position:absolute;
   top:20px;
@@ -64,11 +63,9 @@ button{
   transform:translateX(-50%);
   font-size:44px;
   font-weight:bold;
-  z-index:3;
 }
 
-/* FOTO */
-
+/* FOTO WOW */
 #photoBox{
   position:absolute;
   top:110px;
@@ -76,52 +73,55 @@ button{
   transform:translateX(-50%);
   border-radius:20px;
   overflow:hidden;
-  z-index:3;
   display:none;
-  backdrop-filter:blur(10px);
   background:rgba(255,255,255,.5);
+  backdrop-filter:blur(10px);
+  transition: all .6s ease;
 }
 
 #photoImg{
   width:100%;
   height:100%;
   object-fit:contain;
+  transition: opacity .6s ease, transform .6s ease;
+}
+
+.fadeOut{
+  opacity:0;
+  transform:scale(.95);
+}
+
+.fadeIn{
+  opacity:1;
+  transform:scale(1);
 }
 
 #photoUser{
   position:absolute;
+  bottom:0;
   left:0;
   right:0;
-  bottom:0;
   background:rgba(0,0,0,.6);
   padding:14px;
-  font-size:24px;
   text-align:center;
 }
 
 /* DELETE */
-
 #deleteBtn{
   position:absolute;
   top:10px;
   right:10px;
-  width:38px;
-  height:38px;
+  width:36px;
+  height:36px;
   border-radius:50%;
   background:rgba(0,0,0,.6);
   display:flex;
   align-items:center;
   justify-content:center;
   cursor:pointer;
-  z-index:10;
-}
-
-#deleteBtn:hover{
-  background:#ff0055;
 }
 
 /* RANKING */
-
 #ranking{
   position:absolute;
   right:30px;
@@ -130,23 +130,16 @@ button{
   background:rgba(0,0,0,.45);
   padding:18px;
   border-radius:18px;
-  z-index:3;
 }
 
 /* QR */
-
 #qrBox{
   position:absolute;
   left:30px;
   bottom:30px;
-  background:rgba(0,0,0,.45);
-  padding:16px;
-  border-radius:16px;
-  z-index:3;
 }
 
 /* SORTEO */
-
 #sortBtn{
   position:absolute;
   right:30px;
@@ -155,9 +148,23 @@ button{
   color:white;
   padding:16px 24px;
   font-size:22px;
-  z-index:3;
 }
 
+/* CONFETTI */
+.confetti{
+  position:fixed;
+  width:10px;
+  height:10px;
+  background:red;
+  top:-10px;
+  animation:fall linear forwards;
+}
+
+@keyframes fall{
+  to{
+    transform:translateY(100vh) rotate(720deg);
+  }
+}
 </style>
 </head>
 
@@ -165,8 +172,8 @@ button{
 
 <div id="login">
   <div class="loginBox">
-    <h1>Ingresar Evento</h1>
-    <input id="eventInput" placeholder="Nombre del evento">
+    <h1>DJ</h1>
+    <input id="eventInput" placeholder="Evento">
     <button onclick="loginEvent()">Entrar</button>
     <div id="status"></div>
   </div>
@@ -175,7 +182,6 @@ button{
 <div id="app">
 
 <div id="overlay"></div>
-
 <div id="eventName"></div>
 
 <div id="photoBox">
@@ -204,7 +210,6 @@ let photoIndex=0;
 let currentPhoto=null;
 
 /* LOGIN */
-
 async function loginEvent(){
 
  const name=document.getElementById("eventInput").value.toLowerCase();
@@ -215,7 +220,7 @@ async function loginEvent(){
  const ev=events.find(e=>e.name.toLowerCase()===name);
 
  if(!ev){
-  document.getElementById("status").innerText="Evento no encontrado";
+  document.getElementById("status").innerText="No existe";
   return;
  }
 
@@ -227,7 +232,7 @@ async function loginEvent(){
  document.getElementById("eventName").innerText=ev.name;
 
  if(ev.background){
-  document.body.style.backgroundImage = `url('${ev.background}')`;
+  document.body.style.backgroundImage=`url('${ev.background}')`;
  }
 
  QRCode.toCanvas(document.getElementById("qr"), window.location.origin);
@@ -241,14 +246,12 @@ async function loginEvent(){
 }
 
 /* FOTOS */
-
 async function loadPhotos(){
  const res=await fetch("/photos/"+selectedEvent.name);
  photos=await res.json();
 }
 
 function rotatePhotos(){
-
  if(!photos.length) return;
 
  if(photoIndex>=photos.length){
@@ -263,42 +266,45 @@ function showPhoto(p){
 
  currentPhoto=p;
 
- const box=document.getElementById("photoBox");
+ const img=document.getElementById("photoImg");
 
- const img=new Image();
+ img.classList.remove("fadeIn");
+ img.classList.add("fadeOut");
 
- img.onload=function(){
+ setTimeout(()=>{
 
-  const ratio=img.width/img.height;
+  const box=document.getElementById("photoBox");
 
-  if(ratio>1.2){
-    box.style.width="50vw";
-    box.style.height="45vh";
-  }else if(ratio<0.8){
-    box.style.width="28vw";
-    box.style.height="60vh";
-  }else{
-    box.style.width="38vw";
-    box.style.height="50vh";
-  }
-
-  document.getElementById("photoImg").src=p.url;
   document.getElementById("photoUser").innerText=p.user+" • Mesa "+p.table;
 
-  box.style.display="block";
- }
+  img.src=p.url;
 
- img.src=p.url;
+  img.onload=()=>{
+    const ratio=img.naturalWidth/img.naturalHeight;
+
+    if(ratio>1.2){
+      box.style.width="50vw";
+      box.style.height="45vh";
+    }else if(ratio<0.8){
+      box.style.width="28vw";
+      box.style.height="60vh";
+    }else{
+      box.style.width="38vw";
+      box.style.height="50vh";
+    }
+
+    box.style.display="block";
+
+    img.classList.remove("fadeOut");
+    img.classList.add("fadeIn");
+  };
+
+ },300);
 }
 
 /* DELETE */
-
 document.getElementById("deleteBtn").onclick=async()=>{
-
  if(!currentPhoto) return;
-
- const ok=confirm("¿Eliminar foto?");
- if(!ok) return;
 
  await fetch("/photo",{
   method:"DELETE",
@@ -307,19 +313,14 @@ document.getElementById("deleteBtn").onclick=async()=>{
  });
 
  photos=photos.filter(p=>p.url!==currentPhoto.url);
-
- document.getElementById("photoBox").style.display="none";
 };
 
 /* RANKING */
-
 async function loadRanking(){
-
  const res=await fetch("/ranking/"+selectedEvent.name);
  const data=await res.json();
 
  let html="<h2>🏆 Ranking</h2>";
-
  data.slice(0,5).forEach((g,i)=>{
    html+=`${i+1}. Mesa ${g.table} (${g.points})<br>`;
  });
@@ -327,16 +328,54 @@ async function loadRanking(){
  document.getElementById("ranking").innerHTML=html;
 }
 
-/* SORTEO SIMPLE */
-
-document.getElementById("sortBtn").onclick=()=>{
+/* SORTEO WOW */
+document.getElementById("sortBtn").onclick=async()=>{
 
  if(!photos.length) return;
 
- const winner=photos[Math.floor(Math.random()*photos.length)];
+ let speed=80;
+ let cycles=0;
 
- alert("🎉 Ganador: "+winner.user+" (Mesa "+winner.table+")");
+ const interval=setInterval(()=>{
+
+   const random=photos[Math.floor(Math.random()*photos.length)];
+   showPhoto(random);
+
+   cycles++;
+
+   if(cycles>30){
+     clearInterval(interval);
+
+     const winner=photos[Math.floor(Math.random()*photos.length)];
+     showPhoto(winner);
+
+     launchConfetti();
+
+     setTimeout(()=>{
+       alert("🎉 Ganador: "+winner.user+" Mesa "+winner.table);
+     },500);
+   }
+
+ },speed);
 };
+
+/* CONFETTI */
+function launchConfetti(){
+
+ for(let i=0;i<80;i++){
+
+   const div=document.createElement("div");
+   div.className="confetti";
+
+   div.style.left=Math.random()*100+"vw";
+   div.style.background=`hsl(${Math.random()*360},100%,50%)`;
+   div.style.animationDuration=(Math.random()*2+2)+"s";
+
+   document.body.appendChild(div);
+
+   setTimeout(()=>div.remove(),4000);
+ }
+}
 
 </script>
 
