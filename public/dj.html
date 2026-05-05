@@ -39,12 +39,20 @@ body{
   position:absolute;
   top:110px;
   left:50%;
-  transform:translateX(-50%);
+  transform:translateX(-50%) scale(.9);
   border-radius:20px;
   overflow:hidden;
   display:none;
   background:rgba(255,255,255,.5);
   backdrop-filter:blur(10px);
+
+  opacity:0;
+  transition:all .6s ease;
+}
+
+#photoBox.active{
+  opacity:1;
+  transform:translateX(-50%) scale(1);
 }
 
 #photoImg{
@@ -78,7 +86,7 @@ body{
   cursor:pointer;
 }
 
-/* 🔥 RANKING PRO */
+/* RANKING */
 #ranking{
   position:absolute;
   right:30px;
@@ -130,10 +138,10 @@ body{
 
 /* QR */
 #qrBox{
-  position:fixed; /* 🔥 clave */
+  position:fixed;
   left:30px;
   bottom:30px;
-  z-index:9999; /* 🔥 arriba de todo */
+  z-index:9999;
 }
 
 #qrBox canvas{
@@ -144,9 +152,9 @@ body{
   border-radius:10px;
 }
 
-/* BOTON SORTEO */
+/* SORTEO */
 #sortBtn{
-  position:fixed; /* 🔥 clave */
+  position:fixed;
   right:30px;
   bottom:30px;
   background:#ff0055;
@@ -156,7 +164,7 @@ body{
   border:none;
   border-radius:12px;
   cursor:pointer;
-  z-index:9999; /* 🔥 ultra arriba */
+  z-index:9999;
   box-shadow:0 0 20px rgba(255,0,100,0.6);
 }
 
@@ -240,13 +248,10 @@ let photoIndex=0;
 let currentPhoto=null;
 let lastPhotoCount=0;
 
-/* LOGIN */
 async function loginEvent(){
-
  const name=document.getElementById("eventInput").value.toLowerCase();
  const res=await fetch("/events");
  const events=await res.json();
-
  const ev=events.find(e=>e.name.toLowerCase()===name);
  if(!ev)return;
 
@@ -272,9 +277,7 @@ async function loginEvent(){
  setInterval(loadRanking,5000);
 }
 
-/* FOTOS */
 async function loadPhotos(){
-
  const res=await fetch("/photos/"+selectedEvent.name);
  const data=await res.json();
 
@@ -295,19 +298,18 @@ function showNewPhotoAlert(p){
 
 function rotatePhotos(){
  if(!photos.length)return;
-
  if(photoIndex>=photos.length)photoIndex=0;
-
  showPhoto(photos[photoIndex]);
  photoIndex++;
 }
 
 function showPhoto(p){
-
  currentPhoto=p;
 
  const img=document.getElementById("photoImg");
  const box=document.getElementById("photoBox");
+
+ box.classList.remove("active");
 
  img.onload=()=>{
    const ratio = img.naturalWidth / img.naturalHeight;
@@ -324,6 +326,10 @@ function showPhoto(p){
    }
 
    box.style.display="block";
+
+   setTimeout(()=>{
+     box.classList.add("active");
+   },50);
  };
 
  img.src=p.url;
@@ -332,7 +338,6 @@ function showPhoto(p){
    p.user+" • Mesa "+p.table;
 }
 
-/* DELETE */
 document.getElementById("deleteBtn").onclick=async()=>{
  if(!currentPhoto)return;
 
@@ -347,12 +352,9 @@ document.getElementById("deleteBtn").onclick=async()=>{
  photoIndex=0;
 };
 
-/* RANKING */
 async function loadRanking(){
-
  const res=await fetch("/ranking/"+selectedEvent.name);
  const data=await res.json();
-
  if(!data.length)return;
 
  let html=`
@@ -393,15 +395,12 @@ async function loadRanking(){
  document.getElementById("ranking").innerHTML=html;
 }
 
-/* SORTEO */
 document.getElementById("sortBtn").onclick=()=>{
-
  if(!photos.length)return;
 
  let cycles=0;
 
  const interval=setInterval(()=>{
-
    const r=photos[Math.floor(Math.random()*photos.length)];
    showPhoto(r);
 
@@ -411,7 +410,6 @@ document.getElementById("sortBtn").onclick=()=>{
      clearInterval(interval);
 
      const winner=photos[Math.floor(Math.random()*photos.length)];
-
      showPhoto(winner);
      showWinner(winner);
      confetti();
@@ -421,7 +419,6 @@ document.getElementById("sortBtn").onclick=()=>{
 };
 
 function showWinner(w){
-
  const overlay=document.getElementById("winnerOverlay");
  overlay.style.display="flex";
 
@@ -432,16 +429,12 @@ function showWinner(w){
 }
 
 function confetti(){
-
  for(let i=0;i<80;i++){
-
    const d=document.createElement("div");
    d.className="confetti";
-
    d.style.left=Math.random()*100+"vw";
    d.style.background=`hsl(${Math.random()*360},100%,50%)`;
    d.style.animationDuration=(Math.random()*2+2)+"s";
-
    document.body.appendChild(d);
    setTimeout(()=>d.remove(),4000);
  }
