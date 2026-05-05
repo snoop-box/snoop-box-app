@@ -14,7 +14,7 @@ body{
   color:white;
 }
 
-/* 🔥 FONDO LOGO */
+/* FONDO */
 #bgLogo{
   position:fixed;
   top:50%;
@@ -32,15 +32,6 @@ body{
   display:none;
   position:relative;
   z-index:2;
-}
-
-#eventName{
-  position:absolute;
-  top:20px;
-  left:50%;
-  transform:translateX(-50%);
-  font-size:42px;
-  font-weight:bold;
 }
 
 /* FOTO */
@@ -87,7 +78,7 @@ body{
   cursor:pointer;
 }
 
-/* RANKING */
+/* 🔥 RANKING PRO */
 #ranking{
   position:absolute;
   right:30px;
@@ -98,6 +89,45 @@ body{
   border-radius:20px;
 }
 
+.rankTitle{font-size:26px;}
+.rankSub{opacity:.7;}
+
+.top3{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+}
+
+.card{
+  flex:1;
+  border-radius:16px;
+  padding:12px;
+  text-align:center;
+  background:rgba(255,255,255,.08);
+}
+
+.gold{border:3px solid gold;}
+.silver{border:3px solid #ccc;}
+.bronze{border:3px solid #cd7f32;}
+
+.rankRest{
+  margin-top:10px;
+  background:rgba(255,255,255,.08);
+  padding:10px;
+  border-radius:12px;
+  display:flex;
+  justify-content:space-between;
+}
+
+.rankMessage{
+  margin-top:10px;
+  background:#b3002d;
+  padding:14px;
+  border-radius:14px;
+  text-align:center;
+  font-weight:bold;
+}
+
 /* QR */
 #qrBox{
   position:absolute;
@@ -105,7 +135,7 @@ body{
   bottom:30px;
 }
 
-/* SORTEO */
+/* BOTON SORTEO */
 #sortBtn{
   position:absolute;
   right:30px;
@@ -114,6 +144,9 @@ body{
   color:white;
   padding:16px 24px;
   font-size:20px;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
 }
 
 /* ALERT */
@@ -172,8 +205,6 @@ body{
 
 <div id="app">
 
-<div id="eventName"></div>
-
 <div id="photoBox">
   <img id="photoImg">
   <div id="photoUser"></div>
@@ -213,9 +244,6 @@ async function loginEvent(){
  document.getElementById("login").style.display="none";
  document.getElementById("app").style.display="block";
 
- document.getElementById("eventName").innerText=ev.name;
-
- /* FONDO */
  if(ev.background){
   document.getElementById("bgLogo").src = ev.background;
  }
@@ -243,21 +271,18 @@ async function loadPhotos(){
    showNewPhotoAlert(data[0]);
  }
 
- lastPhotoCount = data.length;
- photos = data;
+ lastPhotoCount=data.length;
+ photos=data;
 }
 
 function showNewPhotoAlert(p){
-
  const box=document.getElementById("newPhotoAlert");
  box.innerText="📸 Nueva foto Mesa "+p.table;
  box.style.display="block";
-
  setTimeout(()=>box.style.display="none",2000);
 }
 
 function rotatePhotos(){
-
  if(!photos.length)return;
 
  if(photoIndex>=photos.length)photoIndex=0;
@@ -274,7 +299,6 @@ function showPhoto(p){
  const box=document.getElementById("photoBox");
 
  img.onload=()=>{
-
    const ratio = img.naturalWidth / img.naturalHeight;
 
    if(ratio > 1.2){
@@ -299,7 +323,6 @@ function showPhoto(p){
 
 /* DELETE */
 document.getElementById("deleteBtn").onclick=async()=>{
-
  if(!currentPhoto)return;
 
  await fetch("/photo",{
@@ -322,14 +345,39 @@ async function loadRanking(){
  if(!data.length)return;
 
  let html=`
- <div style="font-size:26px;">🏆 Ranking en Vivo</div>
- <div style="opacity:.7;">Cada foto suma puntos</div>
- <br>
+ <div class="rankTitle">🏆 Ranking en Vivo</div>
+ <div class="rankSub">Cada foto suma puntos</div>
+ <div class="top3">
  `;
 
+ const medals=["🥇","🥈","🥉"];
+ const classes=["gold","silver","bronze"];
+
  data.slice(0,3).forEach((g,i)=>{
-   html+=`<div>🥇 Mesa ${g.table} - ${g.points} pts</div>`;
+   html+=`
+   <div class="card ${classes[i]}">
+     ${medals[i]}<br>
+     Mesa ${g.table}<br>
+     ${g.points} pts
+   </div>`;
  });
+
+ html+="</div>";
+
+ data.slice(3,6).forEach((g,i)=>{
+   html+=`
+   <div class="rankRest">
+     ${i+4}. Mesa ${g.table}
+     <span>${g.points} pts</span>
+   </div>`;
+ });
+
+ const leader=data[0];
+
+ html+=`
+ <div class="rankMessage">
+   Mesa ${leader.table} va 1° 🔥 ¡Van primeros!
+ </div>`;
 
  document.getElementById("ranking").innerHTML=html;
 }
@@ -372,7 +420,6 @@ function showWinner(w){
  setTimeout(()=>overlay.style.display="none",4000);
 }
 
-/* CONFETTI */
 function confetti(){
 
  for(let i=0;i<80;i++){
