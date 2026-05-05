@@ -43,27 +43,15 @@ input{
   margin:10px 0;
 }
 
-button{
-  border:none;
-  border-radius:12px;
-  cursor:pointer;
-}
-
 /* APP */
 #app{display:none;}
-
-#overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.35);
-}
 
 #eventName{
   position:absolute;
   top:20px;
   left:50%;
   transform:translateX(-50%);
-  font-size:44px;
+  font-size:42px;
   font-weight:bold;
 }
 
@@ -78,18 +66,13 @@ button{
   display:none;
   background:rgba(255,255,255,.5);
   backdrop-filter:blur(10px);
-  transition:.5s;
 }
 
 #photoImg{
   width:100%;
   height:100%;
   object-fit:contain;
-  transition:.5s;
 }
-
-.fadeOut{opacity:0; transform:scale(.95);}
-.fadeIn{opacity:1; transform:scale(1);}
 
 #photoUser{
   position:absolute;
@@ -97,7 +80,7 @@ button{
   left:0;
   right:0;
   background:rgba(0,0,0,.6);
-  padding:14px;
+  padding:12px;
   text-align:center;
 }
 
@@ -116,27 +99,82 @@ button{
   cursor:pointer;
 }
 
-/* RANKING PRO */
+/* ========================= */
+/* 🔥 RANKING PRO ESTILO CELU */
+/* ========================= */
+
 #ranking{
   position:absolute;
   right:30px;
-  top:120px;
-  width:260px;
+  top:110px;
+  width:340px;
+  background:rgba(0,0,0,.45);
+  padding:20px;
+  border-radius:20px;
 }
 
-.rankCard{
-  background:rgba(255,255,255,.08);
-  padding:10px;
-  border-radius:12px;
-  margin-bottom:8px;
+.rankTitle{
+  font-size:26px;
+  margin-bottom:6px;
+}
+
+.rankSub{
+  font-size:16px;
+  opacity:.7;
+  margin-bottom:14px;
+}
+
+.top3{
   display:flex;
-  justify-content:space-between;
-  font-weight:bold;
+  gap:10px;
+}
+
+.card{
+  flex:1;
+  border-radius:16px;
+  padding:12px;
+  text-align:center;
+  background:rgba(255,255,255,.08);
   transition:.3s;
 }
 
-.rankCard:hover{
+.card:hover{
   transform:scale(1.05);
+}
+
+/* bordes */
+.gold{border:3px solid gold;}
+.silver{border:3px solid #ccc;}
+.bronze{border:3px solid #cd7f32;}
+
+.rankRest{
+  margin-top:12px;
+  background:rgba(255,255,255,.08);
+  padding:10px;
+  border-radius:12px;
+  display:flex;
+  justify-content:space-between;
+}
+
+.rankMessage{
+  margin-top:12px;
+  background:#b3002d;
+  padding:14px;
+  border-radius:14px;
+  text-align:center;
+  font-weight:bold;
+}
+
+/* ALERT FOTO */
+#newPhotoAlert{
+  position:fixed;
+  top:30px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#ff0055;
+  padding:12px 24px;
+  border-radius:12px;
+  display:none;
 }
 
 /* QR */
@@ -154,21 +192,7 @@ button{
   background:#ff0055;
   color:white;
   padding:16px 24px;
-  font-size:22px;
-}
-
-/* ALERT FOTO */
-#newPhotoAlert{
-  position:fixed;
-  top:30px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#ff0055;
-  padding:14px 28px;
-  border-radius:14px;
-  font-size:22px;
-  display:none;
-  z-index:50;
+  font-size:20px;
 }
 
 /* GANADOR */
@@ -180,12 +204,10 @@ button{
   align-items:center;
   justify-content:center;
   flex-direction:column;
-  z-index:20;
 }
 
 #winnerText{
   font-size:60px;
-  text-align:center;
 }
 
 /* CONFETTI */
@@ -207,16 +229,14 @@ button{
 
 <div id="login">
   <div class="loginBox">
-    <h1>DJ</h1>
-    <input id="eventInput" placeholder="Evento">
+    <h2>Evento</h2>
+    <input id="eventInput">
     <button onclick="loginEvent()">Entrar</button>
-    <div id="status"></div>
   </div>
 </div>
 
 <div id="app">
 
-<div id="overlay"></div>
 <div id="eventName"></div>
 
 <div id="photoBox">
@@ -227,16 +247,11 @@ button{
 
 <div id="ranking"></div>
 
-<div id="qrBox">
-<canvas id="qr"></canvas>
-</div>
+<div id="qrBox"><canvas id="qr"></canvas></div>
 
 <button id="sortBtn">🎁 Sorteo</button>
 
-<div id="winnerOverlay">
-  <div id="winnerText"></div>
-</div>
-
+<div id="winnerOverlay"><div id="winnerText"></div></div>
 <div id="newPhotoAlert"></div>
 
 </div>
@@ -244,27 +259,20 @@ button{
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
 <script>
-
 let selectedEvent=null;
 let photos=[];
 let photoIndex=0;
 let currentPhoto=null;
 let lastPhotoCount=0;
 
-/* LOGIN */
 async function loginEvent(){
 
  const name=document.getElementById("eventInput").value.toLowerCase();
-
  const res=await fetch("/events");
  const events=await res.json();
 
  const ev=events.find(e=>e.name.toLowerCase()===name);
-
- if(!ev){
-  document.getElementById("status").innerText="No existe";
-  return;
- }
+ if(!ev)return;
 
  selectedEvent=ev;
 
@@ -290,27 +298,33 @@ async function loginEvent(){
  setInterval(loadRanking,5000);
 }
 
-/* FOTOS */
 async function loadPhotos(){
 
  const res=await fetch("/photos/"+selectedEvent.name);
  const data=await res.json();
 
- if(data.length > lastPhotoCount){
+ if(data.length>lastPhotoCount){
    showNewPhotoAlert(data[0]);
  }
 
- lastPhotoCount = data.length;
- photos = data;
+ lastPhotoCount=data.length;
+ photos=data;
+}
+
+function showNewPhotoAlert(p){
+
+ const box=document.getElementById("newPhotoAlert");
+ box.innerText="📸 Nueva foto Mesa "+p.table;
+ box.style.display="block";
+
+ setTimeout(()=>box.style.display="none",2000);
 }
 
 function rotatePhotos(){
 
- if(!photos.length) return;
+ if(!photos.length)return;
 
- if(photoIndex>=photos.length){
-  photoIndex=0;
- }
+ if(photoIndex>=photos.length)photoIndex=0;
 
  showPhoto(photos[photoIndex]);
  photoIndex++;
@@ -322,44 +336,16 @@ function showPhoto(p){
 
  const img=document.getElementById("photoImg");
 
- img.classList.remove("fadeIn");
- img.classList.add("fadeOut");
+ img.src=p.url;
+ document.getElementById("photoUser").innerText=p.user+" • Mesa "+p.table;
 
- setTimeout(()=>{
-
-  const box=document.getElementById("photoBox");
-
-  document.getElementById("photoUser").innerText=p.user+" • Mesa "+p.table;
-
-  img.src=p.url;
-
-  img.onload=()=>{
-    const ratio=img.naturalWidth/img.naturalHeight;
-
-    if(ratio>1.2){
-      box.style.width="50vw";
-      box.style.height="45vh";
-    }else if(ratio<0.8){
-      box.style.width="28vw";
-      box.style.height="60vh";
-    }else{
-      box.style.width="38vw";
-      box.style.height="50vh";
-    }
-
-    box.style.display="block";
-
-    img.classList.remove("fadeOut");
-    img.classList.add("fadeIn");
-  };
-
- },300);
+ document.getElementById("photoBox").style.display="block";
 }
 
-/* DELETE */
+/* DELETE FIX */
 document.getElementById("deleteBtn").onclick=async()=>{
 
- if(!currentPhoto) return;
+ if(!currentPhoto)return;
 
  await fetch("/photo",{
   method:"DELETE",
@@ -367,42 +353,53 @@ document.getElementById("deleteBtn").onclick=async()=>{
   body:JSON.stringify({url:currentPhoto.url})
  });
 
- photos = photos.filter(p=>p.url!==currentPhoto.url);
-
+ photos=photos.filter(p=>p.url!==currentPhoto.url);
  currentPhoto=null;
  photoIndex=0;
-
- document.getElementById("photoBox").style.display="none";
 };
 
-/* ALERT FOTO */
-function showNewPhotoAlert(p){
-
- const box=document.getElementById("newPhotoAlert");
-
- box.innerText="📸 Nueva foto de Mesa "+p.table;
-
- box.style.display="block";
-
- setTimeout(()=>{
-  box.style.display="none";
- },2500);
-}
-
-/* RANKING */
+/* 🔥 RANKING PRO */
 async function loadRanking(){
 
  const res=await fetch("/ranking/"+selectedEvent.name);
  const data=await res.json();
 
- let html="<h2>🏆 Ranking</h2>";
+ if(!data.length)return;
 
- data.slice(0,5).forEach((g,i)=>{
-   html+=`<div class="rankCard">
-     <span>${i+1}. Mesa ${g.table}</span>
-     <span>${g.points}</span>
+ let html=`
+ <div class="rankTitle">🏆 Ranking en Vivo</div>
+ <div class="rankSub">Cada foto suma puntos</div>
+ <div class="top3">
+ `;
+
+ const medals=["🥇","🥈","🥉"];
+ const classes=["gold","silver","bronze"];
+
+ data.slice(0,3).forEach((g,i)=>{
+   html+=`
+   <div class="card ${classes[i]}">
+     ${medals[i]}<br>
+     Mesa ${g.table}<br>
+     ${g.points} pts
    </div>`;
  });
+
+ html+="</div>";
+
+ data.slice(3,6).forEach((g,i)=>{
+   html+=`
+   <div class="rankRest">
+     ${i+4}. Mesa ${g.table}
+     <span>${g.points} pts</span>
+   </div>`;
+ });
+
+ const leader=data[0];
+
+ html+=`
+ <div class="rankMessage">
+   Mesa ${leader.table} va 1° 🔥 ¡Van primeros!
+ </div>`;
 
  document.getElementById("ranking").innerHTML=html;
 }
@@ -410,14 +407,14 @@ async function loadRanking(){
 /* SORTEO */
 document.getElementById("sortBtn").onclick=()=>{
 
- if(!photos.length) return;
+ if(!photos.length)return;
 
  let cycles=0;
 
  const interval=setInterval(()=>{
 
-   const random=photos[Math.floor(Math.random()*photos.length)];
-   showPhoto(random);
+   const r=photos[Math.floor(Math.random()*photos.length)];
+   showPhoto(r);
 
    cycles++;
 
@@ -428,7 +425,7 @@ document.getElementById("sortBtn").onclick=()=>{
 
      showPhoto(winner);
      showWinner(winner);
-     launchConfetti();
+     confetti();
    }
 
  },80);
@@ -437,32 +434,25 @@ document.getElementById("sortBtn").onclick=()=>{
 function showWinner(w){
 
  const overlay=document.getElementById("winnerOverlay");
- const text=document.getElementById("winnerText");
-
- text.innerHTML=`🎉 ${w.user}<br>Mesa ${w.table}`;
-
  overlay.style.display="flex";
+ document.getElementById("winnerText").innerHTML=
+ `🎉 ${w.user}<br>Mesa ${w.table}`;
 
- setTimeout(()=>{
-   overlay.style.display="none";
- },4000);
+ setTimeout(()=>overlay.style.display="none",4000);
 }
 
-/* CONFETTI */
-function launchConfetti(){
+function confetti(){
 
  for(let i=0;i<80;i++){
 
-   const div=document.createElement("div");
-   div.className="confetti";
+   const d=document.createElement("div");
+   d.className="confetti";
+   d.style.left=Math.random()*100+"vw";
+   d.style.background=`hsl(${Math.random()*360},100%,50%)`;
+   d.style.animationDuration=(Math.random()*2+2)+"s";
 
-   div.style.left=Math.random()*100+"vw";
-   div.style.background=`hsl(${Math.random()*360},100%,50%)`;
-   div.style.animationDuration=(Math.random()*2+2)+"s";
-
-   document.body.appendChild(div);
-
-   setTimeout(()=>div.remove(),4000);
+   document.body.appendChild(d);
+   setTimeout(()=>d.remove(),4000);
  }
 }
 
