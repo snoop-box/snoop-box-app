@@ -11,40 +11,24 @@ body{
   font-family:Arial;
   overflow:hidden;
   background:#000;
-  background-position:center center;
-  background-size:contain;
-  background-repeat:no-repeat;
   color:white;
 }
 
-/* LOGIN */
-#login{
+/* 🔥 LOGO FONDO PRO */
+#bgLogo{
   position:fixed;
-  inset:0;
-  background:#111;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.loginBox{
-  width:420px;
-  background:#1d1d1d;
-  padding:30px;
-  border-radius:18px;
-  text-align:center;
-}
-
-input{
-  width:100%;
-  padding:15px;
-  border:none;
-  border-radius:10px;
-  margin:10px 0;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  max-width:90vw;
+  max-height:90vh;
+  object-fit:contain;
+  opacity:.25;
+  z-index:0;
 }
 
 /* APP */
-#app{display:none;}
+#app{display:none; position:relative; z-index:2;}
 
 #eventName{
   position:absolute;
@@ -99,10 +83,7 @@ input{
   cursor:pointer;
 }
 
-/* ========================= */
-/* 🔥 RANKING PRO ESTILO CELU */
-/* ========================= */
-
+/* RANKING */
 #ranking{
   position:absolute;
   right:30px;
@@ -111,70 +92,6 @@ input{
   background:rgba(0,0,0,.45);
   padding:20px;
   border-radius:20px;
-}
-
-.rankTitle{
-  font-size:26px;
-  margin-bottom:6px;
-}
-
-.rankSub{
-  font-size:16px;
-  opacity:.7;
-  margin-bottom:14px;
-}
-
-.top3{
-  display:flex;
-  gap:10px;
-}
-
-.card{
-  flex:1;
-  border-radius:16px;
-  padding:12px;
-  text-align:center;
-  background:rgba(255,255,255,.08);
-  transition:.3s;
-}
-
-.card:hover{
-  transform:scale(1.05);
-}
-
-/* bordes */
-.gold{border:3px solid gold;}
-.silver{border:3px solid #ccc;}
-.bronze{border:3px solid #cd7f32;}
-
-.rankRest{
-  margin-top:12px;
-  background:rgba(255,255,255,.08);
-  padding:10px;
-  border-radius:12px;
-  display:flex;
-  justify-content:space-between;
-}
-
-.rankMessage{
-  margin-top:12px;
-  background:#b3002d;
-  padding:14px;
-  border-radius:14px;
-  text-align:center;
-  font-weight:bold;
-}
-
-/* ALERT FOTO */
-#newPhotoAlert{
-  position:fixed;
-  top:30px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#ff0055;
-  padding:12px 24px;
-  border-radius:12px;
-  display:none;
 }
 
 /* QR */
@@ -203,11 +120,22 @@ input{
   display:none;
   align-items:center;
   justify-content:center;
-  flex-direction:column;
 }
 
 #winnerText{
   font-size:60px;
+}
+
+/* ALERT */
+#newPhotoAlert{
+  position:fixed;
+  top:30px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#ff0055;
+  padding:12px 24px;
+  border-radius:12px;
+  display:none;
 }
 
 /* CONFETTI */
@@ -226,6 +154,8 @@ input{
 </head>
 
 <body>
+
+<img id="bgLogo">
 
 <div id="login">
   <div class="loginBox">
@@ -246,9 +176,7 @@ input{
 </div>
 
 <div id="ranking"></div>
-
 <div id="qrBox"><canvas id="qr"></canvas></div>
-
 <button id="sortBtn">🎁 Sorteo</button>
 
 <div id="winnerOverlay"><div id="winnerText"></div></div>
@@ -281,8 +209,9 @@ async function loginEvent(){
 
  document.getElementById("eventName").innerText=ev.name;
 
+ /* 🔥 FIX LOGO */
  if(ev.background){
-  document.body.style.backgroundImage=`url('${ev.background}')`;
+   document.getElementById("bgLogo").src = ev.background;
  }
 
  QRCode.toCanvas(
@@ -297,165 +226,6 @@ async function loginEvent(){
  setInterval(rotatePhotos,5000);
  setInterval(loadRanking,5000);
 }
-
-async function loadPhotos(){
-
- const res=await fetch("/photos/"+selectedEvent.name);
- const data=await res.json();
-
- if(data.length>lastPhotoCount){
-   showNewPhotoAlert(data[0]);
- }
-
- lastPhotoCount=data.length;
- photos=data;
-}
-
-function showNewPhotoAlert(p){
-
- const box=document.getElementById("newPhotoAlert");
- box.innerText="📸 Nueva foto Mesa "+p.table;
- box.style.display="block";
-
- setTimeout(()=>box.style.display="none",2000);
-}
-
-function rotatePhotos(){
-
- if(!photos.length)return;
-
- if(photoIndex>=photos.length)photoIndex=0;
-
- showPhoto(photos[photoIndex]);
- photoIndex++;
-}
-
-function showPhoto(p){
-
- currentPhoto=p;
-
- const img=document.getElementById("photoImg");
-
- img.src=p.url;
- document.getElementById("photoUser").innerText=p.user+" • Mesa "+p.table;
-
- document.getElementById("photoBox").style.display="block";
-}
-
-/* DELETE FIX */
-document.getElementById("deleteBtn").onclick=async()=>{
-
- if(!currentPhoto)return;
-
- await fetch("/photo",{
-  method:"DELETE",
-  headers:{"Content-Type":"application/json"},
-  body:JSON.stringify({url:currentPhoto.url})
- });
-
- photos=photos.filter(p=>p.url!==currentPhoto.url);
- currentPhoto=null;
- photoIndex=0;
-};
-
-/* 🔥 RANKING PRO */
-async function loadRanking(){
-
- const res=await fetch("/ranking/"+selectedEvent.name);
- const data=await res.json();
-
- if(!data.length)return;
-
- let html=`
- <div class="rankTitle">🏆 Ranking en Vivo</div>
- <div class="rankSub">Cada foto suma puntos</div>
- <div class="top3">
- `;
-
- const medals=["🥇","🥈","🥉"];
- const classes=["gold","silver","bronze"];
-
- data.slice(0,3).forEach((g,i)=>{
-   html+=`
-   <div class="card ${classes[i]}">
-     ${medals[i]}<br>
-     Mesa ${g.table}<br>
-     ${g.points} pts
-   </div>`;
- });
-
- html+="</div>";
-
- data.slice(3,6).forEach((g,i)=>{
-   html+=`
-   <div class="rankRest">
-     ${i+4}. Mesa ${g.table}
-     <span>${g.points} pts</span>
-   </div>`;
- });
-
- const leader=data[0];
-
- html+=`
- <div class="rankMessage">
-   Mesa ${leader.table} va 1° 🔥 ¡Van primeros!
- </div>`;
-
- document.getElementById("ranking").innerHTML=html;
-}
-
-/* SORTEO */
-document.getElementById("sortBtn").onclick=()=>{
-
- if(!photos.length)return;
-
- let cycles=0;
-
- const interval=setInterval(()=>{
-
-   const r=photos[Math.floor(Math.random()*photos.length)];
-   showPhoto(r);
-
-   cycles++;
-
-   if(cycles>30){
-     clearInterval(interval);
-
-     const winner=photos[Math.floor(Math.random()*photos.length)];
-
-     showPhoto(winner);
-     showWinner(winner);
-     confetti();
-   }
-
- },80);
-};
-
-function showWinner(w){
-
- const overlay=document.getElementById("winnerOverlay");
- overlay.style.display="flex";
- document.getElementById("winnerText").innerHTML=
- `🎉 ${w.user}<br>Mesa ${w.table}`;
-
- setTimeout(()=>overlay.style.display="none",4000);
-}
-
-function confetti(){
-
- for(let i=0;i<80;i++){
-
-   const d=document.createElement("div");
-   d.className="confetti";
-   d.style.left=Math.random()*100+"vw";
-   d.style.background=`hsl(${Math.random()*360},100%,50%)`;
-   d.style.animationDuration=(Math.random()*2+2)+"s";
-
-   document.body.appendChild(d);
-   setTimeout(()=>d.remove(),4000);
- }
-}
-
 </script>
 
 </body>
