@@ -137,7 +137,7 @@ body{
 
 /* BOTON SORTEO */
 #sortBtn{
-  position:absolute;
+  position:fixed; /* 🔥 clave */
   right:30px;
   bottom:30px;
   background:#ff0055;
@@ -147,6 +147,8 @@ body{
   border:none;
   border-radius:12px;
   cursor:pointer;
+  z-index:9999; /* 🔥 ultra arriba */
+  box-shadow:0 0 20px rgba(255,0,100,0.6);
 }
 
 /* ALERT */
