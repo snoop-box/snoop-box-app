@@ -14,21 +14,25 @@ body{
   color:white;
 }
 
-/* 🔥 LOGO FONDO PRO */
+/* 🔥 FONDO LOGO */
 #bgLogo{
   position:fixed;
   top:50%;
   left:50%;
   transform:translate(-50%,-50%);
-  max-width:90vw;
-  max-height:90vh;
+  max-width:80vw;
+  max-height:80vh;
   object-fit:contain;
   opacity:.25;
-  z-index:0;
+  z-index:-1;
 }
 
 /* APP */
-#app{display:none; position:relative; z-index:2;}
+#app{
+  display:none;
+  position:relative;
+  z-index:2;
+}
 
 #eventName{
   position:absolute;
@@ -112,20 +116,6 @@ body{
   font-size:20px;
 }
 
-/* GANADOR */
-#winnerOverlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.85);
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-
-#winnerText{
-  font-size:60px;
-}
-
 /* ALERT */
 #newPhotoAlert{
   position:fixed;
@@ -136,6 +126,21 @@ body{
   padding:12px 24px;
   border-radius:12px;
   display:none;
+}
+
+/* GANADOR */
+#winnerOverlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+}
+
+#winnerText{
+  font-size:60px;
 }
 
 /* CONFETTI */
@@ -158,7 +163,7 @@ body{
 <img id="bgLogo">
 
 <div id="login">
-  <div class="loginBox">
+  <div style="text-align:center; margin-top:100px;">
     <h2>Evento</h2>
     <input id="eventInput">
     <button onclick="loginEvent()">Entrar</button>
@@ -193,6 +198,7 @@ let photoIndex=0;
 let currentPhoto=null;
 let lastPhotoCount=0;
 
+/* LOGIN */
 async function loginEvent(){
 
  const name=document.getElementById("eventInput").value.toLowerCase();
@@ -209,9 +215,9 @@ async function loginEvent(){
 
  document.getElementById("eventName").innerText=ev.name;
 
- /* 🔥 FIX LOGO */
+ /* FONDO */
  if(ev.background){
-   document.getElementById("bgLogo").src = ev.background;
+  document.getElementById("bgLogo").src = ev.background;
  }
 
  QRCode.toCanvas(
@@ -225,6 +231,162 @@ async function loginEvent(){
  setInterval(loadPhotos,4000);
  setInterval(rotatePhotos,5000);
  setInterval(loadRanking,5000);
+}
+
+/* FOTOS */
+async function loadPhotos(){
+
+ const res=await fetch("/photos/"+selectedEvent.name);
+ const data=await res.json();
+
+ if(data.length > lastPhotoCount){
+   showNewPhotoAlert(data[0]);
+ }
+
+ lastPhotoCount = data.length;
+ photos = data;
+}
+
+function showNewPhotoAlert(p){
+
+ const box=document.getElementById("newPhotoAlert");
+ box.innerText="📸 Nueva foto Mesa "+p.table;
+ box.style.display="block";
+
+ setTimeout(()=>box.style.display="none",2000);
+}
+
+function rotatePhotos(){
+
+ if(!photos.length)return;
+
+ if(photoIndex>=photos.length)photoIndex=0;
+
+ showPhoto(photos[photoIndex]);
+ photoIndex++;
+}
+
+function showPhoto(p){
+
+ currentPhoto=p;
+
+ const img=document.getElementById("photoImg");
+ const box=document.getElementById("photoBox");
+
+ img.onload=()=>{
+
+   const ratio = img.naturalWidth / img.naturalHeight;
+
+   if(ratio > 1.2){
+     box.style.width="50vw";
+     box.style.height="45vh";
+   }else if(ratio < 0.8){
+     box.style.width="28vw";
+     box.style.height="60vh";
+   }else{
+     box.style.width="38vw";
+     box.style.height="50vh";
+   }
+
+   box.style.display="block";
+ };
+
+ img.src=p.url;
+
+ document.getElementById("photoUser").innerText=
+   p.user+" • Mesa "+p.table;
+}
+
+/* DELETE */
+document.getElementById("deleteBtn").onclick=async()=>{
+
+ if(!currentPhoto)return;
+
+ await fetch("/photo",{
+  method:"DELETE",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({url:currentPhoto.url})
+ });
+
+ photos=photos.filter(p=>p.url!==currentPhoto.url);
+ currentPhoto=null;
+ photoIndex=0;
+};
+
+/* RANKING */
+async function loadRanking(){
+
+ const res=await fetch("/ranking/"+selectedEvent.name);
+ const data=await res.json();
+
+ if(!data.length)return;
+
+ let html=`
+ <div style="font-size:26px;">🏆 Ranking en Vivo</div>
+ <div style="opacity:.7;">Cada foto suma puntos</div>
+ <br>
+ `;
+
+ data.slice(0,3).forEach((g,i)=>{
+   html+=`<div>🥇 Mesa ${g.table} - ${g.points} pts</div>`;
+ });
+
+ document.getElementById("ranking").innerHTML=html;
+}
+
+/* SORTEO */
+document.getElementById("sortBtn").onclick=()=>{
+
+ if(!photos.length)return;
+
+ let cycles=0;
+
+ const interval=setInterval(()=>{
+
+   const r=photos[Math.floor(Math.random()*photos.length)];
+   showPhoto(r);
+
+   cycles++;
+
+   if(cycles>30){
+     clearInterval(interval);
+
+     const winner=photos[Math.floor(Math.random()*photos.length)];
+
+     showPhoto(winner);
+     showWinner(winner);
+     confetti();
+   }
+
+ },80);
+};
+
+function showWinner(w){
+
+ const overlay=document.getElementById("winnerOverlay");
+ overlay.style.display="flex";
+
+ document.getElementById("winnerText").innerHTML=
+ `🎉 ${w.user}<br>Mesa ${w.table}`;
+
+ setTimeout(()=>overlay.style.display="none",4000);
+}
+
+/* CONFETTI */
+function confetti(){
+
+ for(let i=0;i<80;i++){
+
+   const d=document.createElement("div");
+   d.className="confetti";
+
+   d.style.left=Math.random()*100+"vw";
+   d.style.background=`hsl(${Math.random()*360},100%,50%)`;
+   d.style.animationDuration=(Math.random()*2+2)+"s";
+
+   document.body.appendChild(d);
+   setTimeout(()=>d.remove(),4000);
+ }
 }
 </script>
 
