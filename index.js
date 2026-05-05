@@ -600,7 +600,7 @@ app.post("/trivia-answer", (req, res) => {
 
   // 💣 sumar puntos SOLO si acierta
   if(correct){
-    guest.points = (guest.points || 0) + 100;
+  guest.points = (guest.points || 0) + 5;
   }
 
   // marcar como jugado

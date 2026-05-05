@@ -50,6 +50,10 @@ button{
 .wrong{
   background:#b00020;
 }
+
+.back{
+  background:#ff0055;
+}
 </style>
 </head>
 
@@ -65,12 +69,13 @@ button{
 let allQuestions=[];
 let questions=[];
 let index=0;
+let score=0;
 
 /* PARAMS */
 const params = new URLSearchParams(window.location.search);
 const eventName = params.get("event");
 
-/* USER DATA */
+/* USER */
 const userData = JSON.parse(
   localStorage.getItem("snoop_" + eventName)
 );
@@ -80,12 +85,12 @@ const table = userData?.table;
 
 /* VALIDACIÓN */
 if(!user || !table){
-  document.body.innerHTML="<h2>⚠️ Error: usuario no identificado</h2>";
+  document.body.innerHTML="<h2>⚠️ Error de usuario</h2>";
 }
 
 /* 🚫 YA JUGÓ */
 if(localStorage.getItem("triviaPlayed_"+eventName)){
-  document.body.innerHTML="<h2>⚠️ Ya participaste en la trivia</h2>";
+  document.body.innerHTML="<h2>⚠️ Ya participaste</h2>";
 }else{
   loadTrivia();
 }
@@ -94,26 +99,12 @@ if(localStorage.getItem("triviaPlayed_"+eventName)){
 
 async function loadTrivia(){
 
- try{
+ const res = await fetch("/trivia.json");
+ allQuestions = await res.json();
 
-  const res = await fetch("/trivia.json");
-  allQuestions = await res.json();
+ questions = shuffle(allQuestions).slice(0,3);
 
-  if(!allQuestions.length){
-    document.getElementById("box").innerHTML="<h2>⚠️ No hay preguntas</h2>";
-    return;
-  }
-
-  questions = shuffle(allQuestions).slice(0,3);
-
-  showQuestion();
-
- }catch(err){
-
-  document.getElementById("box").innerHTML="<h2>Error cargando trivia</h2>";
-
- }
-
+ showQuestion();
 }
 
 /* ======================= */
@@ -142,7 +133,6 @@ function showQuestion(){
 
    box.appendChild(btn);
  });
-
 }
 
 /* ======================= */
@@ -162,7 +152,12 @@ function answer(i){
    }
  });
 
- /* 🔥 SUMAR PUNTOS */
+ /* 🔥 SUMA LOCAL */
+ if(correct){
+   score++;
+ }
+
+ /* 🔥 BACKEND */
  fetch("/trivia-answer",{
    method:"POST",
    headers:{"Content-Type":"application/json"},
@@ -186,12 +181,31 @@ function answer(i){
        true
      );
 
-     document.getElementById("box").innerHTML=
-     "<h2>🎉 Terminaste la trivia</h2><p>¡Gracias por participar!</p>";
+     showResult();
    }
 
  },1500);
+}
 
+/* ======================= */
+
+function showResult(){
+
+ document.getElementById("box").innerHTML = `
+   <h2>🎉 Terminaste la trivia</h2>
+   <p>Respuestas correctas: ${score}/3</p>
+
+   <button class="back" onclick="goBack()">
+     🔙 Volver
+   </button>
+ `;
+}
+
+/* ======================= */
+
+function goBack(){
+ window.location.href =
+   "/?event=" + eventName;
 }
 
 </script>
