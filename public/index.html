@@ -201,8 +201,8 @@ Ingresar
 📸 Subir Foto
 </button>
 
-<button class="dark"
-onclick="alert('Trivia próxima etapa')">
+<!-- 🔥 BOTÓN TRIVIA -->
+<button class="dark" onclick="goTrivia()">
 🎮 Trivia
 </button>
 
@@ -217,7 +217,7 @@ onchange="uploadPhoto(event)">
 
 </div>
 
-<!-- RANKING WOW -->
+<!-- RANKING -->
 
 <div class="card">
 
@@ -549,6 +549,13 @@ function renderRanking(data){
 
  }
 
+}
+
+/* ===================== */
+
+function goTrivia(){
+  window.location.href =
+    "/trivia.html?event=" + eventName;
 }
 
 /* ===================== */

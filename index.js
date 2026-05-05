@@ -551,6 +551,64 @@ app.get("/",(req,res)=>{
 
 });
 
+// ===============================
+// 🔥 TRIVIA SAFE MODULE
+// ===============================
+
+// memoria simple para controlar participación
+if(!global.triviaPlayers){
+  global.triviaPlayers = {};
+}
+
+app.post("/trivia-answer", (req, res) => {
+
+  const { event, table, user, correct } = req.body;
+
+  if(!event || !table || !user){
+    return res.json({ success:false });
+  }
+
+  const key = event + "_" + user;
+
+  // 🚫 ya jugó
+  if(global.triviaPlayers[key]){
+    return res.json({ success:false, played:true });
+  }
+
+  const ev = events.find(e =>
+    normalize(e.name) === normalize(event)
+  );
+
+  if(!ev){
+    return res.json({ success:false });
+  }
+
+  // buscar invitado (igual que tu sistema actual)
+  let guest = ev.guests.find(g =>
+    normalize(g.name) === normalize(user)
+  );
+
+  if(!guest){
+    guest = ev.guests.find(g =>
+      g.table == table
+    );
+  }
+
+  if(!guest){
+    return res.json({ success:false });
+  }
+
+  // 💣 sumar puntos SOLO si acierta
+  if(correct){
+    guest.points = (guest.points || 0) + 100;
+  }
+
+  // marcar como jugado
+  global.triviaPlayers[key] = true;
+
+  res.json({ success:true });
+});
+
 /* ===============================
    SERVER
 =============================== */

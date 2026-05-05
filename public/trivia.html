@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trivia</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:linear-gradient(135deg,#0b1f5e,#111,#7f1d1d);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+}
+
+#box{
+  width:90%;
+  max-width:500px;
+  background:rgba(255,255,255,.08);
+  backdrop-filter:blur(12px);
+  padding:24px;
+  border-radius:20px;
+  text-align:center;
+}
+
+h2{
+  margin-bottom:20px;
+}
+
+button{
+  width:100%;
+  padding:16px;
+  margin:8px 0;
+  border:none;
+  border-radius:12px;
+  font-size:16px;
+  cursor:pointer;
+  background:#263238;
+  color:#fff;
+}
+
+.correct{
+  background:green;
+}
+
+.wrong{
+  background:#b00020;
+}
+</style>
+</head>
+
+<body>
+
+<div id="box">
+  <h2 id="question">Cargando...</h2>
+  <div id="options"></div>
+</div>
+
+<script>
+
+let allQuestions=[];
+let questions=[];
+let index=0;
+
+/* PARAMS */
+const params = new URLSearchParams(window.location.search);
+const eventName = params.get("event");
+
+/* USER DATA */
+const userData = JSON.parse(
+  localStorage.getItem("snoop_" + eventName)
+);
+
+const user = userData?.name;
+const table = userData?.table;
+
+/* VALIDACIÓN */
+if(!user || !table){
+  document.body.innerHTML="<h2>⚠️ Error: usuario no identificado</h2>";
+}
+
+/* 🚫 YA JUGÓ */
+if(localStorage.getItem("triviaPlayed_"+eventName)){
+  document.body.innerHTML="<h2>⚠️ Ya participaste en la trivia</h2>";
+}else{
+  loadTrivia();
+}
+
+/* ======================= */
+
+async function loadTrivia(){
+
+ try{
+
+  const res = await fetch("/trivia.json");
+  allQuestions = await res.json();
+
+  if(!allQuestions.length){
+    document.getElementById("box").innerHTML="<h2>⚠️ No hay preguntas</h2>";
+    return;
+  }
+
+  questions = shuffle(allQuestions).slice(0,3);
+
+  showQuestion();
+
+ }catch(err){
+
+  document.getElementById("box").innerHTML="<h2>Error cargando trivia</h2>";
+
+ }
+
+}
+
+/* ======================= */
+
+function shuffle(arr){
+ return arr.sort(()=>Math.random()-0.5);
+}
+
+/* ======================= */
+
+function showQuestion(){
+
+ const q = questions[index];
+
+ document.getElementById("question").innerText = q.question;
+
+ const box = document.getElementById("options");
+ box.innerHTML="";
+
+ q.options.forEach((opt,i)=>{
+
+   const btn=document.createElement("button");
+   btn.innerText=opt;
+
+   btn.onclick=()=>answer(i);
+
+   box.appendChild(btn);
+ });
+
+}
+
+/* ======================= */
+
+function answer(i){
+
+ const q = questions[index];
+ const correct = (i === q.correct);
+
+ const buttons=document.querySelectorAll("button");
+
+ buttons.forEach((b,idx)=>{
+   if(idx===q.correct){
+     b.classList.add("correct");
+   }else{
+     b.classList.add("wrong");
+   }
+ });
+
+ /* 🔥 SUMAR PUNTOS */
+ fetch("/trivia-answer",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({
+     event:eventName,
+     table:table,
+     user:user,
+     correct:correct
+   })
+ });
+
+ setTimeout(()=>{
+   index++;
+
+   if(index<questions.length){
+     showQuestion();
+   }else{
+
+     localStorage.setItem(
+       "triviaPlayed_"+eventName,
+       true
+     );
+
+     document.getElementById("box").innerHTML=
+     "<h2>🎉 Terminaste la trivia</h2><p>¡Gracias por participar!</p>";
+   }
+
+ },1500);
+
+}
+
+</script>
+
+</body>
+</html>
