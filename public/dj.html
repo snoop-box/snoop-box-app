@@ -248,6 +248,27 @@ let photoIndex=0;
 let currentPhoto=null;
 let lastPhotoCount=0;
 
+/* 🔥 AUTO LOGIN DESDE HUB */
+
+window.onload = async ()=>{
+
+ const params =
+ new URLSearchParams(window.location.search);
+
+ const autoEvent =
+ params.get("event");
+
+ if(autoEvent){
+
+   document.getElementById("eventInput").value =
+   autoEvent;
+
+   await loginEvent();
+
+ }
+
+};
+
 async function loginEvent(){
  const name=document.getElementById("eventInput").value.toLowerCase();
  const res=await fetch("/events");
