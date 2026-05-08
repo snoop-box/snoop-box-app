@@ -14,8 +14,6 @@ let stream;
 
 startBtn.addEventListener("click", async () => {
 
-  alert("BOTON FUNCIONA");
-
   try {
 
     startBtn.disabled = true;
@@ -28,8 +26,6 @@ startBtn.addEventListener("click", async () => {
       video: true,
       audio: false
     });
-
-    alert("CAMARA OK");
 
     preview.srcObject = stream;
 
@@ -45,7 +41,7 @@ startBtn.addEventListener("click", async () => {
 
     console.error(error);
 
-    alert("ERROR CAMARA: " + error.message);
+    alert("Error iniciando cámara");
 
     startBtn.disabled = false;
 
