@@ -71,9 +71,8 @@ function startRecording() {
 
   recordedChunks = [];
 
-  mediaRecorder = new MediaRecorder(stream, {
-    mimeType: "video/mp4"
-  });
+  // Safari/iPhone estable
+  mediaRecorder = new MediaRecorder(stream);
 
   mediaRecorder.ondataavailable = (event) => {
 
@@ -90,7 +89,7 @@ function startRecording() {
     statusText.innerText = "SUBIENDO VIDEO...";
 
     const blob = new Blob(recordedChunks, {
-      type: "video/mp4"
+      type: "video/webm"
     });
 
     const formData = new FormData();
