@@ -1,127 +1,58 @@
-const homeScreen = document.getElementById("homeScreen");
-const cameraScreen = document.getElementById("cameraScreen");
-const thanksScreen = document.getElementById("thanksScreen");
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Snoop Box 360</title>
 
-const startBtn = document.getElementById("startBtn");
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
 
-const preview = document.getElementById("preview");
-const countdown = document.getElementById("countdown");
-const statusText = document.getElementById("status");
+  <div id="homeScreen" class="screen active">
 
-let mediaRecorder;
-let recordedChunks = [];
-let stream;
+    <div class="content">
 
-startBtn.addEventListener("click", async () => {
+      <h1>SNOOP 360</h1>
 
-  showScreen(cameraScreen);
+      <button id="startBtn">
+        🎥 GRABAR VIDEO
+      </button>
 
-  await initCamera();
+    </div>
 
-  await startCountdown();
+  </div>
 
-  startRecording();
+  <div id="cameraScreen" class="screen">
 
-});
+    <video id="preview" autoplay playsinline muted></video>
 
-async function initCamera() {
+    <div id="cameraOverlay">
 
-  try {
+      <div id="countdown"></div>
 
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: "user",
-        width: 1920,
-        height: 1080,
-        frameRate: 30
-      },
-      audio: false
-    });
+      <div id="status"></div>
 
-    preview.srcObject = stream;
+    </div>
 
-  } catch (error) {
+  </div>
 
-    console.error(error);
+  <div id="thanksScreen" class="screen">
 
-    alert("No se pudo acceder a la cámara");
-  }
-}
+    <div class="content">
 
-async function startCountdown() {
+      <h2>✨ Gracias por participar ✨</h2>
 
-  for (let i = 3; i > 0; i--) {
+      <p>
+        Pronto vas a ver tu video
+        en la galería del evento
+      </p>
 
-    countdown.innerText = i;
+    </div>
 
-    await wait(1000);
-  }
+  </div>
 
-  countdown.innerText = "";
-}
+  <script src="./app.js"></script>
 
-function startRecording() {
-
-  recordedChunks = [];
-
-  mediaRecorder = new MediaRecorder(stream);
-
-  mediaRecorder.ondataavailable = (event) => {
-
-    if (event.data.size > 0) {
-      recordedChunks.push(event.data);
-    }
-  };
-
-  mediaRecorder.onstop = async () => {
-
-    const blob = new Blob(recordedChunks, {
-      type: "video/mp4"
-    });
-
-    console.log("VIDEO GRABADO", blob);
-
-    stopCamera();
-
-    showScreen(thanksScreen);
-
-    setTimeout(() => {
-
-      showScreen(homeScreen);
-
-    }, 5000);
-  };
-
-  mediaRecorder.start();
-
-  statusText.innerText = "GRABANDO...";
-
-  setTimeout(() => {
-
-    mediaRecorder.stop();
-
-    statusText.innerText = "";
-
-  }, 8000);
-}
-
-function stopCamera() {
-
-  if (stream) {
-
-    stream.getTracks().forEach(track => track.stop());
-  }
-}
-
-function showScreen(screen) {
-
-  homeScreen.classList.remove("active");
-  cameraScreen.classList.remove("active");
-  thanksScreen.classList.remove("active");
-
-  screen.classList.add("active");
-}
-
-function wait(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+</body>
+</html>
