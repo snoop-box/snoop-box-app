@@ -1,0 +1,124 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: black;
+  font-family: Arial, sans-serif;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background: black;
+}
+
+.screen.active {
+  display: flex;
+}
+
+.content {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  text-align: center;
+
+  padding: 40px;
+
+  background:
+    radial-gradient(circle at center, rgba(255,255,255,0.08), transparent 60%),
+    linear-gradient(180deg, #050505 0%, #101010 100%);
+}
+
+h1 {
+  color: white;
+  font-size: 64px;
+  margin-bottom: 60px;
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  text-shadow: 0 0 25px rgba(255,255,255,0.35);
+}
+
+h2 {
+  color: white;
+  font-size: 42px;
+  margin-bottom: 30px;
+}
+
+p {
+  color: white;
+  font-size: 26px;
+  line-height: 1.5;
+  max-width: 600px;
+}
+
+button {
+  border: 2px solid rgba(255,255,255,0.25);
+  border-radius: 100px;
+
+  padding: 24px 60px;
+
+  font-size: 30px;
+  font-weight: bold;
+
+  color: white;
+
+  background: rgba(255,255,255,0.12);
+
+  backdrop-filter: blur(12px);
+
+  cursor: pointer;
+
+  box-shadow:
+    0 0 30px rgba(255,255,255,0.12),
+    inset 0 0 20px rgba(255,255,255,0.05);
+}
+
+#cameraScreen {
+  overflow: hidden;
+}
+
+#preview {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#cameraOverlay {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  background: rgba(0,0,0,0.15);
+}
+
+#countdown {
+  font-size: 180px;
+  font-weight: bold;
+  color: white;
+}
+
+#status {
+  margin-top: 20px;
+  font-size: 30px;
+  color: white;
+}
