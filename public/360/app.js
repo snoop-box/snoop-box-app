@@ -1,3 +1,7 @@
+const CLOUD_NAME = "daxf4enjn";
+const UPLOAD_PRESET = "snoop360_unsigned";
+const EVENT_ID = "evento-demo";
+
 const homeScreen = document.getElementById("homeScreen");
 const cameraScreen = document.getElementById("cameraScreen");
 const thanksScreen = document.getElementById("thanksScreen");
@@ -21,8 +25,6 @@ startBtn.addEventListener("click", async () => {
     startBtn.disabled = true;
 
     showScreen(cameraScreen);
-
-    statusText.innerText = "";
 
     stream = await navigator.mediaDevices.getUserMedia({
       video: {
@@ -77,9 +79,31 @@ function startRecording() {
     }
   };
 
-  mediaRecorder.onstop = () => {
+  mediaRecorder.onstop = async () => {
 
     stopCamera();
+
+    const blob = new Blob(recordedChunks, {
+      type: "video/mp4"
+    });
+
+    try {
+
+      timer.innerText = "SUBIENDO...";
+
+      const uploadedUrl = await uploadVideo(blob);
+
+      console.log("VIDEO SUBIDO:", uploadedUrl);
+
+      timer.innerText = "VIDEO LISTO";
+
+    } catch (error) {
+
+      console.error(error);
+
+      timer.innerText = "ERROR";
+
+    }
 
     showScreen(thanksScreen);
 
@@ -88,6 +112,8 @@ function startRecording() {
       startBtn.disabled = false;
 
       showScreen(homeScreen);
+
+      timer.innerText = "00:08";
 
     }, 5000);
   };
@@ -103,6 +129,7 @@ function startRecording() {
     seconds--;
 
     if (seconds >= 0) {
+
       timer.innerText = `00:0${seconds}`;
     }
 
@@ -114,6 +141,34 @@ function startRecording() {
     }
 
   }, 1000);
+}
+
+async function uploadVideo(blob) {
+
+  const formData = new FormData();
+
+  formData.append("file", blob);
+
+  formData.append("upload_preset", UPLOAD_PRESET);
+
+  formData.append(
+    "folder",
+    `snoopbox/${EVENT_ID}/360`
+  );
+
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`,
+    {
+      method: "POST",
+      body: formData
+    }
+  );
+
+  const data = await response.json();
+
+  console.log(data);
+
+  return data.secure_url;
 }
 
 function stopCamera() {
@@ -134,5 +189,6 @@ function showScreen(screen) {
 }
 
 function wait(ms) {
+
   return new Promise(resolve => setTimeout(resolve, ms));
 }
