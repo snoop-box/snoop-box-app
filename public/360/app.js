@@ -22,18 +22,18 @@ startBtn.addEventListener("click", async () => {
 
     showScreen(cameraScreen);
 
-    statusText.innerText = "ABRIENDO CAMARA...";
+    statusText.innerText = "";
 
     stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
+      video: {
+        facingMode: "user"
+      },
       audio: false
     });
 
     preview.srcObject = stream;
 
     await preview.play();
-
-    statusText.innerText = "";
 
     await startCountdown();
 
@@ -94,8 +94,6 @@ function startRecording() {
 
   mediaRecorder.start();
 
-  statusText.innerText = "GRABANDO...";
-
   let seconds = 8;
 
   timer.innerText = `00:0${seconds}`;
@@ -113,8 +111,6 @@ function startRecording() {
       clearInterval(interval);
 
       mediaRecorder.stop();
-
-      statusText.innerText = "";
     }
 
   }, 1000);
