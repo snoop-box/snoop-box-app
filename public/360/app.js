@@ -5,8 +5,10 @@ const thanksScreen = document.getElementById("thanksScreen");
 const startBtn = document.getElementById("startBtn");
 
 const preview = document.getElementById("preview");
+
 const countdown = document.getElementById("countdown");
 const statusText = document.getElementById("status");
+const timer = document.getElementById("timer");
 
 let mediaRecorder;
 let recordedChunks = [];
@@ -94,13 +96,28 @@ function startRecording() {
 
   statusText.innerText = "GRABANDO...";
 
-  setTimeout(() => {
+  let seconds = 8;
 
-    mediaRecorder.stop();
+  timer.innerText = `00:0${seconds}`;
 
-    statusText.innerText = "";
+  const interval = setInterval(() => {
 
-  }, 8000);
+    seconds--;
+
+    if (seconds >= 0) {
+      timer.innerText = `00:0${seconds}`;
+    }
+
+    if (seconds <= 0) {
+
+      clearInterval(interval);
+
+      mediaRecorder.stop();
+
+      statusText.innerText = "";
+    }
+
+  }, 1000);
 }
 
 function stopCamera() {
