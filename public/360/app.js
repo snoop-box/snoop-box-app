@@ -1,58 +1,129 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Snoop Box 360</title>
+const homeScreen = document.getElementById("homeScreen");
+const cameraScreen = document.getElementById("cameraScreen");
+const thanksScreen = document.getElementById("thanksScreen");
 
-  <link rel="stylesheet" href="./style.css" />
-</head>
-<body>
+const startBtn = document.getElementById("startBtn");
 
-  <div id="homeScreen" class="screen active">
+const preview = document.getElementById("preview");
+const countdown = document.getElementById("countdown");
+const statusText = document.getElementById("status");
 
-    <div class="content">
+let mediaRecorder;
+let recordedChunks = [];
+let stream;
 
-      <h1>SNOOP 360</h1>
+startBtn.addEventListener("click", async () => {
 
-      <button id="startBtn">
-        🎥 GRABAR VIDEO
-      </button>
+  alert("BOTON FUNCIONA");
 
-    </div>
+  try {
 
-  </div>
+    startBtn.disabled = true;
 
-  <div id="cameraScreen" class="screen">
+    showScreen(cameraScreen);
 
-    <video id="preview" autoplay playsinline muted></video>
+    statusText.innerText = "ABRIENDO CAMARA...";
 
-    <div id="cameraOverlay">
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: false
+    });
 
-      <div id="countdown"></div>
+    alert("CAMARA OK");
 
-      <div id="status"></div>
+    preview.srcObject = stream;
 
-    </div>
+    await preview.play();
 
-  </div>
+    statusText.innerText = "";
 
-  <div id="thanksScreen" class="screen">
+    await startCountdown();
 
-    <div class="content">
+    startRecording();
 
-      <h2>✨ Gracias por participar ✨</h2>
+  } catch (error) {
 
-      <p>
-        Pronto vas a ver tu video
-        en la galería del evento
-      </p>
+    console.error(error);
 
-    </div>
+    alert("ERROR CAMARA: " + error.message);
 
-  </div>
+    startBtn.disabled = false;
 
-  <script src="./app.js"></script>
+    showScreen(homeScreen);
+  }
 
-</body>
-</html>
+});
+
+async function startCountdown() {
+
+  for (let i = 3; i > 0; i--) {
+
+    countdown.innerText = i;
+
+    await wait(1000);
+  }
+
+  countdown.innerText = "";
+}
+
+function startRecording() {
+
+  recordedChunks = [];
+
+  mediaRecorder = new MediaRecorder(stream);
+
+  mediaRecorder.ondataavailable = (event) => {
+
+    if (event.data.size > 0) {
+      recordedChunks.push(event.data);
+    }
+  };
+
+  mediaRecorder.onstop = () => {
+
+    stopCamera();
+
+    showScreen(thanksScreen);
+
+    setTimeout(() => {
+
+      startBtn.disabled = false;
+
+      showScreen(homeScreen);
+
+    }, 5000);
+  };
+
+  mediaRecorder.start();
+
+  statusText.innerText = "GRABANDO...";
+
+  setTimeout(() => {
+
+    mediaRecorder.stop();
+
+    statusText.innerText = "";
+
+  }, 8000);
+}
+
+function stopCamera() {
+
+  if (stream) {
+
+    stream.getTracks().forEach(track => track.stop());
+  }
+}
+
+function showScreen(screen) {
+
+  homeScreen.classList.remove("active");
+  cameraScreen.classList.remove("active");
+  thanksScreen.classList.remove("active");
+
+  screen.classList.add("active");
+}
+
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
