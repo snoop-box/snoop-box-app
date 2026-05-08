@@ -1,7 +1,3 @@
-const CLOUD_NAME = "daxf4enjn";
-const UPLOAD_PRESET = "snoop360_unsigned";
-const EVENT_ID = "evento-demo";
-
 const homeScreen = document.getElementById("homeScreen");
 const cameraScreen = document.getElementById("cameraScreen");
 const thanksScreen = document.getElementById("thanksScreen");
@@ -9,14 +5,16 @@ const thanksScreen = document.getElementById("thanksScreen");
 const startBtn = document.getElementById("startBtn");
 
 const preview = document.getElementById("preview");
-
 const countdown = document.getElementById("countdown");
 const statusText = document.getElementById("status");
-const timer = document.getElementById("timer");
+const timerText = document.getElementById("timer");
 
 let mediaRecorder;
 let recordedChunks = [];
 let stream;
+
+const CLOUDINARY_CLOUD_NAME = "daxf4enjn";
+const CLOUDINARY_UPLOAD_PRESET = "snoop360";
 
 startBtn.addEventListener("click", async () => {
 
@@ -25,6 +23,8 @@ startBtn.addEventListener("click", async () => {
     startBtn.disabled = true;
 
     showScreen(cameraScreen);
+
+    statusText.innerText = "ABRIENDO CAMARA...";
 
     stream = await navigator.mediaDevices.getUserMedia({
       video: {
@@ -36,6 +36,8 @@ startBtn.addEventListener("click", async () => {
     preview.srcObject = stream;
 
     await preview.play();
+
+    statusText.innerText = "";
 
     await startCountdown();
 
@@ -51,7 +53,6 @@ startBtn.addEventListener("click", async () => {
 
     showScreen(homeScreen);
   }
-
 });
 
 async function startCountdown() {
@@ -70,11 +71,14 @@ function startRecording() {
 
   recordedChunks = [];
 
-  mediaRecorder = new MediaRecorder(stream);
+  mediaRecorder = new MediaRecorder(stream, {
+    mimeType: "video/mp4"
+  });
 
   mediaRecorder.ondataavailable = (event) => {
 
     if (event.data.size > 0) {
+
       recordedChunks.push(event.data);
     }
   };
@@ -83,26 +87,45 @@ function startRecording() {
 
     stopCamera();
 
+    statusText.innerText = "SUBIENDO VIDEO...";
+
     const blob = new Blob(recordedChunks, {
       type: "video/mp4"
     });
 
+    const formData = new FormData();
+
+    formData.append("file", blob);
+
+    formData.append(
+      "upload_preset",
+      CLOUDINARY_UPLOAD_PRESET
+    );
+
+    formData.append(
+      "folder",
+      "snoopbox/evento-demo/360"
+    );
+
     try {
 
-      timer.innerText = "SUBIENDO...";
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`,
+        {
+          method: "POST",
+          body: formData
+        }
+      );
 
-      const uploadedUrl = await uploadVideo(blob);
+      const data = await response.json();
 
-      console.log("VIDEO SUBIDO:", uploadedUrl);
-
-      timer.innerText = "VIDEO LISTO";
+      console.log("VIDEO SUBIDO:", data);
 
     } catch (error) {
 
       console.error(error);
 
-      timer.innerText = "ERROR";
-
+      alert("Error subiendo video");
     }
 
     showScreen(thanksScreen);
@@ -113,62 +136,37 @@ function startRecording() {
 
       showScreen(homeScreen);
 
-      timer.innerText = "00:08";
-
     }, 5000);
   };
 
   mediaRecorder.start();
 
-  let seconds = 8;
+  let seconds = 15;
 
-  timer.innerText = `00:0${seconds}`;
+  timerText.innerText = `${seconds}s`;
+
+  statusText.innerText = "REC";
 
   const interval = setInterval(() => {
 
     seconds--;
 
-    if (seconds >= 0) {
-
-      timer.innerText = `00:0${seconds}`;
-    }
+    timerText.innerText = `${seconds}s`;
 
     if (seconds <= 0) {
 
       clearInterval(interval);
-
-      mediaRecorder.stop();
     }
 
   }, 1000);
-}
 
-async function uploadVideo(blob) {
+  setTimeout(() => {
 
-  const formData = new FormData();
+    mediaRecorder.stop();
 
-  formData.append("file", blob);
+    statusText.innerText = "";
 
-  formData.append("upload_preset", UPLOAD_PRESET);
-
-  formData.append(
-    "folder",
-    `snoopbox/${EVENT_ID}/360`
-  );
-
-  const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`,
-    {
-      method: "POST",
-      body: formData
-    }
-  );
-
-  const data = await response.json();
-
-  console.log(data);
-
-  return data.secure_url;
+  }, 15000);
 }
 
 function stopCamera() {
