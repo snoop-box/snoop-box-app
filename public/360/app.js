@@ -1,5 +1,10 @@
+const homeScreen = document.getElementById("homeScreen");
+const cameraScreen = document.getElementById("cameraScreen");
+const thanksScreen = document.getElementById("thanksScreen");
+
+const startBtn = document.getElementById("startBtn");
+
 const preview = document.getElementById("preview");
-const recordBtn = document.getElementById("recordBtn");
 const countdown = document.getElementById("countdown");
 const statusText = document.getElementById("status");
 
@@ -7,7 +12,20 @@ let mediaRecorder;
 let recordedChunks = [];
 let stream;
 
+startBtn.addEventListener("click", async () => {
+
+  showScreen(cameraScreen);
+
+  await initCamera();
+
+  await startCountdown();
+
+  startRecording();
+
+});
+
 async function initCamera() {
+
   try {
 
     stream = await navigator.mediaDevices.getUserMedia({
@@ -23,22 +41,12 @@ async function initCamera() {
     preview.srcObject = stream;
 
   } catch (error) {
+
     console.error(error);
+
     alert("No se pudo acceder a la cámara");
   }
 }
-
-initCamera();
-
-recordBtn.addEventListener("click", async () => {
-
-  recordBtn.style.display = "none";
-
-  await startCountdown();
-
-  startRecording();
-
-});
 
 async function startCountdown() {
 
@@ -65,7 +73,7 @@ function startRecording() {
     }
   };
 
-  mediaRecorder.onstop = () => {
+  mediaRecorder.onstop = async () => {
 
     const blob = new Blob(recordedChunks, {
       type: "video/mp4"
@@ -73,14 +81,15 @@ function startRecording() {
 
     console.log("VIDEO GRABADO", blob);
 
-    statusText.innerText = "✔ VIDEO GRABADO";
+    stopCamera();
+
+    showScreen(thanksScreen);
 
     setTimeout(() => {
 
-      statusText.innerText = "";
-      recordBtn.style.display = "block";
+      showScreen(homeScreen);
 
-    }, 3000);
+    }, 5000);
   };
 
   mediaRecorder.start();
@@ -94,6 +103,23 @@ function startRecording() {
     statusText.innerText = "";
 
   }, 8000);
+}
+
+function stopCamera() {
+
+  if (stream) {
+
+    stream.getTracks().forEach(track => track.stop());
+  }
+}
+
+function showScreen(screen) {
+
+  homeScreen.classList.remove("active");
+  cameraScreen.classList.remove("active");
+  thanksScreen.classList.remove("active");
+
+  screen.classList.add("active");
 }
 
 function wait(ms) {
