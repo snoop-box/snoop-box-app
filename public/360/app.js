@@ -113,19 +113,18 @@ function startRecording() {
 
       showScreen(homeScreen);
 
-      timer.innerText = "00:08";
+      timer.innerText = "00:15";
 
     }, 5000);
   };
 
   mediaRecorder.start();
 
-  let seconds = 8;
+  let seconds = 15;
 
   timer.innerText = `00:0${seconds}`;
 
   const interval = setInterval(() => {
-
     seconds--;
 
     if (seconds >= 0) {
