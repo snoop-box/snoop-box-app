@@ -815,7 +815,7 @@ async(req,res)=>{
        FROM guests
 
        WHERE event_slug=$1
-       AND guest_name=$2
+       AND LOWER(guest_name)=LOWER($2)
 
        LIMIT 1`,
 
@@ -840,7 +840,7 @@ async(req,res)=>{
 
        event_slug=$1
 
-       AND guest_name=$2`,
+       AND LOWER(guest_name)=LOWER($2)`,
 
       [
         eventName,
@@ -1327,7 +1327,7 @@ app.post('/submit-trivia', async (req,res)=>{
       `UPDATE guests
        SET points = points + $1
        WHERE event_slug=$2
-       AND guest_name=$3`,
+       AND LOWER(guest_name)=LOWER($3)`,
       [
         score,
         event_slug,
@@ -1394,45 +1394,60 @@ app.post(
 
       );
 
-      for(const row of data){
+for(const rawRow of data){
 
-        const options = [
+  const row = {};
 
-          row.option1,
-          row.option2,
-          row.option3,
-          row.option4
+  Object.keys(rawRow)
+  .forEach(key=>{
 
-        ].filter(Boolean);
+    row[
+      key
+      .toString()
+      .trim()
+      .toLowerCase()
 
-        await pool.query(
+    ] = rawRow[key];
 
-          `INSERT INTO trivia_questions(
+  });
 
-            event_slug,
-            question,
-            options,
-            correct_answer
+  const options = [
 
-          )
+    row.option1,
+    row.option2,
+    row.option3,
+    row.option4
 
-          VALUES($1,$2,$3,$4)`,
+  ].filter(Boolean);
 
-          [
+  await pool.query(
 
-            eventSlug,
+    `INSERT INTO trivia_questions(
 
-            row.question,
+      event_slug,
+      question,
+      options,
+      correct_answer
 
-            options,
+    )
 
-            Number(row.correct) - 1
+    VALUES($1,$2,$3,$4)`,
 
-          ]
+    [
 
-        );
+      eventSlug,
 
-      }
+      row.question,
+
+      options,
+
+      Number(row.correct) - 1
+
+    ]
+
+  );
+
+}
 
       res.json({
         success:true
