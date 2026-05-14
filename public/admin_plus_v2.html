@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Admin Plus V2</title>
+
+<title>Admin Plus V3</title>
 
 <style>
+
 body{
   margin:0;
   background:#111;
@@ -13,16 +16,23 @@ body{
   font-family:Arial;
   padding:30px;
 }
+
 .wrap{
-  max-width:850px;
+  max-width:900px;
   margin:auto;
 }
+
 .box{
   background:#1d1d1d;
   padding:25px;
   border-radius:18px;
   margin-bottom:25px;
 }
+
+h1,h2,h3{
+  margin-top:0;
+}
+
 input[type=text],
 input[type=file]{
   width:100%;
@@ -32,6 +42,7 @@ input[type=file]{
   margin:10px 0;
   box-sizing:border-box;
 }
+
 button{
   width:100%;
   padding:14px;
@@ -43,67 +54,164 @@ button{
   cursor:pointer;
   margin-top:10px;
 }
+
+button:hover{
+  opacity:.9;
+}
+
 button:disabled{
   opacity:.5;
 }
+
 .preview{
   max-width:100%;
   max-height:120px;
   border-radius:10px;
   margin-top:8px;
 }
+
 .event{
   background:#262626;
-  padding:14px;
-  border-radius:12px;
-  margin-bottom:12px;
+  padding:18px;
+  border-radius:14px;
+  margin-bottom:14px;
 }
+
 .row{
   display:flex;
   gap:10px;
   margin-top:10px;
+  flex-wrap:wrap;
 }
+
 .smallBtn{
   flex:1;
   background:#444;
   padding:10px;
   font-size:14px;
 }
+
+.red{
+  background:#a3002f;
+}
+
+.green{
+  background:#0b7d32;
+}
+
+.checks{
+  margin-top:15px;
+}
+
+.checks label{
+  display:block;
+  margin-top:10px;
+  font-size:15px;
+}
+
+.status{
+  margin-top:10px;
+  color:#00ff95;
+}
+
+.meta{
+  margin-top:8px;
+  color:#ccc;
+  font-size:14px;
+}
+
 </style>
+
 </head>
 <body>
 
 <div class="wrap">
 
+<!-- CREAR EVENTO -->
+
 <div class="box">
 
 <h1>Admin Plus</h1>
 
-<input type="text" id="eventName" placeholder="Nombre del evento">
+<input
+type="text"
+id="eventName"
+placeholder="Nombre del evento">
 
 <label>Logo del salón</label>
-<input type="file" id="venueFile" accept="image/*">
-<img id="venuePreview" class="preview" style="display:none;">
+
+<input
+type="file"
+id="venueFile"
+accept="image/*">
+
+<img
+id="venuePreview"
+class="preview"
+style="display:none;">
 
 <label>Fondo DJ</label>
-<input type="file" id="bgFile" accept="image/*">
-<img id="bgPreview" class="preview" style="display:none;">
+
+<input
+type="file"
+id="bgFile"
+accept="image/*">
+
+<img
+id="bgPreview"
+class="preview"
+style="display:none;">
 
 <label>Frame</label>
-<input type="file" id="frameFile" accept="image/*">
-<img id="framePreview" class="preview" style="display:none;">
 
-<button id="saveBtn" onclick="saveEvent()">Crear Evento</button>
+<input
+type="file"
+id="frameFile"
+accept="image/*">
 
-<div id="status"></div>
+<img
+id="framePreview"
+class="preview"
+style="display:none;">
+
+<div class="checks">
+
+<label>
+<input type="checkbox" id="has360">
+ Habilitar módulo 360
+</label>
+
+<label>
+<input type="checkbox" id="hasTrivia">
+ Habilitar Trivia
+</label>
 
 </div>
+
+<button
+id="saveBtn"
+onclick="saveEvent()">
+
+Crear Evento
+
+</button>
+
+<div
+id="status"
+class="status">
+</div>
+
+</div>
+
+<!-- EVENTOS -->
 
 <div class="box">
 
 <h2>Eventos</h2>
 
-<div id="list">Cargando...</div>
+<div id="list">
+Cargando...
+</div>
 
 </div>
 
@@ -119,51 +227,278 @@ const UPLOAD_PRESET = "snoopbox";
 let venueLogo = "";
 let bgUrl = "";
 let frameUrl = "";
+
 let uploading = 0;
 
-/* =================== */
+/* ====================== */
 
 function btnState(){
 
  const btn =
- document.getElementById("saveBtn");
+ document.getElementById(
+ "saveBtn"
+ );
 
  if(uploading>0){
-  btn.disabled=true;
-  btn.innerText="Subiendo...";
+
+  btn.disabled = true;
+  btn.innerText = "Subiendo...";
+
  }else{
-  btn.disabled=false;
-  btn.innerText="Crear Evento";
+
+  btn.disabled = false;
+  btn.innerText = "Crear Evento";
+
  }
 
 }
 
+/* ====================== */
+
 function preview(file,id){
 
- const reader = new FileReader();
+ const reader =
+ new FileReader();
 
  reader.onload = e=>{
+
   const img =
   document.getElementById(id);
 
-  img.src = e.target.result;
-  img.style.display="block";
+  img.src =
+  e.target.result;
+
+  img.style.display =
+  "block";
+
  };
 
  reader.readAsDataURL(file);
 
 }
 
+/* ====================== */
+
+async function uploadImage(file){
+
+ const form =
+ new FormData();
+
+ form.append(
+ "file",
+ file
+ );
+
+ form.append(
+ "upload_preset",
+ UPLOAD_PRESET
+ );
+
+ const res =
+ await fetch(
+
+ "https://api.cloudinary.com/v1_1/" +
+ CLOUD_NAME +
+ "/image/upload",
+
+ {
+  method:"POST",
+  body:form
+ }
+
+ );
+
+ const data =
+ await res.json();
+
+ return data.secure_url || "";
+
+}
+
+/* ====================== */
+
+async function doUpload(
+ file,
+ type,
+ previewId
+){
+
+ if(!file) return;
+
+ preview(file,previewId);
+
+ uploading++;
+
+ btnState();
+
+ const url =
+ await uploadImage(file);
+
+ if(type==="venue")
+ venueLogo=url;
+
+ if(type==="bg")
+ bgUrl=url;
+
+ if(type==="frame")
+ frameUrl=url;
+
+ uploading--;
+
+ btnState();
+
+}
+
+/* ====================== */
+
+venueFile.onchange =
+function(){
+
+ doUpload(
+ this.files[0],
+ "venue",
+ "venuePreview"
+ );
+
+};
+
+bgFile.onchange =
+function(){
+
+ doUpload(
+ this.files[0],
+ "bg",
+ "bgPreview"
+ );
+
+};
+
+frameFile.onchange =
+function(){
+
+ doUpload(
+ this.files[0],
+ "frame",
+ "framePreview"
+ );
+
+};
+
+/* ====================== */
+
+async function saveEvent(){
+
+ if(uploading>0)
+ return;
+
+ const name =
+ document
+ .getElementById(
+ "eventName"
+ )
+ .value
+ .trim();
+
+ if(!name){
+
+  status.innerText =
+  "Escribí nombre";
+
+  return;
+
+ }
+
+ status.innerText =
+ "Creando evento...";
+
+ const res =
+ await fetch(
+ "/create-event",
+ {
+
+ method:"POST",
+
+ headers:{
+ "Content-Type":
+ "application/json"
+ },
+
+ body:JSON.stringify({
+
+ name:name,
+
+ logoVenue:
+ venueLogo,
+
+ background:
+ bgUrl,
+
+ frame:
+ frameUrl,
+
+ has360:
+ document
+ .getElementById(
+ "has360"
+ )
+ .checked,
+
+ hasTrivia:
+ document
+ .getElementById(
+ "hasTrivia"
+ )
+ .checked
+
+ })
+
+ });
+
+ const data =
+ await res.json();
+
+ if(data.success){
+
+  status.innerText =
+  "✅ Evento creado";
+
+  resetForm();
+
+  loadEvents();
+
+ }
+
+ else{
+
+  status.innerText =
+  data.message ||
+  "Error";
+
+ }
+
+}
+
+/* ====================== */
+
 function resetForm(){
 
- document.getElementById("eventName").value="";
- document.getElementById("venueFile").value="";
- document.getElementById("bgFile").value="";
- document.getElementById("frameFile").value="";
+ eventName.value="";
 
- document.getElementById("venuePreview").style.display="none";
- document.getElementById("bgPreview").style.display="none";
- document.getElementById("framePreview").style.display="none";
+ venueFile.value="";
+ bgFile.value="";
+ frameFile.value="";
+
+ venuePreview.style.display=
+ "none";
+
+ bgPreview.style.display=
+ "none";
+
+ framePreview.style.display=
+ "none";
+
+ has360.checked=false;
+ hasTrivia.checked=false;
 
  venueLogo="";
  bgUrl="";
@@ -171,174 +506,153 @@ function resetForm(){
 
 }
 
-/* =================== */
-
-async function uploadImage(file){
-
- const form = new FormData();
-
- form.append("file",file);
- form.append("upload_preset",UPLOAD_PRESET);
-
- const res = await fetch(
- "https://api.cloudinary.com/v1_1/" +
- CLOUD_NAME +
- "/image/upload",
- {
-  method:"POST",
-  body:form
- });
-
- const data = await res.json();
-
- return data.secure_url || "";
-
-}
-
-/* =================== */
-
-async function doUpload(file,varName,id){
-
- if(!file) return;
-
- preview(file,id);
-
- uploading++;
- btnState();
-
- const url = await uploadImage(file);
-
- if(varName==="venue") venueLogo=url;
- if(varName==="bg") bgUrl=url;
- if(varName==="frame") frameUrl=url;
-
- uploading--;
- btnState();
-
-}
-
-document.getElementById("venueFile").onchange =
-function(){
- doUpload(this.files[0],"venue","venuePreview");
-};
-
-document.getElementById("bgFile").onchange =
-function(){
- doUpload(this.files[0],"bg","bgPreview");
-};
-
-document.getElementById("frameFile").onchange =
-function(){
- doUpload(this.files[0],"frame","framePreview");
-};
-
-/* =================== */
-
-async function saveEvent(){
-
- if(uploading>0) return;
-
- const name =
- document.getElementById("eventName")
- .value.trim();
-
- const status =
- document.getElementById("status");
-
- if(!name){
-  status.innerText="Escribí nombre";
-  return;
- }
-
- status.innerText="Creando...";
-
- const res = await fetch("/create-event",{
-  method:"POST",
-  headers:{
-   "Content-Type":"application/json"
-  },
-  body:JSON.stringify({
-   name:name,
-   logoVenue:venueLogo,
-   background:bgUrl,
-   frame:frameUrl
-  })
- });
-
- const data = await res.json();
-
- if(data.success){
-
-  status.innerText="✅ Evento creado";
-
-  resetForm();
-  loadEvents();
-
- }else{
-
-  status.innerText=
-  data.message || "Error";
-
- }
-
-}
-
-/* =================== */
+/* ====================== */
 
 async function loadEvents(){
 
  const box =
- document.getElementById("list");
+ document.getElementById(
+ "list"
+ );
 
- const res = await fetch("/events");
- const data = await res.json();
+ const res =
+ await fetch("/events");
+
+ const data =
+ await res.json();
 
  if(!data.length){
-  box.innerHTML="Sin eventos";
+
+  box.innerHTML =
+  "Sin eventos";
+
   return;
+
  }
 
- box.innerHTML="";
+ box.innerHTML = "";
 
- data.slice().reverse().forEach(ev=>{
+ data
+ .slice()
+ .reverse()
+ .forEach(ev=>{
 
  box.innerHTML += `
+
  <div class="event">
 
-   <strong>${ev.name}</strong><br>
-   ${ev.active ? "🟢 Activo":"⚪ Inactivo"}<br>
-   Invitados: ${(ev.guests||[]).length}
+   <strong>
+   ${ev.name}
+   </strong>
+
+   <div class="meta">
+
+   ${ev.active
+   ? "🟢 Activo"
+   : "⚪ Inactivo"}
+
+   <br>
+
+   Invitados:
+   ${(ev.guests||[]).length}
+
+   <br>
+
+   360:
+   ${ev.has360
+   ? "✅"
+   : "❌"}
+
+   <br>
+
+   Trivia:
+${ev.hasTrivia || ev.hastrivia
+? "✅"
+: "❌"}
+
+   </div>
 
    <div class="row">
 
-    <button class="smallBtn"
+    <button
+    class="smallBtn green"
     onclick="toggleEvent(${ev.id})">
-    Activar
+
+    ${ev.active
+    ? "Desactivar"
+    : "Activar"}
+
     </button>
 
-    <button class="smallBtn"
+    <button
+    class="smallBtn"
     onclick="openExcel(${ev.id})">
+
     Excel
+
+    </button>
+
+    ${ev.hasTrivia || ev.hastrivia ? `
+
+<button
+class="smallBtn"
+onclick="uploadTrivia(${ev.id})">
+
+📤 Trivia
+
+</button>
+
+` : ""}
+
+    <button
+    class="smallBtn red"
+    onclick="deleteEvent(
+      ${ev.id},
+      '${ev.name}'
+    )">
+
+    Eliminar
+
     </button>
 
    </div>
 
-   <input type="file"
+   <input
+   type="file"
    id="excel_${ev.id}"
    accept=".xlsx,.xls,.csv"
    style="display:none"
-   onchange="processExcel(event,${ev.id})">
+   onchange="
+   processExcel(
+   event,
+   ${ev.id}
+   )">
+   <input
+type="file"
+id="trivia_${ev.id}"
+accept=".xlsx,.xls"
+style="display:none"
+onchange="
+processTrivia(
+event,
+'${ev.slug}'
+)">
 
  </div>
+
  `;
 
  });
 
 }
 
+/* ====================== */
+
 async function toggleEvent(id){
 
- await fetch("/toggle-event/"+id,{
+ await fetch(
+ "/toggle-event/"+id,
+ {
   method:"POST"
  });
 
@@ -346,28 +660,87 @@ async function toggleEvent(id){
 
 }
 
-/* =================== */
+/* ====================== */
+
+async function deleteEvent(
+ id,
+ name
+){
+
+ const confirmName =
+ prompt(
+
+ "Escribí el nombre del evento para eliminarlo"
+
+ );
+
+ if(
+ confirmName !== name
+ ){
+
+  return;
+
+ }
+
+ await fetch(
+ "/delete-event/"+id,
+ {
+  method:"POST"
+ });
+
+ loadEvents();
+
+}
+
+/* ====================== */
 
 function openExcel(id){
- document.getElementById(
+
+ document
+ .getElementById(
  "excel_"+id
- ).click();
+ )
+ .click();
+
 }
+
+/* ====================== */
+
+function uploadTrivia(id){
+
+ document
+ .getElementById(
+ "trivia_"+id
+ )
+ .click();
+
+}
+
+/* ====================== */
 
 function processExcel(e,id){
 
- const file = e.target.files[0];
+ const file =
+ e.target.files[0];
+
  if(!file) return;
 
- const reader = new FileReader();
+ const reader =
+ new FileReader();
 
- reader.onload = function(evt){
+ reader.onload =
+ function(evt){
 
  const data =
- new Uint8Array(evt.target.result);
+ new Uint8Array(
+ evt.target.result
+ );
 
  const workbook =
- XLSX.read(data,{type:"array"});
+ XLSX.read(
+ data,
+ {type:"array"}
+ );
 
  const sheet =
  workbook.Sheets[
@@ -375,37 +748,50 @@ function processExcel(e,id){
  ];
 
  const rows =
- XLSX.utils.sheet_to_json(sheet);
+ XLSX.utils
+ .sheet_to_json(sheet);
 
- const guests = rows.map(r=>{
+ const guests =
+ rows.map(r=>{
 
  const clean={};
 
- Object.keys(r).forEach(k=>{
+ Object.keys(r)
+ .forEach(k=>{
+
  clean[
  k.toString()
  .trim()
  .toLowerCase()
  ] = r[k];
+
  });
 
  return{
+
   name:
   clean.nombre ||
-  clean.name || "",
+  clean.name ||
+  "",
 
   table:
   clean.mesa ||
-  clean.table || "",
+  clean.table ||
+  "",
 
   phone:
   clean.telefono ||
-  clean.phone || ""
+  clean.phone ||
+  ""
+
  };
 
  });
 
- uploadGuests(id,guests);
+ uploadGuests(
+ id,
+ guests
+ );
 
  };
 
@@ -413,25 +799,108 @@ function processExcel(e,id){
 
 }
 
-async function uploadGuests(id,guests){
+/* ====================== */
 
- await fetch("/upload-guests/"+id,{
+async function uploadGuests(
+ id,
+ guests
+){
+
+ await fetch(
+ "/upload-guests/"+id,
+ {
+
  method:"POST",
+
  headers:{
- "Content-Type":"application/json"
+ "Content-Type":
+ "application/json"
  },
+
  body:JSON.stringify({
  guests:guests
  })
- });
 
- alert("Excel cargado");
+ });
 
  loadEvents();
 
 }
+/* ====================== */
+
+async function processTrivia(
+ e,
+ slug
+){
+
+ const file =
+ e.target.files[0];
+
+ if(!file) return;
+
+ const formData =
+ new FormData();
+
+ formData.append(
+  "file",
+  file
+ );
+
+ try{
+
+  const res =
+  await fetch(
+
+   "/upload-trivia/" +
+   slug,
+
+   {
+
+    method:"POST",
+
+    body:formData
+
+   }
+
+  );
+
+  const data =
+  await res.json();
+
+  if(data.success){
+
+   alert(
+    "✅ Trivia subida"
+   );
+
+  }
+
+  else{
+
+   alert(
+    "❌ Error trivia"
+   );
+
+  }
+
+ }
+
+ catch(err){
+
+  console.error(err);
+
+  alert(
+   "❌ Error servidor"
+  );
+
+ }
+
+}
+
+/* ====================== */
 
 loadEvents();
+
 btnState();
 
 </script>

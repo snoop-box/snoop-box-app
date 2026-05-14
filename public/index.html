@@ -1,219 +1,328 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+
 <title>Snoop Box</title>
 
 <style>
+
 body{
   margin:0;
-  font-family:Arial,sans-serif;
   min-height:100vh;
+
+  font-family:Arial,sans-serif;
   color:#fff;
-  background:linear-gradient(135deg,#0b1f5e,#111,#7f1d1d);
+
+  background:
+  linear-gradient(
+    135deg,
+    #071a52,
+    #111,
+    #5c0b0b
+  );
 }
 
 .wrap{
   max-width:520px;
   margin:auto;
-  padding:24px;
+  padding:22px;
 }
 
 .card{
-  background:rgba(255,255,255,.08);
-  backdrop-filter:blur(12px);
-  border-radius:22px;
-  padding:22px;
-  box-shadow:0 18px 40px rgba(0,0,0,.25);
-  margin-bottom:18px;
+
+  background:
+  rgba(255,255,255,.08);
+
+  backdrop-filter:
+  blur(12px);
+
+  border-radius:28px;
+
+  padding:26px;
+
+  margin-bottom:22px;
+
+  box-shadow:
+  0 20px 50px
+  rgba(0,0,0,.25);
+
 }
 
-.center{text-align:center;}
+.logo{
+  display:block;
+  margin:auto;
+  max-width:180px;
+  max-height:90px;
+  object-fit:contain;
+  margin-bottom:14px;
+}
 
-#eventTitle,#eventTitleApp{
-  font-size:34px;
+.title{
+  text-align:center;
+  font-size:54px;
   font-weight:bold;
-  margin-bottom:8px;
+  margin-bottom:6px;
 }
 
 .sub{
+  text-align:center;
   color:#ddd;
-  font-size:14px;
+  margin-bottom:18px;
 }
 
-input,select{
+.user{
+  text-align:center;
+  margin-bottom:22px;
+}
+
+.user span{
+
+  background:
+  rgba(255,255,255,.1);
+
+  padding:10px 16px;
+
+  border-radius:999px;
+
+  display:inline-block;
+
+  font-size:18px;
+
+}
+
+.btn{
+
   width:100%;
-  padding:15px;
-  margin:8px 0;
-  border:none;
-  border-radius:14px;
-  font-size:16px;
-  box-sizing:border-box;
-}
 
-button{
-  width:100%;
-  padding:16px;
-  margin-top:10px;
-  border:none;
-  border-radius:14px;
-  font-size:17px;
-  cursor:pointer;
-}
+  padding:20px;
 
-.primary{
-  background:#ff0055;
+  border:none;
+
+  border-radius:18px;
+
+  font-size:22px;
+  font-weight:bold;
+
   color:#fff;
+
+  cursor:pointer;
+
+  margin-bottom:16px;
+
+  transition:.2s;
+
+}
+
+.btn:hover{
+
+  transform:
+  scale(1.01);
+
+}
+
+.photo{
+  background:#ff0055;
 }
 
 .dark{
-  background:#263238;
-  color:#fff;
+  background:
+  rgba(255,255,255,.08);
 }
 
-#login,#app{
-  display:none;
-}
-
-.badge{
-  display:inline-block;
-  padding:8px 12px;
-  border-radius:30px;
-  background:rgba(255,255,255,.08);
-  margin-top:8px;
-  font-size:14px;
-}
-
-#photoInput{
-  display:none;
-}
-
-#status{
-  margin-top:12px;
-  font-size:14px;
-}
-
-.podium{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:10px;
-  margin-top:12px;
-}
-
-.place{
+.rankTitle{
+  font-size:30px;
+  font-weight:bold;
   text-align:center;
-  padding:14px 8px;
+}
+
+.rankSub{
+  text-align:center;
+  color:#ddd;
+  margin-bottom:20px;
+}
+
+.rankGrid{
+
+  display:grid;
+
+  grid-template-columns:
+  repeat(3,1fr);
+
+  gap:14px;
+
+}
+
+.rankCard{
+
+  border-radius:20px;
+
+  padding:18px;
+
+  text-align:center;
+
+  background:
+  rgba(255,255,255,.08);
+
+  border:
+  2px solid
+  rgba(255,255,255,.2);
+
+}
+
+.gold{
+  border-color:#ffd700;
+}
+
+.silver{
+  border-color:#c0c0c0;
+}
+
+.bronze{
+  border-color:#cd7f32;
+}
+
+.rankTable{
+  font-size:20px;
+  font-weight:bold;
+}
+
+.rankPts{
+  font-size:15px;
+  color:#ddd;
+}
+
+.highlight{
+
+  margin-top:18px;
+
+  padding:18px;
+
   border-radius:18px;
-  background:rgba(255,255,255,.06);
-}
 
-.first{
-  border:2px solid gold;
-  transform:scale(1.04);
-}
+  text-align:center;
 
-.second{
-  border:2px solid silver;
-}
+  background:
+  rgba(255,0,85,.2);
 
-.third{
-  border:2px solid #cd7f32;
-}
+  border:
+  1px solid
+  rgba(255,255,255,.1);
 
-.medal{
-  font-size:28px;
-}
-
-.placeMesa{
   font-size:18px;
   font-weight:bold;
-  margin-top:6px;
+
 }
 
-.placePts{
-  font-size:14px;
-  color:#ddd;
-}
+.loading{
 
-.rankRow{
-  display:flex;
-  justify-content:space-between;
-  padding:12px;
-  margin-top:8px;
-  border-radius:12px;
-  background:rgba(255,255,255,.06);
-}
-
-#myRank{
-  margin-top:14px;
-  padding:14px;
-  border-radius:16px;
-  background:rgba(255,0,85,.18);
-  border:1px solid rgba(255,255,255,.12);
   text-align:center;
-  font-weight:bold;
+  padding:80px 20px;
+
 }
 
-.small{
-  color:#ddd;
-  font-size:14px;
+.logout{
+
+  width:100%;
+
+  padding:16px;
+
+  border:none;
+
+  border-radius:16px;
+
+  background:
+  rgba(255,255,255,.08);
+
+  color:#fff;
+
+  font-size:16px;
+
+  cursor:pointer;
+
+  margin-top:10px;
+
 }
+
 </style>
+
 </head>
 <body>
 
+<div
+id="loading"
+class="loading">
+
+Cargando invitado...
+
+</div>
+
+<div
+id="app"
+style="display:none;">
+
 <div class="wrap">
 
-<!-- LOGIN -->
-
-<div class="card" id="login">
-
-<div class="center">
-<div id="eventTitle">Evento</div>
-<div class="sub">Ingresá para participar</div>
-</div>
-
-<input id="nameInput" placeholder="Tu nombre">
-
-<select id="tableInput">
-<option value="">Seleccioná tu mesa</option>
-</select>
-
-<button class="primary" onclick="enterApp()">
-Ingresar
-</button>
-
-</div>
-
-<!-- APP -->
-
-<div id="app">
+<!-- HERO -->
 
 <div class="card">
 
-<div class="center">
-<div id="eventTitleApp"></div>
-<div class="badge" id="userInfo"></div>
+<img
+id="logo"
+class="logo"
+style="display:none;">
+
+<div
+class="title"
+id="eventTitle">
+
+EVENTO
+
 </div>
 
-<button class="primary" onclick="openCamera()">
+<div class="sub">
+Event Experience
+</div>
+
+<div class="user">
+
+<span id="guestInfo">
+
+Invitado
+
+</span>
+
+</div>
+
+<button
+class="btn photo"
+onclick="uploadPhoto()">
+
 📸 Subir Foto
+
 </button>
 
-<!-- 🔥 BOTÓN TRIVIA -->
-<button class="dark" onclick="goTrivia()">
-🎮 Trivia
+<button
+id="btnTrivia"
+class="btn dark"
+style="display:none"
+onclick="openTrivia()">
+
+🧠 Trivia
+
 </button>
 
-<input
-type="file"
-accept="image/*"
-capture="environment"
-id="photoInput"
-onchange="uploadPhoto(event)">
+<button
+id="btn360"
+class="btn dark"
+style="display:none"
+onclick="open360()">
 
-<div id="status"></div>
+🎬 360
+
+</button>
 
 </div>
 
@@ -221,20 +330,31 @@ onchange="uploadPhoto(event)">
 
 <div class="card">
 
-<div class="center">
-<div style="font-size:28px;font-weight:bold;">
+<div class="rankTitle">
+
 🏆 Ranking en Vivo
+
 </div>
-<div class="sub">
+
+<div class="rankSub">
+
 Cada foto suma puntos
+
 </div>
+
+<div
+id="ranking"
+class="rankGrid">
+
 </div>
 
-<div id="podium"></div>
+<div
+id="highlight"
+class="highlight">
 
-<div id="rankingBox"></div>
+Sin puntos todavía
 
-<div id="myRank"></div>
+</div>
 
 </div>
 
@@ -244,327 +364,367 @@ Cada foto suma puntos
 
 <script>
 
-let eventName="";
-let eventData=null;
-let user=null;
+const session =
+JSON.parse(
 
-/* ===================== */
+  localStorage.getItem(
+    "snoopGuest"
+  )
+
+);
+
+if(!session){
+
+  window.location.href =
+  "/login.html";
+
+}
+
+const guest =
+session.guest;
+
+const eventSlug =
+session.event;
+
+/* ====================== */
 
 async function init(){
 
- const params =
- new URLSearchParams(location.search);
+  await loadEvent();
 
- eventName =
- params.get("event") || "";
+  await loadRanking();
 
- if(!eventName) return;
-
- const res =
- await fetch("/event/" +
- encodeURIComponent(eventName));
-
- const data =
- await res.json();
-
- if(!data.success) return;
-
- eventData = data.event;
-
- const qrName =
- params.get("name");
-
- const qrTable =
- params.get("table");
-
- if(qrName && qrTable){
-
-  user = {
-   name:qrName,
-   table:qrTable
-  };
-
-  localStorage.setItem(
-   "snoop_" + eventName,
-   JSON.stringify(user)
+  setInterval(
+    loadRanking,
+    5000
   );
 
-  showApp();
-  return;
+  document
+  .getElementById(
+    "loading"
+  )
+  .style.display =
+  "none";
 
- }
-
- renderLogin();
-
-}
-
-/* ===================== */
-
-function renderLogin(){
-
- login.style.display="block";
- app.style.display="none";
-
- eventTitle.innerText =
- eventData.name;
-
- buildTables();
-
- const saved =
- localStorage.getItem(
- "snoop_" + eventName
- );
-
- if(saved){
-
-  user =
-  JSON.parse(saved);
-
-  showApp();
-
- }
+  document
+  .getElementById(
+    "app"
+  )
+  .style.display =
+  "block";
 
 }
 
-function buildTables(){
+/* ====================== */
 
- for(let i=1;i<=40;i++){
+async function loadEvent(){
 
-  const n =
-  String(i).padStart(2,"0");
+  try{
 
-  tableInput.innerHTML += `
-  <option value="${n}">
-  Mesa ${n}
-  </option>`;
+    const res =
+    await fetch(
 
- }
+      "/event-config/" +
+      eventSlug
 
-}
+    );
 
-function enterApp(){
+    const data =
+    await res.json();
 
- const name =
- nameInput.value.trim();
+    if(!data.success){
 
- const table =
- tableInput.value;
+      logout();
+      return;
 
- if(!name || !table) return;
+    }
 
- user = {name,table};
+    const ev =
+    data.event;
 
- localStorage.setItem(
- "snoop_" + eventName,
- JSON.stringify(user)
- );
+    document
+    .getElementById(
+      "eventTitle"
+    )
+    .innerText =
+    ev.name.toUpperCase();
 
- showApp();
+    document
+    .getElementById(
+      "guestInfo"
+    )
+    .innerText =
 
-}
+      guest.guest_name +
+      " • Mesa " +
+      guest.guest_table;
 
-/* ===================== */
+    if(ev.logo_url){
 
-function showApp(){
+      const logo =
+      document
+      .getElementById(
+        "logo"
+      );
 
- login.style.display="none";
- app.style.display="block";
+      logo.src =
+      ev.logo_url;
 
- eventTitleApp.innerText =
- eventData.name;
+      logo.style.display =
+      "block";
 
- userInfo.innerText =
- user.name +
- " • Mesa " +
- user.table;
+    }
 
- loadRanking();
+    if(ev.has360){
 
-}
+      document
+      .getElementById(
+        "btn360"
+      )
+      .style.display =
+      "block";
 
-/* ===================== */
+    }
 
-function openCamera(){
- photoInput.click();
-}
+    if(
+      ev.hastrivia ||
+      ev.hasTrivia
+    ){
 
-function uploadPhoto(e){
+      document
+      .getElementById(
+        "btnTrivia"
+      )
+      .style.display =
+      "block";
 
- const file =
- e.target.files[0];
-
- if(!file) return;
-
- status.innerText =
- "Subiendo foto...";
-
- const reader =
- new FileReader();
-
- reader.onload =
- async function(ev){
-
-  await fetch("/upload-photo",{
-   method:"POST",
-   headers:{
-    "Content-Type":"application/json"
-   },
-   body:JSON.stringify({
-    eventName:eventName,
-    user:user.name,
-    table:user.table,
-    image:ev.target.result
-   })
-  });
-
-  status.innerText =
-  "✅ Foto subida +1 punto";
-
-  loadRanking();
-
-  setTimeout(()=>{
-   status.innerText="";
-  },2500);
-
- };
-
- reader.readAsDataURL(file);
-
-}
-
-/* ===================== */
-
-async function loadRanking(){
-
- const res =
- await fetch("/ranking/" +
- encodeURIComponent(eventName));
-
- const data =
- await res.json();
-
- renderRanking(data);
-
-}
-
-function renderRanking(data){
-
- podium.innerHTML="";
- rankingBox.innerHTML="";
- myRank.innerHTML="";
-
- if(!data.length){
-
-  rankingBox.innerHTML =
-  "Sin puntos todavía";
-
-  return;
-
- }
-
- const top =
- data.slice(0,3);
-
- const medals =
- ["🥇","🥈","🥉"];
-
- const cls =
- ["first","second","third"];
-
- let html =
- `<div class="podium">`;
-
- top.forEach((r,i)=>{
-
- html += `
- <div class="place ${cls[i]}">
-   <div class="medal">${medals[i]}</div>
-   <div class="placeMesa">
-   Mesa ${r.table}
-   </div>
-   <div class="placePts">
-   ${r.points||0} pts
-   </div>
- </div>
- `;
-
- });
-
- html += `</div>`;
-
- podium.innerHTML = html;
-
- data.slice(3,6).forEach((r,i)=>{
-
- rankingBox.innerHTML += `
- <div class="rankRow">
-   <div>${i+4}. Mesa ${r.table}</div>
-   <div>${r.points||0} pts</div>
- </div>
- `;
-
- });
-
- const pos =
- data.findIndex(r =>
- String(r.table) ===
- String(user.table)
- );
-
- if(pos >= 0){
-
-  const leader =
-  data[0].points || 0;
-
-  const mine =
-  data[pos].points || 0;
-
-  const diff =
-  leader - mine;
-
-  let msg =
-  "Mesa " + user.table +
-  " va " + (pos+1) + "°";
-
-  if(pos===0){
-
-   msg +=
-   " 🔥 ¡Van primeros!";
-
-  }else if(diff===1){
-
-   msg +=
-   " 🔥 A 1 punto del líder";
-
-  }else{
-
-   msg +=
-   " • A " + diff +
-   " pts del líder";
+    }
 
   }
 
-  myRank.innerText =
-  msg;
+  catch(err){
 
- }
+    console.error(err);
+
+  }
 
 }
 
-/* ===================== */
+/* ====================== */
 
-function goTrivia(){
+async function loadRanking(){
+
+  try{
+
+    const res =
+    await fetch(
+
+      "/ranking/" +
+      eventSlug
+
+    );
+
+    const ranking =
+    await res.json();
+
+    const container =
+    document.getElementById(
+      "ranking"
+    );
+
+    container.innerHTML =
+    "";
+
+    const medals = [
+
+      "gold",
+      "silver",
+      "bronze"
+
+    ];
+
+    ranking
+    .slice(0,3)
+    .forEach((r,i)=>{
+
+      container.innerHTML += `
+
+      <div class="
+      rankCard
+      ${medals[i]||""}
+      ">
+
+      <div style="
+      font-size:34px;
+      margin-bottom:10px;
+      ">
+
+      ${
+        i===0 ? "🥇" :
+        i===1 ? "🥈" :
+        "🥉"
+      }
+
+      </div>
+
+      <div class="rankTable">
+
+      Mesa ${r.table}
+
+      </div>
+
+      <div class="rankPts">
+
+      ${r.points} pts
+
+      </div>
+
+      </div>
+
+      `;
+
+    });
+
+    const top =
+    ranking[0];
+
+    if(top){
+
+      document
+      .getElementById(
+        "highlight"
+      )
+      .innerText =
+
+      `Mesa ${top.table}
+      va 1°
+      🔥 ¡Van primeros!`;
+
+    }
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+  }
+
+}
+
+/* ====================== */
+
+async function uploadPhoto(){
+
+  const input =
+  document.createElement(
+    "input"
+  );
+
+  input.type = "file";
+
+  input.accept =
+  "image/*";
+
+  input.onchange =
+  async(e)=>{
+
+    const file =
+    e.target.files[0];
+
+    const reader =
+    new FileReader();
+
+    reader.onload =
+    async()=>{
+
+      try{
+
+        const res =
+        await fetch(
+
+          "/upload-photo",
+
+          {
+
+            method:"POST",
+
+            headers:{
+              "Content-Type":
+              "application/json"
+            },
+
+            body:JSON.stringify({
+
+              image:
+              reader.result,
+
+              eventName:
+              eventSlug,
+
+              user:
+              guest.guest_name
+
+            })
+
+          }
+
+        );
+
+        const data =
+        await res.json();
+
+        if(data.success){
+
+          alert(
+            "📸 Foto subida\n+1 punto"
+          );
+
+          loadRanking();
+
+        }
+
+      }
+
+      catch(err){
+
+        console.error(err);
+
+      }
+
+    };
+
+    reader.readAsDataURL(
+      file
+    );
+
+  };
+
+  input.click();
+
+}
+
+/* ====================== */
+
+function open360(){
+
   window.location.href =
-    "/trivia.html?event=" + eventName;
+
+  "/360-gallery.html?event=" +
+  eventSlug;
+
 }
 
-/* ===================== */
+/* ====================== */
 
-setInterval(()=>{
- if(app.style.display==="block"){
-  loadRanking();
- }
-},5000);
+function openTrivia(){
+
+  window.location.href =
+  "/trivia.html";
+
+}
+
+/* ====================== */
 
 init();
 

@@ -192,54 +192,67 @@ Actualiza automáticamente cada 5 segundos
 
 <script>
 
-const eventName =
+const eventSlug =
 new URLSearchParams(location.search)
 .get("event") || "";
 
-let eventId = null;
+let interval = null;
 
 /* ===================== */
 
 async function init(){
 
- if(!eventName){
+ if(!eventSlug){
 
-  errorBox.innerHTML =
-  "Falta ?event=nombre";
-
-  return;
-
- }
-
- const res =
- await fetch(
- "/event/" +
- encodeURIComponent(eventName)
- );
-
- const data =
- await res.json();
-
- if(!data.success){
-
-  errorBox.innerHTML =
-  "Evento no encontrado";
+  document.getElementById(
+   "errorBox"
+  ).innerHTML =
+  "Falta ?event=slug";
 
   return;
 
  }
 
- eventId =
- data.event.id;
+ try{
 
- eventTitle.innerText =
- data.event.name;
+  const res =
+  await fetch(
+   "/event-config/" +
+   encodeURIComponent(eventSlug)
+  );
 
- loadControl();
+  const data =
+  await res.json();
 
- setInterval(()=>{
-  loadControl();
- },5000);
+  if(!data.success){
+
+   document.getElementById(
+    "errorBox"
+   ).innerHTML =
+   "Evento no encontrado";
+
+   return;
+
+  }
+
+  document.getElementById(
+   "eventTitle"
+  ).innerText =
+  data.event.name;
+
+  await loadControl();
+
+  interval = setInterval(()=>{
+   loadControl();
+  },5000);
+
+ }
+
+ catch(err){
+
+  console.error(err);
+
+ }
 
 }
 
@@ -247,29 +260,59 @@ async function init(){
 
 async function loadControl(){
 
- if(!eventId) return;
+ try{
 
- const res =
- await fetch(
- "/control/" + eventId
- );
+  const res =
+  await fetch(
+   "/db-guests/" +
+   eventSlug
+  );
 
- const data =
- await res.json();
+  const guests =
+  await res.json();
 
- if(!data.success) return;
+  const total =
+  guests.length;
 
- total.innerText =
- data.total || 0;
+  const arrived =
+  guests.filter(g=>g.arrived)
+  .length;
 
- arrived.innerText =
- data.arrived || 0;
+  const missing =
+  total - arrived;
 
- missing.innerText =
- data.missing || 0;
+  const percent =
+  total
+  ? Math.round(
+     (arrived * 100)
+     / total
+    )
+  : 0;
 
- percent.innerText =
- (data.percent || 0) + "%";
+  document.getElementById(
+   "total"
+  ).innerText = total;
+
+  document.getElementById(
+   "arrived"
+  ).innerText = arrived;
+
+  document.getElementById(
+   "missing"
+  ).innerText = missing;
+
+  document.getElementById(
+   "percent"
+  ).innerText =
+  percent + "%";
+
+ }
+
+ catch(err){
+
+  console.error(err);
+
+ }
 
 }
 

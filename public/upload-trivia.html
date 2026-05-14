@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Upload Trivia</title>
+
+<style>
+
+body{
+
+  background:#111;
+  color:#fff;
+  font-family:Arial;
+  padding:40px;
+
+}
+
+.card{
+
+  max-width:500px;
+  margin:auto;
+
+  background:#1e1e1e;
+
+  padding:30px;
+
+  border-radius:20px;
+
+}
+
+input,
+button{
+
+  width:100%;
+  padding:16px;
+  margin-top:16px;
+
+  border:none;
+  border-radius:12px;
+
+}
+
+button{
+
+  background:#ff0055;
+  color:#fff;
+  font-size:18px;
+  font-weight:bold;
+
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="card">
+
+<h1>📤 Upload Trivia XLSX</h1>
+
+<input
+id="event"
+placeholder="Evento"
+value="santi">
+
+<input
+id="file"
+type="file"
+accept=".xlsx">
+
+<button onclick="uploadTrivia()">
+
+Subir Trivia
+
+</button>
+
+</div>
+
+<script>
+
+async function uploadTrivia(){
+
+  const event =
+  document
+  .getElementById(
+    "event"
+  )
+  .value;
+
+  const file =
+  document
+  .getElementById(
+    "file"
+  )
+  .files[0];
+
+  if(!file){
+
+    alert(
+      "Seleccioná un Excel"
+    );
+
+    return;
+
+  }
+
+  const formData =
+  new FormData();
+
+  formData.append(
+    "file",
+    file
+  );
+
+  try{
+
+    const res =
+    await fetch(
+
+      "/upload-trivia/" +
+      event,
+
+      {
+
+        method:"POST",
+
+        body:formData
+
+      }
+
+    );
+
+    const data =
+    await res.json();
+
+    if(data.success){
+
+      alert(
+        "✅ Trivia subida"
+      );
+
+    }
+
+    else{
+
+      alert(
+        "❌ Error"
+      );
+
+    }
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+    alert(
+      "❌ Error servidor"
+    );
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>

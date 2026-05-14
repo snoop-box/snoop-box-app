@@ -1,212 +1,657 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Trivia</title>
+
+<title>Snoop Trivia</title>
 
 <style>
+
 body{
+
   margin:0;
   font-family:Arial,sans-serif;
-  background:linear-gradient(135deg,#0b1f5e,#111,#7f1d1d);
-  color:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
   min-height:100vh;
-}
-
-#box{
-  width:90%;
-  max-width:500px;
-  background:rgba(255,255,255,.08);
-  backdrop-filter:blur(12px);
-  padding:24px;
-  border-radius:20px;
-  text-align:center;
-}
-
-h2{
-  margin-bottom:20px;
-}
-
-button{
-  width:100%;
-  padding:16px;
-  margin:8px 0;
-  border:none;
-  border-radius:12px;
-  font-size:16px;
-  cursor:pointer;
-  background:#263238;
   color:#fff;
+
+  background:
+  linear-gradient(
+    135deg,
+    #071a52,
+    #111,
+    #5c0b0b
+  );
+
 }
 
-.correct{
-  background:green;
+.wrap{
+
+  max-width:700px;
+  margin:auto;
+  padding:24px;
+
 }
 
-.wrong{
-  background:#b00020;
+.hero{
+
+  background:
+  rgba(255,255,255,.08);
+
+  backdrop-filter:
+  blur(12px);
+
+  border-radius:24px;
+
+  padding:28px;
+
+  text-align:center;
+
+  margin-bottom:24px;
+
+  box-shadow:
+  0 18px 40px
+  rgba(0,0,0,.25);
+
 }
 
-.back{
+.logo{
+
+  max-width:150px;
+  max-height:70px;
+
+  object-fit:contain;
+
+  display:block;
+
+  margin:auto auto 18px auto;
+
+}
+
+.title{
+
+  font-size:52px;
+  font-weight:bold;
+  margin-bottom:10px;
+
+}
+
+.sub{
+
+  color:#ddd;
+  font-size:16px;
+
+}
+
+.card{
+
+  background:
+  rgba(255,255,255,.08);
+
+  backdrop-filter:
+  blur(12px);
+
+  border-radius:22px;
+
+  padding:24px;
+
+  margin-bottom:22px;
+
+  box-shadow:
+  0 10px 30px
+  rgba(0,0,0,.2);
+
+}
+
+.question{
+
+  font-size:22px;
+  font-weight:bold;
+
+  margin-bottom:18px;
+
+}
+
+.option{
+
+  width:100%;
+
+  padding:16px;
+
+  margin-bottom:14px;
+
+  border:none;
+
+  border-radius:14px;
+
+  background:
+  rgba(255,255,255,.12);
+
+  color:#fff;
+
+  font-size:16px;
+
+  cursor:pointer;
+
+  transition:.2s;
+
+}
+
+.option:hover{
+
+  background:
+  rgba(255,255,255,.22);
+
+}
+
+.submit{
+
+  width:100%;
+
+  padding:18px;
+
+  border:none;
+
+  border-radius:16px;
+
   background:#ff0055;
-}
-</style>
-</head>
 
+  color:#fff;
+
+  font-size:18px;
+
+  font-weight:bold;
+
+  cursor:pointer;
+
+  margin-top:12px;
+
+}
+
+.done{
+
+  text-align:center;
+
+  padding:40px;
+
+  background:
+  rgba(255,255,255,.08);
+
+  border-radius:24px;
+
+  font-size:22px;
+
+  font-weight:bold;
+
+}
+
+.score{
+
+  margin-top:12px;
+
+  color:#ffd700;
+
+  font-size:28px;
+
+}
+
+.loader{
+
+  text-align:center;
+  padding:40px;
+  color:#ddd;
+
+}
+
+</style>
+
+</head>
 <body>
 
-<div id="box">
-  <h2 id="question">Cargando...</h2>
-  <div id="options"></div>
+<div class="wrap">
+
+<div class="hero">
+
+<img
+id="logo"
+class="logo"
+style="display:none;">
+
+<div class="title">
+
+🧠 TRIVIA
+
+</div>
+
+<div class="sub">
+
+Respondé y sumá puntos
+
+</div>
+
+</div>
+
+<div id="content">
+
+<div class="loader">
+
+Cargando trivia...
+
+</div>
+
+</div>
+
 </div>
 
 <script>
 
-let allQuestions=[];
-let questions=[];
-let index=0;
-let score=0;
+const session =
+JSON.parse(
 
-/* PARAMS */
-const params = new URLSearchParams(window.location.search);
-const eventName = params.get("event");
+  localStorage.getItem(
+    "snoopGuest"
+  )
 
-/* USER */
-const userData = JSON.parse(
-  localStorage.getItem("snoop_" + eventName)
 );
 
-const user = userData?.name;
-const table = userData?.table;
+if(!session){
 
-/* VALIDACIÓN */
-if(!user || !table){
-  document.body.innerHTML="<h2>⚠️ Error de usuario</h2>";
+  window.location.href =
+  "/login.html";
+
 }
 
-/* 🚫 YA JUGÓ */
-if(localStorage.getItem("triviaPlayed_"+eventName)){
-  document.body.innerHTML="<h2>⚠️ Ya participaste</h2>";
-}else{
-  loadTrivia();
+const guest =
+session.guest;
+
+const eventSlug =
+session.event;
+
+let questions = [];
+
+let answers = {};
+
+/* ====================== */
+
+async function init(){
+
+  await loadEvent();
+
+  await checkStatus();
+
 }
 
-/* ======================= */
+/* ====================== */
+
+async function loadEvent(){
+
+  try{
+
+    const res =
+    await fetch(
+      "/event-config/" +
+      eventSlug
+    );
+
+    const data =
+    await res.json();
+
+    if(data.success){
+
+      if(data.event.logo_url){
+
+        const logo =
+        document.getElementById(
+          "logo"
+        );
+
+        logo.src =
+        data.event.logo_url;
+
+        logo.style.display =
+        "block";
+
+      }
+
+    }
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+  }
+
+}
+
+/* ====================== */
+
+async function checkStatus(){
+
+  try{
+
+    const res =
+    await fetch(
+
+      `/trivia-status/${eventSlug}/${guest.guest_name}`
+
+    );
+
+    const data =
+    await res.json();
+
+    if(data.answered){
+
+      renderDone(
+        data.data.score
+      );
+
+      return;
+
+    }
+
+    await loadTrivia();
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+  }
+
+}
+
+/* ====================== */
 
 async function loadTrivia(){
 
- const res = await fetch("/trivia.json");
- allQuestions = await res.json();
+  try{
 
- questions = shuffle(allQuestions).slice(0,3);
+    const res =
+    await fetch(
+      "/trivia/" +
+      eventSlug
+    );
 
- showQuestion();
+    questions =
+    await res.json();
+
+    // mezclar preguntas
+    questions =
+    questions.sort(
+      ()=>Math.random()-0.5
+    );
+
+    // tomar solo 3
+    questions =
+    questions.slice(0,3);
+
+    renderTrivia();
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+  }
+
 }
 
-/* ======================= */
+/* ====================== */
 
-function shuffle(arr){
- return arr.sort(()=>Math.random()-0.5);
+function renderTrivia(){
+
+  const content =
+  document.getElementById(
+    "content"
+  );
+
+  if(!questions.length){
+
+    content.innerHTML = `
+
+    <div class="done">
+
+      Todavía no hay trivia cargada
+
+    </div>
+
+    `;
+
+    return;
+
+  }
+
+  let html = "";
+
+  questions.forEach((q,index)=>{
+
+    html += `
+
+    <div class="card">
+
+      <div class="question">
+
+        ${index + 1}.
+        ${q.question}
+
+      </div>
+
+      ${q.options.map((opt,i)=>`
+
+        <button
+        class="option"
+        onclick="selectOption(
+          ${index},
+          ${i},
+          this
+        )">
+
+          ${opt}
+
+        </button>
+
+      `).join("")}
+
+    </div>
+
+    `;
+
+  });
+
+  html += `
+
+  <button
+id="finishBtn"
+class="submit"
+onclick="submitTrivia()">
+
+    Finalizar Trivia
+
+  </button>
+
+  `;
+
+  content.innerHTML =
+  html;
+
 }
 
-/* ======================= */
+/* ====================== */
 
-function showQuestion(){
+function selectOption(
+questionIndex,
+optionIndex,
+btn
+){
 
- const q = questions[index];
+  answers[questionIndex] =
+  optionIndex;
 
- document.getElementById("question").innerText = q.question;
+  const parent =
+  btn.parentElement;
 
- const box = document.getElementById("options");
- box.innerHTML="";
+  parent
+  .querySelectorAll(".option")
+  .forEach(b=>{
 
- q.options.forEach((opt,i)=>{
+    b.style.background =
+    "rgba(255,255,255,.12)";
 
-   const btn=document.createElement("button");
-   btn.innerText=opt;
+  });
 
-   btn.onclick=()=>answer(i);
+  btn.style.background =
+  "#ff0055";
 
-   box.appendChild(btn);
- });
 }
 
-/* ======================= */
+/* ====================== */
 
-function answer(i){
+async function submitTrivia(){
+if(
+Object.keys(answers).length
+< questions.length
+){
 
- const q = questions[index];
- const correct = (i === q.correct);
+  alert(
+  "Respondé todas las preguntas"
+  );
 
- const buttons=document.querySelectorAll("button");
+  return;
 
- buttons.forEach((b,idx)=>{
-   if(idx===q.correct){
-     b.classList.add("correct");
-   }else{
-     b.classList.add("wrong");
-   }
- });
+}
+  let score = 0;
 
- /* 🔥 SUMA LOCAL */
- if(correct){
-   score++;
- }
+  questions.forEach((q,index)=>{
 
- /* 🔥 BACKEND */
- fetch("/trivia-answer",{
-   method:"POST",
-   headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({
-     event:eventName,
-     table:table,
-     user:user,
-     correct:correct
-   })
- });
+    if(
+      answers[index] ==
+      q.correct_answer
+    ){
 
- setTimeout(()=>{
-   index++;
+      score += 3;
 
-   if(index<questions.length){
-     showQuestion();
-   }else{
+    }
 
-     localStorage.setItem(
-       "triviaPlayed_"+eventName,
-       true
-     );
+  });
 
-     showResult();
-   }
+  try{
+document
+.getElementById(
+"finishBtn"
+)
+.disabled = true;
+    const res =
+    await fetch(
 
- },1500);
+      "/submit-trivia",
+
+      {
+
+        method:"POST",
+
+        headers:{
+          "Content-Type":
+          "application/json"
+        },
+
+        body:JSON.stringify({
+
+          event_slug:
+          eventSlug,
+
+          guest_name:
+          guest.guest_name,
+
+          score
+
+        })
+
+      }
+
+    );
+
+    const data =
+    await res.json();
+
+    if(data.success){
+
+      renderDone(score);
+
+    }
+
+  }
+
+  catch(err){
+
+  console.error(err);
+
+  document
+  .getElementById(
+    "finishBtn"
+  )
+  .disabled = false;
+
+  alert(
+
+  "Error enviando trivia"
+
+);
+
 }
 
-/* ======================= */
-
-function showResult(){
-
- document.getElementById("box").innerHTML = `
-   <h2>🎉 Terminaste la trivia</h2>
-   <p>Respuestas correctas: ${score}/3</p>
-
-   <button class="back" onclick="goBack()">
-     🔙 Volver
-   </button>
- `;
 }
 
-/* ======================= */
+/* ====================== */
+
+function renderDone(score){
+
+  document
+  .getElementById(
+    "content"
+  )
+  .innerHTML = `
+
+  <div class="done">
+
+    ✅ Trivia completada
+
+    <div class="score">
+
+      +${score} pts
+
+    </div>
+
+    <button
+    class="submit"
+    onclick="goBack()"
+    style="margin-top:25px;">
+
+      Volver
+
+    </button>
+
+  </div>
+
+  `;
+
+}
+/* ====================== */
 
 function goBack(){
- window.location.href =
-   "/?event=" + eventName;
+
+  window.location.href =
+  "/index.html";
+
 }
+
+/* ====================== */
+
+init();
 
 </script>
 

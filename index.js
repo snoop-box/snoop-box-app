@@ -1,358 +1,423 @@
 const express = require("express");
-const cors = require("cors");
 const path = require("path");
 const cloudinary = require("cloudinary").v2;
+const cors = require("cors");
+const { Pool } = require("pg");
+const multer = require("multer");
+const XLSX = require("xlsx");
+
+require("dotenv").config();
 
 const app = express();
 
-/* ===============================
-   CLOUDINARY
-=============================== */
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
+const upload = multer({
+  dest:"uploads/"
 });
 
+/* ========================================= */
+/* MIDDLEWARE */
+/* ========================================= */
+
 app.use(cors());
-app.use(express.json({ limit:"50mb" }));
-app.use(express.urlencoded({ extended:true, limit:"50mb" }));
-app.use(express.static("public"));
 
-console.log("🔥 SNOOP BOX PRO CLOUDINARY");
+app.use(express.json({
+  limit:"50mb"
+}));
 
-/* ===============================
-   BASE EN MEMORIA
-=============================== */
+app.use(express.urlencoded({
+  extended:true,
+  limit:"50mb"
+}));
 
-let events = [];
-let photos = [];
+app.use(
+  express.static(
+    path.join(__dirname,"public")
+  )
+);
 
-/* ===============================
-   HELPERS
-=============================== */
+/* ========================================= */
+/* CLOUDINARY */
+/* ========================================= */
 
-function newId(){
-  return Date.now() + Math.floor(Math.random()*9999);
+cloudinary.config({
+
+  cloud_name:
+  process.env.CLOUDINARY_CLOUD_NAME,
+
+  api_key:
+  process.env.CLOUDINARY_API_KEY,
+
+  api_secret:
+  process.env.CLOUDINARY_API_SECRET
+
+});
+
+/* ========================================= */
+/* POSTGRES */
+/* ========================================= */
+
+const pool = new Pool({
+
+  connectionString:
+  process.env.DATABASE_URL,
+
+  ssl:{
+    rejectUnauthorized:false
+  }
+
+});
+
+/* ========================================= */
+/* INIT DB */
+/* ========================================= */
+
+async function initDB(){
+
+  try{
+
+    /* EVENTS */
+
+    await pool.query(`
+
+      CREATE TABLE IF NOT EXISTS events(
+
+        id SERIAL PRIMARY KEY,
+
+        name TEXT,
+
+        slug TEXT UNIQUE,
+
+        active BOOLEAN DEFAULT true,
+
+        has360 BOOLEAN DEFAULT false,
+
+        hastrivia BOOLEAN DEFAULT false,
+
+        logo_url TEXT,
+
+        background_url TEXT,
+
+        frame_url TEXT,
+
+        created_at TIMESTAMP
+        DEFAULT NOW()
+
+      )
+
+    `);
+
+    /* GUESTS */
+
+    await pool.query(`
+
+      CREATE TABLE IF NOT EXISTS guests(
+
+        id SERIAL PRIMARY KEY,
+
+        event_slug TEXT,
+
+        guest_name TEXT,
+
+        guest_table TEXT,
+
+        guest_phone TEXT,
+
+        arrived BOOLEAN DEFAULT false,
+
+        points INTEGER DEFAULT 0,
+
+        created_at TIMESTAMP
+        DEFAULT NOW()
+
+      )
+
+    `);
+
+    /* 360 VIDEOS */
+
+    await pool.query(`
+
+      CREATE TABLE IF NOT EXISTS videos360(
+
+        id SERIAL PRIMARY KEY,
+
+        event_slug TEXT,
+
+        guest_name TEXT,
+
+        video_url TEXT,
+
+        created_at TIMESTAMP
+        DEFAULT NOW()
+
+      )
+
+    `);
+
+    /* TRIVIA QUESTIONS */
+
+    await pool.query(`
+
+      CREATE TABLE IF NOT EXISTS trivia_questions(
+
+        id SERIAL PRIMARY KEY,
+
+        event_slug TEXT,
+
+        question TEXT,
+
+        options JSONB,
+
+        correct_answer INTEGER,
+
+        created_at TIMESTAMP
+        DEFAULT NOW()
+
+      )
+
+    `);
+
+    /* TRIVIA ANSWERS */
+
+    await pool.query(`
+
+      CREATE TABLE IF NOT EXISTS trivia_answers(
+
+        id SERIAL PRIMARY KEY,
+
+        event_slug TEXT,
+
+        guest_name TEXT,
+
+        answered BOOLEAN DEFAULT true,
+
+        score INTEGER DEFAULT 0,
+
+        created_at TIMESTAMP
+        DEFAULT NOW()
+
+      )
+
+    `);
+
+    console.log(
+      "🐘 PostgreSQL conectado"
+    );
+
+  }
+
+  catch(err){
+
+    console.error(
+      "❌ Error PostgreSQL",
+      err
+    );
+
+  }
+
 }
 
-function normalize(txt=""){
-  return txt.toString().trim().toLowerCase();
+initDB();
+
+/* ========================================= */
+/* HELPERS */
+/* ========================================= */
+
+function slugify(text){
+
+  return text
+  .toLowerCase()
+  .trim()
+  .replace(/\s+/g,"-")
+  .replace(/[^\w\-]+/g,"");
+
 }
 
-function cleanFolder(txt=""){
-  return txt
-    .toString()
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g,"_")
-    .replace(/[^a-z0-9_]/g,"");
-}
+/* ========================================= */
+/* CREATE EVENT */
+/* ========================================= */
 
-/* ===============================
-   EVENTOS
-=============================== */
-
-app.post("/create-event",(req,res)=>{
+app.post(
+"/create-event",
+async(req,res)=>{
 
   try{
 
     const {
+
       name,
       logoVenue,
       background,
-      frame
+      frame,
+      has360,
+      hastrivia
+
     } = req.body;
 
-    if(!name || !name.trim()){
-      return res.json({
-        success:false,
-        message:"Nombre requerido"
-      });
-    }
+    const slug =
+    slugify(name);
 
-    const exists = events.find(ev =>
-      normalize(ev.name) === normalize(name)
+    await pool.query(
+
+      `INSERT INTO events(
+
+        name,
+        slug,
+        active,
+        has360,
+        hastrivia,
+        logo_url,
+        background_url,
+        frame_url
+
+      )
+
+      VALUES(
+        $1,$2,$3,$4,$5,$6,$7,$8
+      )`,
+
+      [
+
+        name,
+        slug,
+        true,
+        has360 || false,
+        hastrivia || false,
+        logoVenue || "",
+        background || "",
+        frame || ""
+
+      ]
+
     );
 
-    if(exists){
-      return res.json({
-        success:false,
-        message:"Ese evento ya existe"
-      });
-    }
+    res.json({
+      success:true
+    });
 
-    const folder =
-      "snoopbox/" + cleanFolder(name);
+  }
 
-    const event = {
-      id:newId(),
-      name:name.trim(),
-      folder,
-      logoVenue:logoVenue || "",
-      background:background || "",
-      frame:frame || "",
-      active:true,
-      createdAt:new Date().toISOString(),
-      guests:[],
-      arrived:0
-    };
+  catch(err){
 
-    events.push(event);
+    console.error(err);
 
     res.json({
-      success:true,
-      event
-    });
 
-  }catch(err){
-
-    res.json({
       success:false,
-      message:"Error servidor"
+      message:"Error creando evento"
+
     });
 
   }
 
 });
 
-app.get("/events",(req,res)=>{
-  res.json(events);
-});
+/* ========================================= */
+/* EVENTS */
+/* ========================================= */
 
-app.get("/event/:name",(req,res)=>{
-
-  const found = events.find(ev =>
-    normalize(ev.name) ===
-    normalize(req.params.name)
-  );
-
-  if(!found){
-    return res.json({
-      success:false
-    });
-  }
-
-  if(!found.active){
-    return res.json({
-      success:false,
-      inactive:true,
-      message:"Evento desactivado"
-    });
-  }
-
-  res.json({
-    success:true,
-    event:found
-  });
-
-});
-
-app.post("/toggle-event/:id",(req,res)=>{
-
-  const id = Number(req.params.id);
-
-  const ev = events.find(e=>e.id===id);
-
-  if(!ev){
-    return res.json({
-      success:false
-    });
-  }
-
-  ev.active = !ev.active;
-
-  res.json({
-    success:true,
-    active:ev.active
-  });
-
-});
-
-/* ===============================
-   INVITADOS
-=============================== */
-
-app.post("/upload-guests/:id",(req,res)=>{
-
-  const id = Number(req.params.id);
-
-  const ev = events.find(e=>e.id===id);
-
-  if(!ev){
-    return res.json({
-      success:false
-    });
-  }
-
-  const guests = req.body.guests || [];
-
-  ev.guests = guests.map((g,i)=>({
-
-    id:i+1,
-    name:g.name || "",
-    table:g.table || "",
-    phone:g.phone || "",
-    arrived:false,
-    points:0
-
-  }));
-
-  ev.arrived = 0;
-
-  res.json({
-    success:true,
-    total:ev.guests.length
-  });
-
-});
-
-app.get("/guests/:id",(req,res)=>{
-
-  const id = Number(req.params.id);
-
-  const ev = events.find(e=>e.id===id);
-
-  if(!ev) return res.json([]);
-
-  res.json(ev.guests);
-
-});
-
-app.post("/arrive/:eventId/:guestId",(req,res)=>{
-
-  const eventId = Number(req.params.eventId);
-  const guestId = Number(req.params.guestId);
-
-  const ev = events.find(e=>e.id===eventId);
-
-  if(!ev){
-    return res.json({
-      success:false
-    });
-  }
-
-  const guest =
-    ev.guests.find(g=>g.id===guestId);
-
-  if(!guest){
-    return res.json({
-      success:false
-    });
-  }
-
-  if(!guest.arrived){
-    guest.arrived = true;
-    ev.arrived++;
-  }
-
-  res.json({
-    success:true
-  });
-
-});
-
-/* ===============================
-   CONTROL
-=============================== */
-
-app.get("/control/:id",(req,res)=>{
-
-  const id = Number(req.params.id);
-
-  const ev = events.find(e=>e.id===id);
-
-  if(!ev){
-    return res.json({
-      success:false
-    });
-  }
-
-  const total = ev.guests.length;
-
-  const percent =
-    total
-    ? Math.round((ev.arrived/total)*100)
-    : 0;
-
-  res.json({
-    success:true,
-    event:ev.name,
-    total,
-    arrived:ev.arrived,
-    missing: total - ev.arrived,
-    percent
-  });
-
-});
-
-/* ===============================
-   UPLOAD LEGACY
-=============================== */
-
-app.post("/upload",(req,res)=>{
+app.get(
+"/events",
+async(req,res)=>{
 
   try{
 
-    const event =
-      req.body.event || "default";
+    const events =
+    await pool.query(`
 
-    const name =
-      req.body.name || "Invitado";
+      SELECT *
+      FROM events
+      ORDER BY id DESC
 
-    const table =
-      req.body.table || "-";
+    `);
 
-    const ev =
-      events.find(e =>
-        normalize(e.name) ===
-        normalize(event)
+    const finalEvents = [];
+
+    for(const ev of events.rows){
+
+      const guests =
+      await pool.query(
+
+        `SELECT *
+         FROM guests
+         WHERE event_slug=$1`,
+
+        [ev.slug]
+
       );
 
-    if(!ev || !ev.active){
-      return res.json({
-        success:false,
-        inactive:true
+      finalEvents.push({
+
+        ...ev,
+        guests:guests.rows
+
       });
+
     }
 
-    const folder =
-      "snoopbox/" +
-      cleanFolder(event);
+    res.json(finalEvents);
 
-    const fakeUrl =
-      "https://picsum.photos/seed/" +
-      Date.now() +
-      "/800/1200";
+  }
 
-    photos.unshift({
-      id:newId(),
-      eventName:event,
-      folder,
-      url:fakeUrl,
-      user:name,
-      table,
-      createdAt:Date.now()
-    });
+  catch(err){
 
-    const guest =
-      ev.guests.find(g =>
-        g.table == table
-      );
+    console.error(err);
 
-    if(guest){
-      guest.points =
-        (guest.points || 0) + 1;
+    res.json([]);
+
+  }
+
+});
+
+/* ========================================= */
+/* EVENT CONFIG */
+/* ========================================= */
+
+app.get(
+"/event-config/:slug",
+async(req,res)=>{
+
+  try{
+
+    const slug =
+    req.params.slug;
+
+    const result =
+    await pool.query(
+
+      `SELECT *
+       FROM events
+       WHERE slug=$1
+       LIMIT 1`,
+
+      [slug]
+
+    );
+
+    if(
+      result.rows.length===0
+    ){
+
+      return res.json({
+        success:false
+      });
+
     }
 
     res.json({
+
       success:true,
-      url:fakeUrl,
-      folder
+
+      event:
+      result.rows[0]
+
     });
 
-  }catch(err){
+  }
+
+  catch(err){
+
+    console.error(err);
 
     res.json({
       success:false
@@ -362,110 +427,389 @@ app.post("/upload",(req,res)=>{
 
 });
 
-/* ===============================
-   UPLOAD REAL CLOUDINARY SAFE
-=============================== */
+/* ========================================= */
+/* TOGGLE EVENT */
+/* ========================================= */
 
-app.post("/upload-photo", async (req,res)=>{
+app.post(
+"/toggle-event/:id",
+async(req,res)=>{
+
+  try{
+
+    const id =
+    req.params.id;
+
+    const current =
+    await pool.query(
+
+      `SELECT *
+       FROM events
+       WHERE id=$1`,
+
+      [id]
+
+    );
+
+    if(
+      current.rows.length===0
+    ){
+
+      return res.json({
+        success:false
+      });
+
+    }
+
+    const active =
+    current.rows[0].active;
+
+    await pool.query(
+
+      `UPDATE events
+       SET active=$1
+       WHERE id=$2`,
+
+      [!active,id]
+
+    );
+
+    res.json({
+      success:true
+    });
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+    res.json({
+      success:false
+    });
+
+  }
+
+});
+
+/* ========================================= */
+/* DELETE EVENT */
+/* ========================================= */
+
+app.post(
+"/delete-event/:id",
+async(req,res)=>{
+
+  try{
+
+    const id =
+    req.params.id;
+
+    const eventResult =
+    await pool.query(
+
+      `SELECT *
+       FROM events
+       WHERE id=$1`,
+
+      [id]
+
+    );
+
+    if(
+      eventResult.rows.length===0
+    ){
+
+      return res.json({
+        success:false
+      });
+
+    }
+
+    const event =
+    eventResult.rows[0];
+
+    await pool.query(
+
+      `DELETE FROM guests
+       WHERE event_slug=$1`,
+
+      [event.slug]
+
+    );
+
+    await pool.query(
+
+      `DELETE FROM videos360
+       WHERE event_slug=$1`,
+
+      [event.slug]
+
+    );
+
+    await pool.query(
+
+      `DELETE FROM trivia_questions
+       WHERE event_slug=$1`,
+
+      [event.slug]
+
+    );
+
+    await pool.query(
+
+      `DELETE FROM trivia_answers
+       WHERE event_slug=$1`,
+
+      [event.slug]
+
+    );
+
+    await pool.query(
+
+      `DELETE FROM events
+       WHERE id=$1`,
+
+      [id]
+
+    );
+
+    res.json({
+      success:true
+    });
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+    res.status(500).json({
+      success:false
+    });
+
+  }
+
+});
+
+/* ========================================= */
+/* UPLOAD GUESTS */
+/* ========================================= */
+
+app.post(
+"/upload-guests/:id",
+async(req,res)=>{
+
+  try{
+
+    const id =
+    req.params.id;
+
+    const guests =
+    req.body.guests || [];
+
+    const eventResult =
+    await pool.query(
+
+      `SELECT *
+       FROM events
+       WHERE id=$1`,
+
+      [id]
+
+    );
+
+    if(
+      eventResult.rows.length===0
+    ){
+
+      return res.json({
+        success:false
+      });
+
+    }
+
+    const event =
+    eventResult.rows[0];
+
+    for(const g of guests){
+
+      await pool.query(
+
+        `INSERT INTO guests(
+
+          event_slug,
+          guest_name,
+          guest_table,
+          guest_phone
+
+        )
+
+        VALUES(
+          $1,$2,$3,$4
+        )`,
+
+        [
+
+          event.slug,
+          g.name || "",
+          g.table || "",
+          g.phone || ""
+
+        ]
+
+      );
+
+    }
+
+    res.json({
+      success:true
+    });
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+    res.json({
+      success:false
+    });
+
+  }
+
+});
+
+/* ========================================= */
+/* LOGIN */
+/* ========================================= */
+
+app.post(
+"/login-guest",
+async(req,res)=>{
 
   try{
 
     const {
-      eventName,
-      user,
-      image,
-      table
+      event_slug,
+      name
     } = req.body;
 
-    if(!eventName || !image){
-      return res.json({
-        success:false
-      });
-    }
+    const result =
+    await pool.query(
 
-    const ev =
-      events.find(e =>
-        normalize(e.name) ===
-        normalize(eventName)
-      );
+      `SELECT *
+       FROM guests
 
-    if(!ev || !ev.active){
+       WHERE
+       event_slug=$1
+
+       AND LOWER(guest_name)
+       = LOWER($2)
+
+       LIMIT 1`,
+
+      [
+        event_slug,
+        name
+      ]
+
+    );
+
+    if(
+      result.rows.length===0
+    ){
+
       return res.json({
+
         success:false,
-        inactive:true
+        error:"Invitado no encontrado"
+
       });
-    }
-
-    const folder =
-      "snoopbox/" +
-      cleanFolder(eventName);
-
-    let finalUrl = image;
-
-    try{
-
-      const uploaded =
-        await cloudinary.uploader.upload(
-          image,
-          {
-            folder: folder,
-            resource_type:"image"
-          }
-        );
-
-      finalUrl =
-        uploaded.secure_url;
-
-      console.log("☁ Cloudinary OK");
-
-    }catch(err){
-
-      console.log("⚠ Fallback local");
-
-      finalUrl = image;
-    }
-
-    photos.unshift({
-      id:newId(),
-      eventName:eventName,
-      folder,
-      url:finalUrl,
-      user:user || "Invitado",
-      table:table || "-",
-      createdAt:Date.now()
-    });
-
-    let guest =
-      ev.guests.find(g =>
-        normalize(g.name) ===
-        normalize(user)
-      );
-
-    if(!guest && table){
-
-      guest =
-        ev.guests.find(g =>
-          g.table == table
-        );
 
     }
 
-    if(guest){
-
-      guest.points =
-        (guest.points || 0) + 1;
-
-    }
+    const guest =
+    result.rows[0];
 
     res.json({
+
       success:true,
-      folder,
-      url:finalUrl
+      guest
+
     });
 
-  }catch(err){
+  }
 
-    console.log(err);
+  catch(err){
+
+    console.error(err);
+
+    res.status(500).json({
+      success:false
+    });
+
+  }
+
+});
+
+/* ========================================= */
+/* UPLOAD PHOTO */
+/* ========================================= */
+
+app.post(
+"/upload-photo",
+async(req,res)=>{
+
+  try{
+
+    const {
+      image,
+      eventName,
+      user
+    } = req.body;
+
+    const uploaded =
+    await cloudinary.uploader.upload(
+      image,
+      {
+        folder:
+        `snoopbox/${eventName}/photos`
+      }
+    );
+
+    await pool.query(
+
+      `UPDATE guests
+
+       SET points =
+       points + 1
+
+       WHERE
+
+       event_slug=$1
+
+       AND guest_name=$2`,
+
+      [
+        eventName,
+        user
+      ]
+
+    );
+
+    res.json({
+
+      success:true,
+      image:uploaded.secure_url
+
+    });
+
+  }
+
+  catch(err){
+
+    console.error(err);
 
     res.json({
       success:false
@@ -475,143 +819,504 @@ app.post("/upload-photo", async (req,res)=>{
 
 });
 
-/* ===============================
-   GALERIA
-=============================== */
+/* ========================================= */
+/* RANKING */
+/* ========================================= */
 
-app.get("/photos/:eventName",(req,res)=>{
+app.get(
+"/ranking/:slug",
+async(req,res)=>{
 
-  const name =
-    normalize(req.params.eventName);
+  try{
 
-  const result =
-    photos.filter(p =>
-      normalize(p.eventName || "") === name
-    );
+    const slug =
+    req.params.slug;
 
-  res.json(result);
+    const result =
+    await pool.query(`
 
-});
+      SELECT
 
-app.delete("/photo",(req,res)=>{
+      guest_table AS table,
 
-  const { url } = req.body;
+      SUM(points)::int AS points
 
-  photos =
-    photos.filter(p =>
-      p.url !== url
-    );
+      FROM guests
 
-  res.json({
-    success:true
-  });
+      WHERE event_slug=$1
 
-});
+      GROUP BY guest_table
 
-/* ===============================
-   RANKING
-=============================== */
+      ORDER BY points DESC
 
-app.get("/ranking/:event",(req,res)=>{
+    `,[slug]);
 
-  const ev =
-    events.find(e =>
-      normalize(e.name) ===
-      normalize(req.params.event)
-    );
+    res.json(result.rows);
 
-  if(!ev){
-    return res.json([]);
   }
 
-  const ranking =
-    [...ev.guests]
-    .sort((a,b)=>
-      (b.points||0) -
-      (a.points||0)
-    );
+  catch(err){
 
-  res.json(ranking);
+    console.error(err);
+
+    res.json([]);
+
+  }
 
 });
 
-/* ===============================
-   HOME
-=============================== */
+/* ========================================= */
+/* SAVE 360 VIDEO */
+/* ========================================= */
 
-app.get("/",(req,res)=>{
+app.post(
+"/save-360-video",
+async(req,res)=>{
+
+  try{
+
+    const {
+      event_slug,
+      guest_name,
+      video_url
+    } = req.body;
+
+    await pool.query(
+
+      `INSERT INTO videos360(
+
+        event_slug,
+        guest_name,
+        video_url
+
+      )
+
+      VALUES($1,$2,$3)`,
+
+      [
+
+        event_slug,
+        guest_name,
+        video_url
+
+      ]
+
+    );
+
+    res.json({
+      success:true
+    });
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+    res.json({
+      success:false
+    });
+
+  }
+
+});
+
+/* ========================================= */
+/* LIST 360 VIDEOS */
+/* ========================================= */
+
+app.get(
+"/360-videos/:slug",
+async(req,res)=>{
+
+  try{
+
+    const slug =
+    req.params.slug;
+
+    const result =
+    await pool.query(
+
+      `SELECT *
+       FROM videos360
+
+       WHERE event_slug=$1
+
+       ORDER BY id DESC`,
+
+      [slug]
+
+    );
+
+    res.json(result.rows);
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+    res.json([]);
+
+  }
+
+});
+/* ========================================= */
+/* ARRIVE GUEST */
+/* ========================================= */
+
+app.post(
+"/arrive/:id",
+async(req,res)=>{
+
+  try{
+
+    const id =
+    req.params.id;
+
+    await pool.query(
+
+      `UPDATE guests
+
+       SET arrived=true
+
+       WHERE id=$1`,
+
+      [id]
+
+    );
+
+    res.json({
+      success:true
+    });
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+    res.status(500).json({
+      success:false
+    });
+
+  }
+
+});
+
+/* ========================================= */
+/* DEBUG */
+/* ========================================= */
+
+app.get(
+"/db-events",
+async(req,res)=>{
+
+  const result =
+  await pool.query(
+    `SELECT * FROM events`
+  );
+
+  res.json(result.rows);
+
+});
+
+app.get(
+"/db-guests/:slug",
+async(req,res)=>{
+
+  const slug =
+  req.params.slug;
+
+  const result =
+  await pool.query(
+
+    `SELECT *
+     FROM guests
+     WHERE event_slug=$1`,
+
+    [slug]
+
+  );
+
+  res.json(result.rows);
+
+});
+
+/* ========================================= */
+/* TRIVIA */
+/* ========================================= */
+
+app.get('/trivia/:event', async (req,res)=>{
+
+  try{
+
+    const { rows } = await pool.query(
+      `SELECT *
+       FROM trivia_questions
+       WHERE event_slug=$1
+       ORDER BY id ASC`,
+      [req.params.event]
+    );
+
+    res.json(rows);
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+    res.status(500).json({
+      success:false
+    });
+
+  }
+
+});
+
+/* ====================== */
+
+app.get('/trivia-status/:event/:guest', async (req,res)=>{
+
+  try{
+
+    const { rows } = await pool.query(
+      `SELECT *
+       FROM trivia_answers
+       WHERE event_slug=$1
+       AND guest_name=$2
+       LIMIT 1`,
+      [
+        req.params.event,
+        req.params.guest
+      ]
+    );
+
+    if(rows.length){
+
+      return res.json({
+        answered:true,
+        data:rows[0]
+      });
+
+    }
+
+    res.json({
+      answered:false
+    });
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+    res.status(500).json({
+      success:false
+    });
+
+  }
+
+});
+
+/* ====================== */
+
+app.post('/submit-trivia', async (req,res)=>{
+
+  try{
+
+    const {
+      event_slug,
+      guest_name,
+      score
+    } = req.body;
+
+    const existing = await pool.query(
+      `SELECT *
+       FROM trivia_answers
+       WHERE event_slug=$1
+       AND guest_name=$2`,
+      [event_slug,guest_name]
+    );
+
+    if(existing.rows.length){
+
+      return res.json({
+        success:false,
+        message:'already answered'
+      });
+
+    }
+
+    await pool.query(
+      `INSERT INTO trivia_answers
+      (
+        event_slug,
+        guest_name,
+        answered,
+        score
+      )
+      VALUES($1,$2,true,$3)`,
+      [
+        event_slug,
+        guest_name,
+        score
+      ]
+    );
+
+    await pool.query(
+      `UPDATE guests
+       SET points = points + $1
+       WHERE event_slug=$2
+       AND guest_name=$3`,
+      [
+        score,
+        event_slug,
+        guest_name
+      ]
+    );
+
+    res.json({
+      success:true
+    });
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+    res.status(500).json({
+      success:false
+    });
+
+  }
+
+});
+
+/* ========================================= */
+/* UPLOAD TRIVIA XLSX */
+/* ========================================= */
+
+app.post(
+
+  "/upload-trivia/:event",
+
+  upload.single("file"),
+
+  async(req,res)=>{
+
+    try{
+
+      const eventSlug =
+      req.params.event;
+
+      const workbook =
+      XLSX.readFile(
+        req.file.path
+      );
+
+      const sheet =
+      workbook.Sheets[
+        workbook.SheetNames[0]
+      ];
+
+      const data =
+      XLSX.utils.sheet_to_json(
+        sheet
+      );
+
+      await pool.query(
+
+        `DELETE FROM trivia_questions
+         WHERE event_slug=$1`,
+
+        [eventSlug]
+
+      );
+
+      for(const row of data){
+
+        const options = [
+
+          row.option1,
+          row.option2,
+          row.option3,
+          row.option4
+
+        ].filter(Boolean);
+
+        await pool.query(
+
+          `INSERT INTO trivia_questions(
+
+            event_slug,
+            question,
+            options,
+            correct_answer
+
+          )
+
+          VALUES($1,$2,$3,$4)`,
+
+          [
+
+            eventSlug,
+
+            row.question,
+
+            options,
+
+            Number(row.correct) - 1
+
+          ]
+
+        );
+
+      }
+
+      res.json({
+        success:true
+      });
+
+    }
+
+    catch(err){
+
+      console.error(err);
+
+      res.status(500).json({
+        success:false
+      });
+
+    }
+
+  }
+
+);
+
+/* ========================================= */
+/* CATCH ALL */
+/* ========================================= */
+
+app.get("*",(req,res)=>{
 
   res.sendFile(
+
     path.join(
       __dirname,
       "public",
       "index.html"
     )
+
   );
 
 });
 
-// ===============================
-// 🔥 TRIVIA SAFE MODULE
-// ===============================
-
-// memoria simple para controlar participación
-if(!global.triviaPlayers){
-  global.triviaPlayers = {};
-}
-
-app.post("/trivia-answer", (req, res) => {
-
-  const { event, table, user, correct } = req.body;
-
-  if(!event || !table || !user){
-    return res.json({ success:false });
-  }
-
-  const key = event + "_" + user;
-
-  // 🚫 ya jugó
-  if(global.triviaPlayers[key]){
-    return res.json({ success:false, played:true });
-  }
-
-  const ev = events.find(e =>
-    normalize(e.name) === normalize(event)
-  );
-
-  if(!ev){
-    return res.json({ success:false });
-  }
-
-  // buscar invitado (igual que tu sistema actual)
-  let guest = ev.guests.find(g =>
-    normalize(g.name) === normalize(user)
-  );
-
-  if(!guest){
-    guest = ev.guests.find(g =>
-      g.table == table
-    );
-  }
-
-  if(!guest){
-    return res.json({ success:false });
-  }
-
-  // 💣 sumar puntos SOLO si acierta
-  if(correct){
-  guest.points = (guest.points || 0) + 5;
-  }
-
-  // marcar como jugado
-  global.triviaPlayers[key] = true;
-
-  res.json({ success:true });
-});
-
-/* ===============================
-   SERVER
-=============================== */
+/* ========================================= */
+/* SERVER */
+/* ========================================= */
 
 const PORT =
 process.env.PORT || 3000;

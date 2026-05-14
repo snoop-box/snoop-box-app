@@ -162,8 +162,6 @@ button{
   text-align:center;
 }
 
-/* SCREENSAVER */
-
 #screensaver{
   position:fixed;
   inset:0;
@@ -279,34 +277,49 @@ function resetIdle(){
 
 }
 
+/* ===================== */
+
 function startScreensaver(){
 
  if(!currentEvent) return;
- if(!currentEvent.logoVenue) return;
 
- ssLogo.src =
- currentEvent.logoVenue;
+ if(!currentEvent.logo_url) return;
 
- screensaver.style.display =
+ document.getElementById(
+  "ssLogo"
+ ).src =
+ currentEvent.logo_url;
+
+ document.getElementById(
+  "screensaver"
+ ).style.display =
  "flex";
 
 }
 
+/* ===================== */
+
 function wakeScreen(){
 
- screensaver.style.display =
+ document.getElementById(
+  "screensaver"
+ ).style.display =
  "none";
 
  resetIdle();
 
 }
 
+/* ===================== */
+
 ["click","touchstart","mousemove","keydown"]
 .forEach(evt=>{
+
  document.addEventListener(
   evt,
   resetIdle
  );
+
 });
 
 /* ===================== */
@@ -314,58 +327,94 @@ function wakeScreen(){
 async function loginEvent(){
 
  const name =
- eventInput.value.trim();
+ document.getElementById(
+  "eventInput"
+ ).value.trim();
 
  if(!name){
-  loginStatus.innerText =
+
+  document.getElementById(
+   "loginStatus"
+  ).innerText =
   "Escribí nombre";
+
   return;
+
  }
 
- const res =
- await fetch(
- "/event/" +
- encodeURIComponent(name)
- );
+ try{
 
- const data =
- await res.json();
+  const res =
+  await fetch(
+   "/event-config/" +
+   encodeURIComponent(name)
+  );
 
- if(!data.success){
-  loginStatus.innerText =
-  "Evento no encontrado";
-  return;
- }
+  const data =
+  await res.json();
 
- currentEvent =
- data.event;
+  if(!data.success){
 
- loginBox.style.display =
- "none";
+   document.getElementById(
+    "loginStatus"
+   ).innerText =
+   "Evento no encontrado";
 
- app.style.display =
- "block";
+   return;
 
- if(currentEvent.logoVenue){
+  }
 
-  venueLogo.src =
-  currentEvent.logoVenue;
+  currentEvent =
+  data.event;
 
-  venueLogo.style.display =
+  document.getElementById(
+   "loginBox"
+  ).style.display =
+  "none";
+
+  document.getElementById(
+   "app"
+  ).style.display =
   "block";
 
-  setTimeout(()=>{
-   venueLogo.classList
-   .add("show");
-  },150);
+  if(currentEvent.logo_url){
+
+   const venueLogo =
+   document.getElementById(
+    "venueLogo"
+   );
+
+   venueLogo.src =
+   currentEvent.logo_url;
+
+   venueLogo.style.display =
+   "block";
+
+   setTimeout(()=>{
+
+    venueLogo.classList
+    .add("show");
+
+   },150);
+
+  }
+
+  document.getElementById(
+   "eventTitle"
+  ).innerText =
+  currentEvent.name;
+
+  await loadGuests();
+
+  resetIdle();
 
  }
 
- eventTitle.innerText =
- currentEvent.name;
+ catch(err){
 
- loadGuests();
- resetIdle();
+  console.error(err);
+
+ }
 
 }
 
@@ -373,25 +422,37 @@ async function loginEvent(){
 
 async function loadGuests(){
 
- const res =
- await fetch(
- "/guests/" +
- currentEvent.id
- );
+ try{
 
- guests =
- await res.json();
+  const res =
+  await fetch(
+   "/db-guests/" +
+   currentEvent.slug
+  );
 
- renderGuests();
+  guests =
+  await res.json();
+
+  renderGuests();
+
+ }
+
+ catch(err){
+
+  console.error(err);
+
+ }
 
 }
 
+/* ===================== */
+
 function guestName(g){
- return g.name || "Sin nombre";
+ return g.guest_name || "Sin nombre";
 }
 
 function guestTable(g){
- return g.table || "-";
+ return g.guest_table || "-";
 }
 
 /* ===================== */
@@ -399,7 +460,9 @@ function guestTable(g){
 function renderGuests(){
 
  const txt =
- search.value
+ document
+ .getElementById("search")
+ .value
  .toLowerCase();
 
  const filtered =
@@ -409,11 +472,17 @@ function renderGuests(){
  .includes(txt)
  );
 
+ const guestList =
+ document.getElementById(
+  "guestList"
+ );
+
  guestList.innerHTML = "";
 
  filtered.forEach(g=>{
 
   guestList.innerHTML += `
+
   <div class="guest">
 
    <div class="guestName">
@@ -445,11 +514,14 @@ function renderGuests(){
    <div id="qr_${g.id}"></div>
 
   </div>
+
   `;
 
  });
 
- counter.innerText =
+ document.getElementById(
+  "counter"
+ ).innerText =
  "Presentes: " +
  guests.filter(g=>g.arrived).length +
  " / " +
@@ -461,21 +533,29 @@ function renderGuests(){
 
 async function markArrived(id){
 
- await fetch(
- "/arrive/" +
- currentEvent.id +
- "/" +
- id,
- {method:"POST"}
- );
+ try{
 
- loadGuests();
- resetIdle();
+  await fetch(
+   "/arrive/" + id,
+   {
+    method:"POST"
+   }
+  );
+
+  await loadGuests();
+
+  resetIdle();
+
+ }
+
+ catch(err){
+
+  console.error(err);
+
+ }
 
 }
 
-/* ===================== */
-/* QR FIX */
 /* ===================== */
 
 function showQR(id){
@@ -485,25 +565,23 @@ function showQR(id){
 
  const code =
  location.origin +
- "/?event=" +
+ "/login.html?event=" +
  encodeURIComponent(
- currentEvent.name
+ currentEvent.slug
  ) +
- "&name=" +
+ "&guest=" +
  encodeURIComponent(
- guest.name || "Invitado"
- ) +
- "&table=" +
- encodeURIComponent(
- guest.table || "-"
+ guest.guest_name ||
+ "Invitado"
  );
 
  const box =
  document.getElementById(
- "qr_"+id
+  "qr_"+id
  );
 
  box.innerHTML = `
+
  <div class="qrWrap">
 
    <canvas id="canvas_${id}"
@@ -523,6 +601,7 @@ function showQR(id){
    </div>
 
  </div>
+
  `;
 
  QRCode.toCanvas(

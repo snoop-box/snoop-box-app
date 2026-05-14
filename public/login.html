@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Snoop Login</title>
+
+<style>
+
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-family:Arial,sans-serif;
+  color:#fff;
+
+  background:
+  linear-gradient(
+    135deg,
+    #071a52,
+    #111,
+    #5c0b0b
+  );
+}
+
+.card{
+
+  width:92%;
+  max-width:420px;
+
+  background:
+  rgba(255,255,255,.08);
+
+  backdrop-filter:
+  blur(12px);
+
+  border-radius:28px;
+
+  padding:34px;
+
+  box-shadow:
+  0 20px 50px
+  rgba(0,0,0,.3);
+
+}
+
+.title{
+  font-size:52px;
+  font-weight:bold;
+  text-align:center;
+  margin-bottom:10px;
+}
+
+.sub{
+  text-align:center;
+  color:#ddd;
+  margin-bottom:28px;
+}
+
+input,
+select{
+
+  width:100%;
+
+  padding:18px;
+
+  margin-bottom:16px;
+
+  border:none;
+
+  border-radius:16px;
+
+  background:
+  rgba(255,255,255,.12);
+
+  color:#fff;
+
+  font-size:16px;
+
+  box-sizing:border-box;
+
+}
+
+input::placeholder{
+  color:#ccc;
+}
+
+button{
+
+  width:100%;
+
+  padding:18px;
+
+  border:none;
+
+  border-radius:16px;
+
+  background:#ff0055;
+
+  color:#fff;
+
+  font-size:18px;
+  font-weight:bold;
+
+  cursor:pointer;
+
+  transition:.2s;
+
+}
+
+button:hover{
+
+  transform:
+  scale(1.01);
+
+}
+
+.status{
+
+  text-align:center;
+
+  margin-top:18px;
+
+  color:#ffb3c7;
+
+}
+
+.loading{
+  opacity:.6;
+  pointer-events:none;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="card">
+
+<div class="title">
+SNOOP BOX
+</div>
+
+<div class="sub">
+Ingresá al evento
+</div>
+
+<select id="eventSelect">
+
+<option value="">
+Seleccionar evento
+</option>
+
+</select>
+
+<input
+id="guestName"
+type="text"
+placeholder="Tu nombre">
+
+<button onclick="login()">
+Ingresar
+</button>
+
+<div
+id="status"
+class="status">
+</div>
+
+</div>
+
+<script>
+
+async function loadEvents(){
+
+  try{
+
+    const res =
+    await fetch("/events");
+
+    const events =
+    await res.json();
+
+    const select =
+    document.getElementById(
+      "eventSelect"
+    );
+
+    events
+    .filter(ev=>ev.active)
+    .forEach(ev=>{
+
+      select.innerHTML += `
+
+      <option value="${ev.slug}">
+        ${ev.name}
+      </option>
+
+      `;
+
+    });
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+  }
+
+}
+
+/* ======================== */
+
+async function login(){
+
+  const event_slug =
+  document.getElementById(
+    "eventSelect"
+  ).value;
+
+  const name =
+  document.getElementById(
+    "guestName"
+  ).value.trim();
+
+  const status =
+  document.getElementById(
+    "status"
+  );
+
+  if(!event_slug || !name){
+
+    status.innerText =
+    "Completá los datos";
+
+    return;
+
+  }
+
+  document.body.classList.add(
+    "loading"
+  );
+
+  status.innerText =
+  "Ingresando...";
+
+  try{
+
+    const res =
+    await fetch(
+
+      "/login-guest",
+
+      {
+
+        method:"POST",
+
+        headers:{
+          "Content-Type":
+          "application/json"
+        },
+
+        body:JSON.stringify({
+
+          event_slug,
+          name
+
+        })
+
+      }
+
+    );
+
+    const data =
+    await res.json();
+
+    if(!data.success){
+
+      status.innerText =
+      "Invitado no encontrado";
+
+      document.body.classList.remove(
+        "loading"
+      );
+
+      return;
+
+    }
+
+    localStorage.setItem(
+
+      "snoopGuest",
+
+      JSON.stringify({
+
+        event:event_slug,
+        guest:data.guest
+
+      })
+
+    );
+
+    window.location.href =
+    "/index.html";
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+    status.innerText =
+    "Error conexión";
+
+    document.body.classList.remove(
+      "loading"
+    );
+
+  }
+
+}
+
+/* ======================== */
+
+loadEvents();
+
+</script>
+
+</body>
+</html>
