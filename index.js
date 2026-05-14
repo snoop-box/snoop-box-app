@@ -105,6 +105,28 @@ async function initDB(){
       )
 
     `);
+    /* PHOTOS */
+
+await pool.query(`
+
+  CREATE TABLE IF NOT EXISTS photos(
+
+    id SERIAL PRIMARY KEY,
+
+    event_slug TEXT,
+
+    guest_name TEXT,
+
+    guest_table TEXT,
+
+    image_url TEXT,
+
+    created_at TIMESTAMP
+    DEFAULT NOW()
+
+  )
+
+`);
 
     /* GUESTS */
 
@@ -564,6 +586,14 @@ async(req,res)=>{
       [event.slug]
 
     );
+    await pool.query(
+
+  `DELETE FROM photos
+   WHERE event_slug=$1`,
+
+  [event.slug]
+
+);
 
     await pool.query(
 
@@ -778,6 +808,27 @@ async(req,res)=>{
       }
     );
 
+    const guestResult =
+    await pool.query(
+
+      `SELECT *
+       FROM guests
+
+       WHERE event_slug=$1
+       AND guest_name=$2
+
+       LIMIT 1`,
+
+      [
+        eventName,
+        user
+      ]
+
+    );
+
+    const guestData =
+    guestResult.rows[0];
+
     await pool.query(
 
       `UPDATE guests
@@ -794,6 +845,32 @@ async(req,res)=>{
       [
         eventName,
         user
+      ]
+
+    );
+
+    await pool.query(
+
+      `INSERT INTO photos(
+
+        event_slug,
+        guest_name,
+        guest_table,
+        image_url
+
+      )
+
+      VALUES($1,$2,$3,$4)`,
+
+      [
+
+        eventName,
+        user,
+
+        guestData?.guest_table || "",
+
+        uploaded.secure_url
+
       ]
 
     );
@@ -983,6 +1060,87 @@ async(req,res)=>{
        WHERE id=$1`,
 
       [id]
+
+    );
+
+    res.json({
+      success:true
+    });
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+    res.status(500).json({
+      success:false
+    });
+
+  }
+
+});
+/* ========================================= */
+/* EVENT PHOTOS */
+/* ========================================= */
+
+app.get(
+"/event-photos/:slug",
+async(req,res)=>{
+
+  try{
+
+    const slug =
+    req.params.slug;
+
+    const result =
+    await pool.query(
+
+      `SELECT *
+       FROM photos
+
+       WHERE event_slug=$1
+
+       ORDER BY id DESC`,
+
+      [slug]
+
+    );
+
+    res.json(
+      result.rows
+    );
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+    res.json([]);
+
+  }
+
+});
+/* ========================================= */
+/* DELETE PHOTO */
+/* ========================================= */
+
+app.delete(
+"/photo",
+async(req,res)=>{
+
+  try{
+
+    const { url } =
+    req.body;
+
+    await pool.query(
+
+      `DELETE FROM photos
+       WHERE image_url=$1`,
+
+      [url]
 
     );
 
