@@ -10,27 +10,38 @@
 <style>
 
 body{
+
   margin:0;
+
   min-height:100vh;
+
   display:flex;
+
   align-items:center;
+
   justify-content:center;
 
   font-family:Arial,sans-serif;
+
   color:#fff;
 
   background:
+
   linear-gradient(
+
     135deg,
     #071a52,
     #111,
     #5c0b0b
+
   );
+
 }
 
 .card{
 
   width:92%;
+
   max-width:420px;
 
   background:
@@ -50,16 +61,25 @@ body{
 }
 
 .title{
+
   font-size:52px;
+
   font-weight:bold;
+
   text-align:center;
+
   margin-bottom:10px;
+
 }
 
 .sub{
+
   text-align:center;
+
   color:#ddd;
+
   margin-bottom:28px;
+
 }
 
 input,
@@ -105,6 +125,7 @@ button{
   color:#fff;
 
   font-size:18px;
+
   font-weight:bold;
 
   cursor:pointer;
@@ -130,9 +151,8 @@ button:hover{
 
 }
 
-.loading{
-  opacity:.6;
-  pointer-events:none;
+.hidden{
+  display:none;
 }
 
 </style>
@@ -149,6 +169,8 @@ SNOOP BOX
 <div class="sub">
 Ingresá al evento
 </div>
+
+<div id="manualLogin">
 
 <select id="eventSelect">
 
@@ -167,6 +189,8 @@ placeholder="Tu nombre">
 Ingresar
 </button>
 
+</div>
+
 <div
 id="status"
 class="status">
@@ -175,6 +199,10 @@ class="status">
 </div>
 
 <script>
+
+/* ======================== */
+/* LOAD EVENTS */
+/* ======================== */
 
 async function loadEvents(){
 
@@ -216,15 +244,24 @@ async function loadEvents(){
 }
 
 /* ======================== */
+/* LOGIN */
+/* ======================== */
 
-async function login(){
+async function login(
+  qrEvent=null,
+  qrGuest=null
+){
 
   const event_slug =
+  qrEvent ||
+
   document.getElementById(
     "eventSelect"
   ).value;
 
   const name =
+  qrGuest ||
+
   document.getElementById(
     "guestName"
   ).value.trim();
@@ -242,10 +279,6 @@ async function login(){
     return;
 
   }
-
-  document.body.classList.add(
-    "loading"
-  );
 
   status.innerText =
   "Ingresando...";
@@ -285,10 +318,6 @@ async function login(){
       status.innerText =
       "Invitado no encontrado";
 
-      document.body.classList.remove(
-        "loading"
-      );
-
       return;
 
     }
@@ -318,17 +347,55 @@ async function login(){
     status.innerText =
     "Error conexión";
 
-    document.body.classList.remove(
-      "loading"
-    );
-
   }
 
 }
 
 /* ======================== */
+/* QR AUTO LOGIN */
+/* ======================== */
 
-loadEvents();
+window.addEventListener(
+"load",
+async()=>{
+
+  await loadEvents();
+
+  const params =
+  new URLSearchParams(
+    location.search
+  );
+
+  const event =
+  params.get("event");
+
+  const guest =
+  params.get("guest");
+
+  if(
+    !event ||
+    !guest
+  ){
+    return;
+  }
+
+  document.getElementById(
+    "manualLogin"
+  ).classList.add(
+    "hidden"
+  );
+
+  document.getElementById(
+    "status"
+  ).innerText =
+  "Ingresando automáticamente...";
+
+  await login(
+    event,
+    guest
+  );
+
+});
 
 </script>
 
