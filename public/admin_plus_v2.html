@@ -443,7 +443,7 @@ async function saveEvent(){
  )
  .checked,
 
- hasTrivia:
+ hastrivia:
  document
  .getElementById(
  "hasTrivia"
@@ -566,7 +566,7 @@ async function loadEvents(){
    <br>
 
    Trivia:
-${ev.hasTrivia || ev.hastrivia
+${ev.hastrivia
 ? "✅"
 : "❌"}
 
@@ -592,7 +592,7 @@ ${ev.hasTrivia || ev.hastrivia
 
     </button>
 
-    ${ev.hasTrivia || ev.hastrivia ? `
+    ${ev.hastrivia ? `
 
 <button
 class="smallBtn"
