@@ -1435,15 +1435,15 @@ for(const rawRow of data){
 
     [
 
-      eventSlug,
+  eventSlug,
 
-      row.question,
+  row.question,
 
-      options,
+  JSON.stringify(options),
 
-      Number(row.correct) - 1
+  Number(row.correct) - 1
 
-    ]
+]
 
   );
 
