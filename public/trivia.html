@@ -139,6 +139,26 @@ body{
 }
 
 .option:hover{
+.option.correct{
+
+  background:#00c853 !important;
+  color:#fff;
+
+}
+
+.option.wrong{
+
+  background:#d50000 !important;
+  color:#fff;
+
+}
+
+.option.locked{
+
+  pointer-events:none;
+  opacity:.92;
+
+}
 
   background:
   rgba(255,255,255,.22);
@@ -512,6 +532,7 @@ btn
 /* ====================== */
 
 async function submitTrivia(){
+
 if(
 Object.keys(answers).length
 < questions.length
@@ -524,82 +545,124 @@ Object.keys(answers).length
   return;
 
 }
-  let score = 0;
 
-  questions.forEach((q,index)=>{
+let score = 0;
+
+questions.forEach((q,index)=>{
+
+  const card =
+  document
+  .querySelectorAll(".card")[index];
+
+  const buttons =
+  card.querySelectorAll(".option");
+
+  buttons.forEach((btn,i)=>{
+
+    btn.classList.add(
+      "locked"
+    );
 
     if(
-      answers[index] ==
+      i ==
       q.correct_answer
     ){
 
-      score += 3;
+      btn.classList.add(
+        "correct"
+      );
+
+    }
+
+    if(
+      answers[index] == i &&
+      i != q.correct_answer
+    ){
+
+      btn.classList.add(
+        "wrong"
+      );
 
     }
 
   });
 
-  try{
+  if(
+    answers[index] ==
+    q.correct_answer
+  ){
+
+    score += 3;
+
+  }
+
+});
+
+try{
+
 document
 .getElementById(
 "finishBtn"
 )
 .disabled = true;
-    const res =
-    await fetch(
 
-      "/submit-trivia",
+const res =
+await fetch(
 
-      {
+  "/submit-trivia",
 
-        method:"POST",
+  {
 
-        headers:{
-          "Content-Type":
-          "application/json"
-        },
+    method:"POST",
 
-        body:JSON.stringify({
+    headers:{
+      "Content-Type":
+      "application/json"
+    },
 
-          event_slug:
-          eventSlug,
+    body:JSON.stringify({
 
-          guest_name:
-          guest.guest_name,
+      event_slug:
+      eventSlug,
 
-          score
+      guest_name:
+      guest.guest_name,
 
-        })
+      score
 
-      }
-
-    );
-
-    const data =
-    await res.json();
-
-    if(data.success){
-
-      renderDone(score);
-
-    }
+    })
 
   }
 
-  catch(err){
+);
 
-  console.error(err);
+const data =
+await res.json();
 
-  document
-  .getElementById(
-    "finishBtn"
-  )
-  .disabled = false;
+if(data.success){
 
-  alert(
+  setTimeout(()=>{
 
-  "Error enviando trivia"
+    renderDone(score);
 
+  },1800);
+
+}
+
+}
+
+catch(err){
+
+console.error(err);
+
+document
+.getElementById(
+  "finishBtn"
+)
+.disabled = false;
+
+alert(
+"Error enviando trivia"
 );
 
 }
