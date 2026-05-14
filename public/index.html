@@ -223,29 +223,6 @@ body{
 
 }
 
-.logout{
-
-  width:100%;
-
-  padding:16px;
-
-  border:none;
-
-  border-radius:16px;
-
-  background:
-  rgba(255,255,255,.08);
-
-  color:#fff;
-
-  font-size:16px;
-
-  cursor:pointer;
-
-  margin-top:10px;
-
-}
-
 </style>
 
 </head>
@@ -434,7 +411,12 @@ async function loadEvent(){
 
     if(!data.success){
 
-      logout();
+     localStorage.removeItem(
+  "snoopGuest"
+);
+
+window.location.href =
+"/login.html";
       return;
 
     }
@@ -486,10 +468,7 @@ async function loadEvent(){
 
     }
 
-    if(
-      ev.hastrivia ||
-      ev.hasTrivia
-    ){
+    if(ev.hastrivia){
 
       document
       .getElementById(
@@ -505,6 +484,10 @@ async function loadEvent(){
   catch(err){
 
     console.error(err);
+    document.getElementById(
+  "loading"
+).innerText =
+"Error cargando evento";
 
   }
 
@@ -624,13 +607,22 @@ async function uploadPhoto(){
   input.type = "file";
 
   input.accept =
+
   "image/*";
+
+  input.capture =
+
+  "environment";
+
 
   input.onchange =
   async(e)=>{
 
     const file =
     e.target.files[0];
+    if(!file){
+  return;
+}
 
     const reader =
     new FileReader();
