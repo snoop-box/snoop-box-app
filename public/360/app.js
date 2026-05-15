@@ -9,7 +9,7 @@ let EVENT_ID =
 params.get("event");
 
 
-const homeScreen =document.getElementById("cameraScreen");
+const homeScreen =document.getElementById("homeScreen");
 const cameraScreen = document.getElementById("cameraScreen");
 const thanksScreen = document.getElementById("thanksScreen");
 
@@ -35,15 +35,22 @@ document.getElementById(
 );
 window.onload = ()=>{
 
-  if(EVENT_ID){
+ if(EVENT_ID){
 
-    showScreen(
-      cameraScreen
-    );
+  document.getElementById(
+  "eventTitle"
+  ).innerText =
+  EVENT_ID
+  .replace(/-/g," ")
+  .toUpperCase();
 
-    return;
+  showScreen(
+    homeScreen
+  );
 
-  }
+  return;
+
+}
 
   showScreen(
     eventScreen
@@ -119,6 +126,12 @@ startBtn.addEventListener("click", async () => {
 "none";
 
     showScreen(cameraScreen);
+    if(document.documentElement.requestFullscreen){
+
+  document.documentElement
+  .requestFullscreen();
+
+}
 
     stream = await navigator.mediaDevices.getUserMedia({
       video: {
