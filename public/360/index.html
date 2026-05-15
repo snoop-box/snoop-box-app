@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <meta
+name="apple-mobile-web-app-capable"
+content="yes"
+/>
+
+<meta
+name="apple-mobile-web-app-status-bar-style"
+content="black-translucent"
+/>
   <meta charset="UTF-8" />
 
   <meta
@@ -10,8 +19,24 @@
 
   <title>Snoop Box 360</title>
 
+  <link
+rel="manifest"
+href="/360-manifest.json"
+/>
+
+<meta
+name="theme-color"
+content="#000000"
+/>
+
+<link
+rel="apple-touch-icon"
+href="/icons/360-192.png"
+/>
+
   <link rel="stylesheet" href="./style.css" />
 </head>
+
 <body>
 
   <!-- HOME -->
@@ -126,6 +151,20 @@ class="screen active">
   </div>
 
   <script src="./app.js"></script>
+  <script>
+
+if(
+  "serviceWorker"
+  in navigator
+){
+
+  navigator
+  .serviceWorker
+  .register("/sw.js");
+
+}
+
+</script>
 
 </body>
 </html>
