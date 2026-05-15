@@ -165,8 +165,6 @@ await pool.query(`
 
         event_slug TEXT,
 
-        guest_name TEXT,
-
         video_url TEXT,
 
         created_at TIMESTAMP
@@ -1484,6 +1482,96 @@ app.get("*",(req,res)=>{
     )
 
   );
+
+});
+
+app.post(
+
+"/save-360-video",
+
+async(req,res)=>{
+
+try{
+
+const {
+
+event_slug,
+video_url
+
+} = req.body;
+
+await pool.query(
+
+`INSERT INTO videos_360(
+
+event_slug,
+video_url
+
+)
+
+VALUES($1,$2)`,
+
+[
+event_slug,
+video_url
+]
+
+);
+
+res.json({
+success:true
+});
+
+}
+
+catch(err){
+
+console.error(err);
+
+res.status(500).json({
+success:false
+});
+
+}
+
+});
+
+app.get(
+
+"/360-videos/:event",
+
+async(req,res)=>{
+
+try{
+
+const result =
+await pool.query(
+
+`SELECT *
+
+FROM videos_360
+
+WHERE event_slug=$1
+
+ORDER BY id DESC`,
+
+[req.params.event]
+
+);
+
+res.json(
+result.rows
+);
+
+}
+
+catch(err){
+
+console.error(err);
+
+res.status(500).json([]);
+
+}
 
 });
 

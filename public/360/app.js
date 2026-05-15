@@ -1,6 +1,13 @@
 const CLOUD_NAME = "daxf4enjn";
 const UPLOAD_PRESET = "snoop360_unsigned";
-const EVENT_ID = "evento-demo";
+const params =
+new URLSearchParams(
+window.location.search
+);
+
+let EVENT_ID =
+params.get("event");
+
 
 const homeScreen = document.getElementById("homeScreen");
 const cameraScreen = document.getElementById("cameraScreen");
@@ -12,7 +19,97 @@ const preview = document.getElementById("preview");
 
 const countdown = document.getElementById("countdown");
 const timer = document.getElementById("timer");
+const eventScreen =
+document.getElementById(
+"eventScreen"
+);
 
+const eventInput =
+document.getElementById(
+"eventInput"
+);
+
+const enterEventBtn =
+document.getElementById(
+"enterEventBtn"
+);
+window.onload = async()=>{
+
+  if(EVENT_ID){
+
+    eventScreen
+    .classList
+    .remove("active");
+
+    homeScreen
+    .classList
+    .add("active");
+
+    return;
+
+  }
+
+  homeScreen
+  .classList
+  .remove("active");
+
+};
+
+enterEventBtn.onclick =
+async()=>{
+
+  const value =
+  eventInput.value
+  .trim()
+  .toLowerCase();
+
+  if(!value)return;
+
+  try{
+
+    const res =
+    await fetch("/events");
+
+    const events =
+    await res.json();
+
+    const ev =
+    events.find(
+
+      e=>
+      e.slug
+      .toLowerCase()
+      === value
+
+    );
+
+    if(!ev){
+
+      alert(
+      "Evento no encontrado"
+      );
+
+      return;
+
+    }
+
+    window.location.href =
+    "/360/?event=" +
+    ev.slug;
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+    alert(
+    "Error cargando eventos"
+    );
+
+  }
+
+};
 let mediaRecorder;
 let recordedChunks = [];
 let stream;
@@ -22,6 +119,8 @@ startBtn.addEventListener("click", async () => {
   try {
 
     startBtn.disabled = true;
+    startBtn.style.pointerEvents =
+"none";
 
     showScreen(cameraScreen);
 
@@ -47,6 +146,8 @@ startBtn.addEventListener("click", async () => {
     alert("Error iniciando cámara");
 
     startBtn.disabled = false;
+    startBtn.style.pointerEvents =
+"auto";
 
     showScreen(homeScreen);
   }
@@ -90,11 +191,68 @@ function startRecording() {
 
       timer.innerText = "SUBIENDO...";
 
-      const uploadedUrl = await uploadVideo(blob);
+     const uploadedUrl =
+await uploadVideo(blob);
 
-      console.log("VIDEO SUBIDO:", uploadedUrl);
+const saveRes =
+await fetch(
 
-      timer.innerText = "VIDEO LISTO";
+  "/save-360-video",
+
+  {
+
+    method:"POST",
+
+    headers:{
+      "Content-Type":
+      "application/json"
+    },
+
+    body:JSON.stringify({
+
+      event_slug:
+      EVENT_ID,
+
+      video_url:
+      uploadedUrl
+
+    })
+
+  }
+
+);
+
+if(!saveRes.ok){
+
+  throw new Error(
+    "Error guardando video"
+  );
+
+}
+
+     console.log(
+"VIDEO SUBIDO:",
+uploadedUrl
+);
+
+timer.innerText =
+"VIDEO LISTO";
+
+showScreen(
+thanksScreen
+);
+setTimeout(() => {
+
+  startBtn.disabled = false;
+
+  startBtn.style.pointerEvents =
+  "auto";
+
+  showScreen(homeScreen);
+
+  timer.innerText = "00:15";
+
+}, 5000);
 
     } catch (error) {
 
@@ -105,31 +263,25 @@ function startRecording() {
       alert(error.message);
     }
 
-    showScreen(thanksScreen);
 
-    setTimeout(() => {
-
-      startBtn.disabled = false;
-
-      showScreen(homeScreen);
-
-      timer.innerText = "00:15";
-
-    }, 5000);
   };
 
   mediaRecorder.start();
 
   let seconds = 15;
 
-  timer.innerText = `00:0${seconds}`;
+ timer.innerText =
+`00:${String(seconds)
+.padStart(2,"0")}`;
 
   const interval = setInterval(() => {
     seconds--;
 
     if (seconds >= 0) {
 
-      timer.innerText = `00:0${seconds}`;
+      timer.innerText =
+`00:${String(seconds)
+.padStart(2,"0")}`;
     }
 
     if (seconds <= 0) {
@@ -190,8 +342,12 @@ function stopCamera() {
 
 function showScreen(screen) {
 
+  eventScreen.classList.remove("active");
+
   homeScreen.classList.remove("active");
+
   cameraScreen.classList.remove("active");
+
   thanksScreen.classList.remove("active");
 
   screen.classList.add("active");
