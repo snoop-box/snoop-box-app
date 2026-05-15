@@ -9,7 +9,7 @@ let EVENT_ID =
 params.get("event");
 
 
-const homeScreen = document.getElementById("homeScreen");
+const homeScreen =document.getElementById("cameraScreen");
 const cameraScreen = document.getElementById("cameraScreen");
 const thanksScreen = document.getElementById("thanksScreen");
 
@@ -33,25 +33,21 @@ const enterEventBtn =
 document.getElementById(
 "enterEventBtn"
 );
-window.onload = async()=>{
+window.onload = ()=>{
 
   if(EVENT_ID){
 
-    eventScreen
-    .classList
-    .remove("active");
-
-    homeScreen
-    .classList
-    .add("active");
+    showScreen(
+      cameraScreen
+    );
 
     return;
 
   }
 
-  homeScreen
-  .classList
-  .remove("active");
+  showScreen(
+    eventScreen
+  );
 
 };
 
