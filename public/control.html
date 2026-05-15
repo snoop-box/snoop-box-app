@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1">
+
+<title>Control Salón</title>
+
 <link
 rel="manifest"
 href="/control-manifest.json"
@@ -15,9 +24,6 @@ content="#000000"
 rel="apple-touch-icon"
 href="/icons/control-192.png"
 />
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Control Salón</title>
 
 <style>
 
@@ -119,16 +125,205 @@ body{
   padding:40px;
 }
 
-@keyframes glow{
-  from{
-    text-shadow:0 0 6px rgba(255,255,255,.2);
-  }
-  to{
-    text-shadow:0 0 24px rgba(255,0,90,.6);
-  }
+input{
+  box-sizing:border-box;
 }
+
+button{
+  cursor:pointer;
+}
+
+@keyframes glow{
+
+  from{
+    text-shadow:
+    0 0 6px rgba(255,255,255,.2);
+  }
+
+  to{
+    text-shadow:
+    0 0 24px rgba(255,0,90,.6);
+  }
+
+}
+
 </style>
+
 </head>
+
+<body>
+
+<!-- LOGIN EVENTO -->
+
+<div
+id="loginScreen"
+style="
+display:none;
+min-height:100vh;
+justify-content:center;
+align-items:center;
+padding:24px;
+">
+
+  <div class="card center">
+
+    <h1>
+      Snoop Box
+    </h1>
+
+    <div class="sub">
+      Ingresar evento
+    </div>
+
+    <input
+    id="eventInput"
+    placeholder="Nombre evento"
+    style="
+    margin-top:20px;
+    padding:14px;
+    width:100%;
+    border:none;
+    border-radius:14px;
+    font-size:18px;
+    text-align:center;
+    ">
+
+    <button
+    id="enterBtn"
+    style="
+    margin-top:18px;
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:14px;
+    font-size:18px;
+    font-weight:bold;
+    background:#ff0055;
+    color:white;
+    ">
+
+      ENTRAR
+
+    </button>
+
+  </div>
+
+</div>
+
+<!-- CONTROL -->
+
+<div
+class="wrap"
+id="controlScreen">
+
+  <div class="card">
+
+    <div class="center">
+
+      <div id="eventTitle">
+        Cargando...
+      </div>
+
+      <div class="sub">
+        Panel en vivo del evento
+      </div>
+
+    </div>
+
+    <div class="grid">
+
+      <div class="stat">
+
+        <div class="label">
+          Invitados
+        </div>
+
+        <div
+        class="value"
+        id="total">
+
+          0
+
+        </div>
+
+      </div>
+
+      <div class="stat">
+
+        <div class="label">
+          Presentes
+        </div>
+
+        <div
+        class="value"
+        id="arrived">
+
+          0
+
+        </div>
+
+      </div>
+
+      <div class="stat">
+
+        <div class="label">
+          Faltan llegar
+        </div>
+
+        <div
+        class="value"
+        id="missing">
+
+          0
+
+        </div>
+
+      </div>
+
+      <div class="stat">
+
+        <div class="label">
+          Actualización
+        </div>
+
+        <div
+        class="value"
+        style="font-size:24px;">
+
+          LIVE
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="bigPercent">
+
+      <div class="label">
+        Porcentaje ingreso
+      </div>
+
+      <div
+      class="bigNumber"
+      id="percent">
+
+        0%
+
+      </div>
+
+    </div>
+
+    <div class="footer">
+      Actualiza automáticamente cada 5 segundos
+    </div>
+
+  </div>
+
+  <div id="errorBox"></div>
+
+</div>
+
 <script>
 
 if(
@@ -142,146 +337,97 @@ if(
 
 }
 
-</script>
-<body>
-
-<div class="wrap">
-
-<div class="card">
-
-<div class="center">
-<div id="eventTitle">Cargando...</div>
-<div class="sub">
-Panel en vivo del evento
-</div>
-</div>
-
-<div class="grid">
-
-<div class="stat">
-<div class="label">
-Invitados
-</div>
-<div class="value" id="total">
-0
-</div>
-</div>
-
-<div class="stat">
-<div class="label">
-Presentes
-</div>
-<div class="value" id="arrived">
-0
-</div>
-</div>
-
-<div class="stat">
-<div class="label">
-Faltan llegar
-</div>
-<div class="value" id="missing">
-0
-</div>
-</div>
-
-<div class="stat">
-<div class="label">
-Actualización
-</div>
-<div class="value" style="font-size:24px;">
-LIVE
-</div>
-</div>
-
-</div>
-
-<div class="bigPercent">
-
-<div class="label">
-Porcentaje ingreso
-</div>
-
-<div class="bigNumber"
-id="percent">
-0%
-</div>
-
-</div>
-
-<div class="footer">
-Actualiza automáticamente cada 5 segundos
-</div>
-
-</div>
-
-<div id="errorBox"></div>
-
-</div>
-
-<script>
-
 const eventSlug =
-new URLSearchParams(location.search)
+new URLSearchParams(
+location.search
+)
 .get("event") || "";
 
 let interval = null;
+
+const loginScreen =
+document.getElementById(
+"loginScreen"
+);
+
+const controlScreen =
+document.getElementById(
+"controlScreen"
+);
+
+const eventInput =
+document.getElementById(
+"eventInput"
+);
+
+const enterBtn =
+document.getElementById(
+"enterBtn"
+);
 
 /* ===================== */
 
 async function init(){
 
- if(!eventSlug){
+  if(!eventSlug){
 
-  document.getElementById(
-   "errorBox"
-  ).innerHTML =
-  "Falta ?event=slug";
+    controlScreen.style.display =
+    "none";
 
-  return;
+    loginScreen.style.display =
+    "flex";
 
- }
-
- try{
-
-  const res =
-  await fetch(
-   "/event-config/" +
-   encodeURIComponent(eventSlug)
-  );
-
-  const data =
-  await res.json();
-
-  if(!data.success){
-
-   document.getElementById(
-    "errorBox"
-   ).innerHTML =
-   "Evento no encontrado";
-
-   return;
+    return;
 
   }
 
-  document.getElementById(
-   "eventTitle"
-  ).innerText =
-  data.event.name;
+  try{
 
-  await loadControl();
+    const res =
+    await fetch(
 
-  interval = setInterval(()=>{
-   loadControl();
-  },5000);
+      "/event-config/" +
+      encodeURIComponent(
+        eventSlug
+      )
 
- }
+    );
 
- catch(err){
+    const data =
+    await res.json();
 
-  console.error(err);
+    if(!data.success){
 
- }
+      document.getElementById(
+      "errorBox"
+      ).innerHTML =
+      "Evento no encontrado";
+
+      return;
+
+    }
+
+    document.getElementById(
+    "eventTitle"
+    ).innerText =
+    data.event.name;
+
+    await loadControl();
+
+    interval =
+    setInterval(()=>{
+
+      loadControl();
+
+    },5000);
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+  }
 
 }
 
@@ -289,61 +435,92 @@ async function init(){
 
 async function loadControl(){
 
- try{
+  try{
 
-  const res =
-  await fetch(
-   "/db-guests/" +
-   eventSlug
-  );
+    const res =
+    await fetch(
 
-  const guests =
-  await res.json();
+      "/db-guests/" +
+      eventSlug
 
-  const total =
-  guests.length;
+    );
 
-  const arrived =
-  guests.filter(g=>g.arrived)
-  .length;
+    const guests =
+    await res.json();
 
-  const missing =
-  total - arrived;
+    const total =
+    guests.length;
 
-  const percent =
-  total
-  ? Math.round(
-     (arrived * 100)
-     / total
+    const arrived =
+    guests.filter(
+      g=>g.arrived
+    ).length;
+
+    const missing =
+    total - arrived;
+
+    const percent =
+    total
+
+    ? Math.round(
+
+      (arrived * 100)
+      / total
+
     )
-  : 0;
 
-  document.getElementById(
-   "total"
-  ).innerText = total;
+    : 0;
 
-  document.getElementById(
-   "arrived"
-  ).innerText = arrived;
+    document.getElementById(
+    "total"
+    ).innerText =
+    total;
 
-  document.getElementById(
-   "missing"
-  ).innerText = missing;
+    document.getElementById(
+    "arrived"
+    ).innerText =
+    arrived;
 
-  document.getElementById(
-   "percent"
-  ).innerText =
-  percent + "%";
+    document.getElementById(
+    "missing"
+    ).innerText =
+    missing;
 
- }
+    document.getElementById(
+    "percent"
+    ).innerText =
+    percent + "%";
 
- catch(err){
+  }
 
-  console.error(err);
+  catch(err){
 
- }
+    console.error(err);
+
+  }
 
 }
+
+/* ===================== */
+
+enterBtn.onclick = ()=>{
+
+  const value =
+  eventInput.value
+  .trim()
+  .toLowerCase();
+
+  if(!value)return;
+
+  window.location.href =
+
+  "/control?event=" +
+
+  encodeURIComponent(
+    value
+  );
+
+};
 
 /* ===================== */
 
