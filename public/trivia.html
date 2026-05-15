@@ -509,23 +509,52 @@ optionIndex,
 btn
 ){
 
-  answers[questionIndex] =
-  optionIndex;
+  if(
+    answers[questionIndex]
+    !== undefined
+  ){
+    return;
+  }
+
+  const question =
+  questions[questionIndex];
 
   const parent =
   btn.parentElement;
 
-  parent
-  .querySelectorAll(".option")
-  .forEach(b=>{
+  const buttons =
+  parent.querySelectorAll(
+    ".option"
+  );
 
-    b.style.background =
-    "rgba(255,255,255,.12)";
+  answers[questionIndex] =
+  optionIndex;
+
+  buttons.forEach((b,i)=>{
+
+    b.disabled = true;
+
+    if(
+      i ==
+      question.correct_answer
+    ){
+
+      b.style.background =
+      "#00c853";
+
+    }
 
   });
 
-  btn.style.background =
-  "#ff0055";
+  if(
+    optionIndex !=
+    question.correct_answer
+  ){
+
+    btn.style.background =
+    "#d50000";
+
+  }
 
 }
 
@@ -588,13 +617,13 @@ questions.forEach((q,index)=>{
   });
 
   if(
-    answers[index] ==
-    q.correct_answer
-  ){
+Number(answers[index]) ===
+Number(q.correct_answer)
+){
 
-    score += 3;
+  score += 3;
 
-  }
+}
 
 });
 
