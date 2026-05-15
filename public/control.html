@@ -337,11 +337,7 @@ if(
 
 }
 
-const eventSlug =
-new URLSearchParams(
-location.search
-)
-.get("event") || "";
+let eventSlug = "";
 
 let interval = null;
 
@@ -371,15 +367,15 @@ async function init(){
 
   if(!eventSlug){
 
-    controlScreen.style.display =
-    "none";
+  controlScreen.style.display =
+  "none";
 
-    loginScreen.style.display =
-    "flex";
+  loginScreen.style.display =
+  "flex";
 
-    return;
+  return;
 
-  }
+}
 
   try{
 
@@ -413,6 +409,8 @@ async function init(){
     data.event.name;
 
     await loadControl();
+
+    clearInterval(interval);
 
     interval =
     setInterval(()=>{
@@ -512,13 +510,15 @@ enterBtn.onclick = ()=>{
 
   if(!value)return;
 
-  window.location.href =
+  eventSlug = value;
 
-  "/control?event=" +
+loginScreen.style.display =
+"none";
 
-  encodeURIComponent(
-    value
-  );
+controlScreen.style.display =
+"";
+
+init();
 
 };
 
