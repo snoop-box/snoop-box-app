@@ -189,6 +189,26 @@ padding:24px;
     ">
 
     <button
+    id="installBtn"
+    style="
+    display:none;
+    margin-top:20px;
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:14px;
+    font-size:18px;
+    font-weight:bold;
+    background:#111;
+    color:white;
+    margin-bottom:10px;
+    ">
+
+      📲 Instalar App
+
+    </button>
+
+    <button
     id="enterBtn"
     style="
     margin-top:18px;
@@ -337,6 +357,8 @@ if(
 
 }
 
+let deferredPrompt;
+
 let eventSlug = "";
 
 let interval = null;
@@ -361,21 +383,69 @@ document.getElementById(
 "enterBtn"
 );
 
+const installBtn =
+document.getElementById(
+"installBtn"
+);
+
+/* ===================== */
+/* INSTALL APP */
+/* ===================== */
+
+window.addEventListener(
+
+  "beforeinstallprompt",
+
+  (e)=>{
+
+    e.preventDefault();
+
+    deferredPrompt = e;
+
+    installBtn.style.display =
+    "block";
+
+  }
+
+);
+
+installBtn.onclick =
+async()=>{
+
+  if(!deferredPrompt)return;
+
+  deferredPrompt.prompt();
+
+  const result =
+  await deferredPrompt
+  .userChoice;
+
+  console.log(result);
+
+  deferredPrompt = null;
+
+  installBtn.style.display =
+  "none";
+
+};
+
+/* ===================== */
+/* INIT */
 /* ===================== */
 
 async function init(){
 
   if(!eventSlug){
 
-  controlScreen.style.display =
-  "none";
+    controlScreen.style.display =
+    "none";
 
-  loginScreen.style.display =
-  "flex";
+    loginScreen.style.display =
+    "flex";
 
-  return;
+    return;
 
-}
+  }
 
   try{
 
@@ -403,6 +473,12 @@ async function init(){
 
     }
 
+    loginScreen.style.display =
+    "none";
+
+    controlScreen.style.display =
+    "";
+
     document.getElementById(
     "eventTitle"
     ).innerText =
@@ -429,6 +505,8 @@ async function init(){
 
 }
 
+/* ===================== */
+/* LOAD CONTROL */
 /* ===================== */
 
 async function loadControl(){
@@ -500,6 +578,8 @@ async function loadControl(){
 }
 
 /* ===================== */
+/* LOGIN */
+/* ===================== */
 
 enterBtn.onclick = ()=>{
 
@@ -512,13 +592,7 @@ enterBtn.onclick = ()=>{
 
   eventSlug = value;
 
-loginScreen.style.display =
-"none";
-
-controlScreen.style.display =
-"";
-
-init();
+  init();
 
 };
 
