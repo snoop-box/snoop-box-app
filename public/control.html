@@ -1,11 +1,26 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<link
+rel="manifest"
+href="/control-manifest.json"
+/>
+
+<meta
+name="theme-color"
+content="#000000"
+/>
+
+<link
+rel="apple-touch-icon"
+href="/icons/control-192.png"
+/>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Control Salón</title>
 
 <style>
+
 body{
   margin:0;
   font-family:Arial,sans-serif;
@@ -114,6 +129,20 @@ body{
 }
 </style>
 </head>
+<script>
+
+if(
+  "serviceWorker"
+  in navigator
+){
+
+  navigator
+  .serviceWorker
+  .register("/sw.js");
+
+}
+
+</script>
 <body>
 
 <div class="wrap">
