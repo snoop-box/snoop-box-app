@@ -198,72 +198,74 @@ function startRecording() {
 
     try {
 
-      timer.innerText = "SUBIENDO...";
+  timer.innerText = "SUBIENDO...";
 
-     const uploadedUrl =
-await uploadVideo(blob);
+  const uploadedUrl =
+  await uploadVideo(blob);
 
-const saveRes =
-await fetch(
+  const saveRes =
+  await fetch(
 
-  "/save-360-video",
+    "/save-360-video",
 
-  {
+    {
 
-    method:"POST",
+      method:"POST",
 
-    headers:{
-      "Content-Type":
-      "application/json"
-    },
+      headers:{
+        "Content-Type":
+        "application/json"
+      },
 
-    body:JSON.stringify({
+      body:JSON.stringify({
 
-      event_slug:
-      EVENT_ID,
+        event_slug:
+        EVENT_ID,
 
-      video_url:
-      uploadedUrl
+        video_url:
+        uploadedUrl
 
-    })
+      })
+
+    }
+
+  );
+
+  if(!saveRes.ok){
+
+    throw new Error(
+      "Error guardando video"
+    );
 
   }
 
-);
-
-if(!saveRes.ok){
-
-  throw new Error(
-    "Error guardando video"
+  console.log(
+    "VIDEO SUBIDO:",
+    uploadedUrl
   );
 
+  timer.innerText =
+  "VIDEO LISTO";
+
+  showScreen(
+    thanksScreen
+  );
+
+  setTimeout(() => {
+
+    startBtn.disabled = false;
+
+    startBtn.style.pointerEvents =
+    "auto";
+
+    showScreen(homeScreen);
+
+    timer.innerText = "00:15";
+
+  }, 5000);
+
 }
-
-     console.log(
-"VIDEO SUBIDO:",
-uploadedUrl
-);
-
-timer.innerText =
-"VIDEO LISTO";
-
-showScreen(
-thanksScreen
-);
-setTimeout(() => {
-
-  startBtn.disabled = false;
-
-  startBtn.style.pointerEvents =
-  "auto";
-
-  showScreen(homeScreen);
-
-  timer.innerText = "00:15";
-
-}, 5000);
-
-    } catch (error) {
+ catch (error) {
 
       console.error(error);
 
