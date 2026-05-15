@@ -598,6 +598,30 @@ enterBtn.onclick = ()=>{
 
 /* ===================== */
 
+window.addEventListener(
+
+  "pageshow",
+
+  ()=>{
+
+    eventSlug = "";
+
+    clearInterval(interval);
+
+    document.getElementById(
+"errorBox"
+).innerHTML = "";
+
+    controlScreen.style.display =
+    "none";
+
+    loginScreen.style.display =
+    "flex";
+
+  }
+
+);
+
 init();
 
 </script>
