@@ -1471,6 +1471,26 @@ for(const rawRow of data){
 /* CATCH ALL */
 /* ========================================= */
 
+app.get(
+
+  "/control",
+
+  (req,res)=>{
+
+    res.sendFile(
+
+      path.join(
+        __dirname,
+        "public",
+        "control.html"
+      )
+
+    );
+
+  }
+
+);
+
 app.get("*",(req,res)=>{
 
   res.sendFile(
