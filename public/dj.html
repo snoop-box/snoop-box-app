@@ -273,7 +273,7 @@ async function loginEvent(){
  const name=document.getElementById("eventInput").value.toLowerCase();
  const res=await fetch("/events");
  const events=await res.json();
- const ev=events.find(e=>e.name.toLowerCase()===name);
+ const ev=events.find(e=>e.slug.toLowerCase()===name);
  if(!ev)return;
 
  selectedEvent=ev;
@@ -281,13 +281,13 @@ async function loginEvent(){
  document.getElementById("login").style.display="none";
  document.getElementById("app").style.display="block";
 
- if(ev.background){
-  document.getElementById("bgLogo").src = ev.background;
+ if(ev.background_url){
+  document.getElementById("bgLogo").src = ev.background_url;
  }
 
  QRCode.toCanvas(
    document.getElementById("qr"),
-   window.location.origin + "/?event=" + ev.name
+   window.location.origin + "/login.html?event=" + ev.slug
  );
 
  loadPhotos();
@@ -299,7 +299,11 @@ async function loginEvent(){
 }
 
 async function loadPhotos(){
- const res=await fetch("/photos/"+selectedEvent.name);
+ const res =
+await fetch(
+"/event-photos/" +
+selectedEvent.slug
+);
  const data=await res.json();
 
  if(data.length > lastPhotoCount){
@@ -312,7 +316,7 @@ async function loadPhotos(){
 
 function showNewPhotoAlert(p){
  const box=document.getElementById("newPhotoAlert");
- box.innerText="📸 Nueva foto Mesa "+p.table;
+ box.innerText="📸 Nueva foto Mesa "+p.guest_table;
  box.style.display="block";
  setTimeout(()=>box.style.display="none",2000);
 }
@@ -353,10 +357,12 @@ function showPhoto(p){
    },50);
  };
 
- img.src=p.url;
+ img.src=p.image_url;
 
  document.getElementById("photoUser").innerText=
-   p.user+" • Mesa "+p.table;
+   p.guest_name+
+" • Mesa "+
+p.guest_table;
 }
 
 document.getElementById("deleteBtn").onclick=async()=>{
@@ -365,16 +371,24 @@ document.getElementById("deleteBtn").onclick=async()=>{
  await fetch("/photo",{
   method:"DELETE",
   headers:{"Content-Type":"application/json"},
-  body:JSON.stringify({url:currentPhoto.url})
+  body:JSON.stringify({
+url:currentPhoto.image_url
+})
  });
 
- photos=photos.filter(p=>p.url!==currentPhoto.url);
+ photos=photos.filter(
+
+p=>
+p.image_url
+!== currentPhoto.image_url
+
+);
  currentPhoto=null;
  photoIndex=0;
 };
 
 async function loadRanking(){
- const res=await fetch("/ranking/"+selectedEvent.name);
+ const res=await fetch("/ranking/"+selectedEvent.slug);
  const data=await res.json();
  if(!data.length)return;
 
@@ -444,7 +458,7 @@ function showWinner(w){
  overlay.style.display="flex";
 
  document.getElementById("winnerText").innerHTML=
- `🎉 ${w.user}<br>Mesa ${w.table}`;
+ `🎉 ${w.guest_name}<br>Mesa ${w.guest_table}`;
 
  setTimeout(()=>overlay.style.display="none",4000);
 }
