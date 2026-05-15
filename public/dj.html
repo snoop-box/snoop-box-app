@@ -307,8 +307,19 @@ selectedEvent.slug
  const data=await res.json();
 
  if(data.length > lastPhotoCount){
-   showNewPhotoAlert(data[0]);
- }
+
+  const newPhoto =
+  data[0];
+
+  showNewPhotoAlert(
+    newPhoto
+  );
+
+  showPhoto(
+    newPhoto
+  );
+
+}
 
  lastPhotoCount=data.length;
  photos=data;
