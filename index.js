@@ -5,6 +5,7 @@ const cors = require("cors");
 const { Pool } = require("pg");
 const multer = require("multer");
 const XLSX = require("xlsx");
+const axios = require("axios");
 
 require("dotenv").config();
 
@@ -974,6 +975,35 @@ async(req,res)=>{
       ]
 
     );
+    try{
+
+  await axios.post(
+
+    "https://snoop-360-render-worker-production.up.railway.app/render360",
+
+    {
+
+      videoUrl: video_url,
+      eventId: event_slug
+
+    }
+
+  );
+
+  console.log(
+    "🎬 Render worker disparado"
+  );
+
+}
+
+catch(renderErr){
+
+  console.error(
+    "❌ Error llamando render worker",
+    renderErr.message
+  );
+
+}
 
     res.json({
       success:true
