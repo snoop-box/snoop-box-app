@@ -1023,46 +1023,76 @@ catch(renderErr){
 
 });
 
-/* ========================================= */
-/* LIST 360 VIDEOS */
-/* ========================================= */
+/* =========================================
+   GALERIA 360
+   MOSTRAR RENDER FINAL
+========================================= */
 
 app.get(
-"/360-videos/:slug",
-async(req,res)=>{
+"/360-videos/:event",
+async(
+req,
+res
+)=>{
 
-  try{
+try{
 
-    const slug =
-    req.params.slug;
+const eventSlug =
+req.params.event;
 
-    const result =
-    await pool.query(
+const result =
+await cloudinary.search
+.expression(
 
-      `SELECT *
-       FROM videos360
+`folder:snoopbox/${eventSlug}/360/rendered`
 
-       WHERE event_slug=$1
+)
 
-       ORDER BY id DESC`,
+.sort_by(
+"created_at",
+"desc"
+)
 
-      [slug]
+.max_results(
+100
+)
 
-    );
+.execute();
 
-    res.json(result.rows);
+const videos =
+result.resources.map(
+v=>({
 
-  }
+guest_name:
+"Invitado",
 
-  catch(err){
+video_url:
+v.secure_url,
 
-    console.error(err);
+created_at:
+v.created_at
 
-    res.json([]);
+})
+);
 
-  }
+res.json(
+videos
+);
+
+}
+
+catch(err){
+
+console.error(
+err
+);
+
+res.json([]);
+
+}
 
 });
+
 /* ========================================= */
 /* ARRIVE GUEST */
 /* ========================================= */
