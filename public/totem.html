@@ -6,160 +6,108 @@
 <title>Tótem Snoop Box</title>
 
 <style>
+
 body{
-  margin:0;
-  font-family:Arial,sans-serif;
-  background:radial-gradient(circle,#111,#000);
-  color:#fff;
-  overflow-x:hidden;
+margin:0;
+font-family:Arial,sans-serif;
+background:radial-gradient(circle,#111,#000);
+color:#fff;
+overflow-x:hidden;
 }
 
 header{
-  padding:18px;
-  text-align:center;
-  background:rgba(255,255,255,.04);
-  backdrop-filter:blur(8px);
+padding:18px;
+text-align:center;
+background:rgba(255,255,255,.05);
+backdrop-filter:blur(10px);
 }
 
 #eventTitle{
-  font-size:34px;
-  font-weight:bold;
-}
-
-#cameraBtn{
-  position:fixed;
-  bottom:20px;
-  right:20px;
-  background:#ff0055;
-  color:#fff;
-  border:none;
-  border-radius:16px;
-  padding:18px 24px;
-  font-size:20px;
-  cursor:pointer;
-  z-index:100;
+font-size:34px;
+font-weight:bold;
 }
 
 #grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
-  gap:14px;
-  padding:18px;
-  padding-right:270px;
+display:grid;
+grid-template-columns:
+repeat(auto-fill,minmax(260px,1fr));
+gap:14px;
+padding:18px;
+padding-right:270px;
 }
 
 .card{
-  background:#1a1a1a;
-  border-radius:18px;
-  overflow:hidden;
-  box-shadow:0 10px 25px rgba(0,0,0,.35);
-  cursor:pointer;
-  transition:.25s;
-}
-
-.card:hover{
-  transform:translateY(-4px);
+position:relative;
+background:#1a1a1a;
+border-radius:18px;
+overflow:hidden;
+cursor:pointer;
+box-shadow:
+0 10px 25px rgba(0,0,0,.35);
 }
 
 .card img{
-  width:100%;
-  height:280px;
-  object-fit:cover;
+width:100%;
+height:280px;
+object-fit:cover;
 }
 
 .info{
-  padding:12px;
+padding:12px;
 }
 
 .user{
-  font-size:22px;
-  font-weight:bold;
+font-size:22px;
+font-weight:bold;
 }
 
 .table{
-  color:#ddd;
-  margin-top:4px;
+margin-top:4px;
+color:#ccc;
 }
 
-#toast{
-
-position:fixed;
-
-top:20px;
-
-left:50%;
-
-transform:
-translateX(-50%);
-
-padding:
-
-16px
-28px;
-
-border-radius:18px;
-
-background:
-
-rgba(
-20,
-20,
-30,
-.92
-);
-
-color:white;
-
-font-size:20px;
-
-backdrop-filter:
-blur(12px);
-
-opacity:0;
-
-transition:.35s;
-
-z-index:9999;
-
-pointer-events:none;
-
+.deleteBtn{
+position:absolute;
+top:10px;
+right:10px;
+width:36px;
+height:36px;
+display:flex;
+justify-content:center;
+align-items:center;
+border-radius:50%;
+background:rgba(0,0,0,.8);
+z-index:30;
+cursor:pointer;
 }
-
-#toast.show{
-
-opacity:1;
-
-}
-
-/* SIDE PANEL */
 
 #side{
-  position:fixed;
-  top:0;
-  right:0;
-  width:250px;
-  height:100%;
-  background:rgba(0,0,0,.82);
-  backdrop-filter:blur(10px);
-  padding:16px;
-  box-sizing:border-box;
-  overflow:auto;
+position:fixed;
+top:0;
+right:0;
+width:250px;
+height:100%;
+padding:16px;
+box-sizing:border-box;
+background:rgba(0,0,0,.82);
+backdrop-filter:blur(10px);
+overflow:auto;
 }
 
 #rankTitle{
-  text-align:center;
-  font-size:26px;
-  font-weight:bold;
-  margin-bottom:14px;
+font-size:26px;
+font-weight:bold;
+text-align:center;
+margin-bottom:16px;
 }
 
 .rankRow{
-  display:flex;
-  justify-content:space-between;
-  padding:12px;
-  border-radius:14px;
-  background:rgba(255,255,255,.06);
-  margin-bottom:10px;
+display:flex;
+justify-content:space-between;
+padding:12px;
+margin-bottom:10px;
+border-radius:14px;
+background:rgba(255,255,255,.06);
 }
 
 .gold{border:1px solid gold;}
@@ -167,193 +115,148 @@ opacity:1;
 .bronze{border:1px solid #cd7f32;}
 
 #qrBox{
-  margin-top:20px;
-  text-align:center;
-  background:#fff;
-  color:#000;
-  padding:12px;
-  border-radius:16px;
+margin-top:20px;
+background:#fff;
+color:#000;
+padding:12px;
+border-radius:18px;
+text-align:center;
 }
 
-#qrBox img{
-  width:140px;
+#qrImg{
+width:140px;
 }
 
-#qrText{
-  font-size:14px;
-  margin-top:8px;
+#cameraBtn{
+position:fixed;
+bottom:20px;
+right:20px;
+padding:18px 24px;
+border:none;
+border-radius:16px;
+background:#ff0055;
+color:#fff;
+font-size:20px;
+cursor:pointer;
+z-index:200;
 }
-
-/* CAMERA */
 
 #cameraModal{
-  position:fixed;
-  inset:0;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  background:rgba(0,0,0,.92);
-  z-index:500;
+position:fixed;
+inset:0;
+display:none;
+justify-content:center;
+align-items:center;
+background:rgba(0,0,0,.9);
+z-index:500;
 }
 
 #video{
-  width:70%;
-  max-width:800px;
-  border-radius:20px;
-  transform:scaleX(-1);
+width:70%;
+max-width:800px;
+border-radius:20px;
+transform:scaleX(-1);
 }
 
 #countdown{
-  position:absolute;
-  font-size:140px;
-  font-weight:bold;
-}
-
-#flash{
-  position:fixed;
-  inset:0;
-  background:#fff;
-  opacity:0;
-  pointer-events:none;
-  z-index:600;
+position:absolute;
+font-size:140px;
+font-weight:bold;
 }
 
 #canvas{
-  display:none;
+display:none;
 }
 
-/* POPUP */
+#toast{
+position:fixed;
+top:20px;
+left:50%;
+transform:translateX(-50%);
+padding:16px 28px;
+border-radius:18px;
+background:rgba(20,20,30,.92);
+opacity:0;
+transition:.3s;
+z-index:9999;
+}
+
+#toast.show{
+opacity:1;
+}
 
 #printModal{
-  position:fixed;
-  inset:0;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  background:rgba(0,0,0,.88);
-  z-index:900;
+position:fixed;
+inset:0;
+display:none;
+justify-content:center;
+align-items:center;
+background:rgba(0,0,0,.88);
+z-index:900;
 }
 
 #printInner{
-  background:rgba(255,255,255,.5);
-  backdrop-filter:blur(12px);
-  border-radius:24px;
-  padding:24px;
-  text-align:center;
+padding:24px;
+border-radius:24px;
+background:rgba(255,255,255,.55);
+backdrop-filter:blur(12px);
 }
 
 #printFrame{
-  position:relative;
-  width:260px;
-  height:390px;
-  overflow:hidden;
-  border-radius:18px;
-  background:#000;
+position:relative;
+width:260px;
+height:390px;
+overflow:hidden;
+border-radius:18px;
+background:#000;
 }
 
 #printFrame img{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
+position:absolute;
+inset:0;
+width:100%;
+height:100%;
 }
 
 #printPhoto{
-
 object-fit:cover;
-
 z-index:1;
-
 }
 
 #printFrameOverlay{
-
 object-fit:cover;
-
 z-index:10;
-
-pointer-events:none;
-
 display:none;
-
+pointer-events:none;
 }
 
 .printBtn{
-  border:none;
-  padding:14px 18px;
-  border-radius:12px;
-  margin-top:14px;
-  cursor:pointer;
-  font-size:16px;
+margin-top:14px;
+padding:14px 18px;
+border:none;
+border-radius:12px;
+cursor:pointer;
 }
 
 .primary{
-  background:#ff0055;
-  color:#fff;
+background:#ff0055;
+color:white;
 }
 
 .dark{
-  background:#333;
-  color:#fff;
-}
-
-.card{
-
-position:relative;
-
-}
-
-.deleteBtn{
-
-position:absolute;
-
-top:10px;
-
-right:10px;
-
-width:36px;
-
-height:36px;
-
-display:flex;
-
-justify-content:center;
-
-align-items:center;
-
-border-radius:50%;
-
-background:
-
-rgba(
-0,
-0,
-0,
-.82
-);
-
+background:#333;
 color:white;
-
-cursor:pointer;
-
-z-index:50;
-
-font-size:18px;
-
-}
-
-.deleteBtn:hover{
-
-background:#ff0055;
-
 }
 
 </style>
 </head>
+
 <body>
 
 <header>
-<div id="eventTitle">Cargando...</div>
+<div id="eventTitle">
+Cargando...
+</div>
 </header>
 
 <div id="grid"></div>
@@ -367,10 +270,13 @@ background:#ff0055;
 <div id="rankingBox"></div>
 
 <div id="qrBox">
+
 <img id="qrImg">
-<div id="qrText">
+
+<div>
 Escaneá y participá
 </div>
+
 </div>
 
 </div>
@@ -385,30 +291,39 @@ Escaneá y participá
 </div>
 
 <canvas id="canvas"></canvas>
-<div id="flash"></div>
+
 <div id="toast"></div>
 
 <div id="printModal">
 
 <div id="printInner">
 
-<div style="font-size:24px;font-weight:bold;color:#111;margin-bottom:14px;">
+<h3 style="color:#111">
 Vista previa impresión
-</div>
+</h3>
 
 <div id="printFrame">
+
 <img id="printPhoto">
+
 <img id="printFrameOverlay">
+
 </div>
 
-<button class="printBtn primary"
+<button
+class="printBtn primary"
 onclick="printCurrentPhoto()">
+
 🖨 Imprimir 10x15
+
 </button>
 
-<button class="printBtn dark"
+<button
+class="printBtn dark"
 onclick="closePrintModal()">
+
 Cerrar
+
 </button>
 
 </div>
@@ -417,554 +332,275 @@ Cerrar
 
 <script>
 
-const eventName =
-new URLSearchParams(location.search)
-.get("event") || "";
+const eventName=
+new URLSearchParams(
+location.search
+).get("event") || "";
 
-let frameUrl = "";
-let stream = null;
-let selectedPhoto = "";
-
-/* ===================== */
+let frameUrl="";
+let selectedPhoto="";
+let stream=null;
+let lastPhotoCount=0;
 
 async function init(){
 
- if(!eventName){
-  eventTitle.innerText =
-  "Falta ?event=";
-  return;
- }
+const r=
+await fetch(
+"/event/" +
+encodeURIComponent(
+eventName
+));
 
- const res =
- await fetch("/event/" +
- encodeURIComponent(eventName));
+const d=
+await r.json();
 
- const data =
- await res.json();
+eventTitle.innerText=
 
- if(!data.success){
-  eventTitle.innerText =
-  "Evento no encontrado";
-  return;
- }
+d.event?.name ||
 
- eventTitle.innerText =
- data.event.name;
+eventName.toUpperCase();
 
-frameUrl =
+frameUrl=
 
-data.event.frame_url ||
-
-data.event.frame ||
+d.event?.frame_url ||
 
 "";
 
-console.log(
-"FRAME EVENTO:",
-frameUrl
-);
+buildQR();
 
- buildQR();
+loadPhotos();
 
- loadPhotos();
- loadRanking();
+loadRanking();
 
 }
 
 function buildQR(){
 
- const link =
+const link=
 
- location.origin +
+location.origin+
 
- "/event/" +
+"/event/"+
 
- eventName;
+eventName;
 
- qrImg.src =
+qrImg.src=
 
- "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" +
+"https://api.qrserver.com/v1/create-qr-code/?size=180x180&data="+
 
- encodeURIComponent(
-  link
- );
-
-}
-
-/* ===================== */
-
-cameraBtn.onclick =
-startCamera;
-
-async function startCamera(){
-
- stream =
- await navigator.mediaDevices
- .getUserMedia({video:true});
-
- video.srcObject =
- stream;
-
- cameraModal.style.display =
- "flex";
-
- let n=3;
- countdown.innerText=n;
-
- const t =
- setInterval(()=>{
-
-  n--;
-
-  if(n>0){
-
-   countdown.innerText=n;
-
-  }else{
-
-   clearInterval(t);
-   countdown.innerText="";
-   capturePhoto();
-
-  }
-
- },1000);
+encodeURIComponent(
+link
+);
 
 }
-
-async function capturePhoto(){
-
- canvas.width =
- video.videoWidth || 640;
-
- canvas.height =
- video.videoHeight || 480;
-
- const ctx =
- canvas.getContext("2d");
-
- ctx.translate(canvas.width,0);
- ctx.scale(-1,1);
- ctx.drawImage(video,0,0);
-
- flash.style.opacity=1;
-
- setTimeout(()=>{
-  flash.style.opacity=0;
- },180);
-
- const image =
- canvas.toDataURL(
- "image/jpeg",0.9
- );
-
- await fetch("/upload-photo",{
-  method:"POST",
-  headers:{
-   "Content-Type":"application/json"
-  },
-  body:JSON.stringify({
-   eventName:eventName,
-   user:"Totem",
-   table:"00",
-   image:image
-  })
- });
-
- if(stream){
-  stream.getTracks()
-  .forEach(t=>t.stop());
- }
-
- cameraModal.style.display="none";
-
- loadPhotos();
- loadRanking();
-
-}
-
-/* ===================== */
 
 async function loadPhotos(){
 
- try{
+const r=
+await fetch(
+"/event-photos/"+eventName
+);
 
-  const res =
-  await fetch(
-   "/event-photos/" +
-   encodeURIComponent(
-    eventName
-   )
-  );
+const data=
+await r.json();
 
-  const data =
-  await res.json();
+grid.innerHTML="";
 
-  grid.innerHTML="";
+data.forEach(p=>{
 
-  data.forEach(p=>{
+const img=
 
-   const photoUrl =
+p.image_url ||
+p.photo_url ||
+p.url ||
+p.image;
 
-   p.image_url ||
+grid.innerHTML +=`
 
-   p.photo_url ||
+<div class="card">
 
-   p.url ||
+<div
+class="deleteBtn"
+onclick="
+deletePhoto(
+'${p.id}'
+);
+event.stopPropagation();
+">
 
-   p.image ||
+✖
 
-   "";
+</div>
 
-   const mesa =
+<div
+onclick="
+openPrintModal(
+'${img}'
+)
+">
 
-   p.guest_table ||
+<img src="${img}">
 
-   p.table ||
+<div class="info">
 
-   "-";
+<div class="user">
 
-   const usuario =
+${p.guest_name || p.user || "Invitado"}
 
-   p.guest_name ||
+</div>
 
-   p.user ||
+<div class="table">
 
-   "Invitado";
+Mesa
+${p.guest_table || p.table || "-"}
 
-   grid.innerHTML += `
+</div>
 
-   <div class="card">
+</div>
 
-    <div
-    class="deleteBtn"
+</div>
 
-    onclick="
-    deletePhoto(
-    '${p.id}'
-    );
-    event.stopPropagation();
-    ">
+</div>
 
-    ✖
+`;
 
-    </div>
-
-    <div
-    onclick="
-    openPrintModal(
-    '${photoUrl}'
-    )">
-
-     <img src="${photoUrl}">
-
-     <div class="info">
-
-      <div class="user">
-
-      ${usuario}
-
-      </div>
-
-      <div class="table">
-
-      Mesa ${mesa}
-
-      </div>
-
-     </div>
-
-    </div>
-
-   </div>
-
-   `;
-
-  });
-
- }
-
- catch(err){
-
-  console.error(
-   err
-  );
-
- }
+});
 
 }
-
-
-/* ===================== */
 
 async function loadRanking(){
 
- const res =
- await fetch("/ranking/" +
- encodeURIComponent(eventName));
+const r=
+await fetch(
+"/ranking/"+eventName
+);
 
- const data =
- await res.json();
+const data=
+await r.json();
 
- rankingBox.innerHTML="";
+rankingBox.innerHTML="";
 
- data.slice(0,5).forEach((r,i)=>{
+data
+.slice(0,5)
+.forEach((x,i)=>{
 
- let cls="";
+rankingBox.innerHTML +=`
 
- if(i===0) cls="gold";
- if(i===1) cls="silver";
- if(i===2) cls="bronze";
+<div class="rankRow">
 
- rankingBox.innerHTML += `
- <div class="rankRow ${cls}">
-  <div>${i+1}. Mesa ${r.table}</div>
-  <div>${r.points||0}</div>
- </div>
- `;
+<div>
 
- });
+${i+1}.
+Mesa
+${x.table}
 
-}
+</div>
 
-/* ===================== */
+<div>
 
-function showToast(text){
+${x.points || 0}
 
- toast.innerText =
- text;
+</div>
 
- toast.classList.add(
- "show"
- );
+</div>
 
- setTimeout(()=>{
+`;
 
- toast.classList.remove(
- "show"
- );
-
- },2500);
-
-}
-
-async function deletePhoto(id){
-
- if(
- !confirm(
- "Eliminar foto?"
- )
- ) return;
-
- try{
-
- await fetch(
-
- "/delete-photo/" +
-
- id,
-
- {
- method:"DELETE"
- }
-
- );
-
- showToast(
- "🗑 Foto eliminada"
- );
-
- loadPhotos();
-
- }
-
- catch(err){
-
- console.error(
- err
- );
-
- }
+});
 
 }
 
 function openPrintModal(url){
 
- selectedPhoto = url;
+selectedPhoto=url;
 
- printPhoto.src =
- url;
+printPhoto.src=url;
 
- printPhoto.style.objectFit =
- "cover";
+if(frameUrl){
 
- if(
- frameUrl &&
- frameUrl !== ""
- ){
+printFrameOverlay.src=
+frameUrl;
 
-  printFrameOverlay.src =
-  frameUrl;
+printFrameOverlay.style.display=
+"block";
 
-  printFrameOverlay.style.display =
-  "block";
+}
 
- }
-
- else{
-
-  printFrameOverlay.style.display =
-  "none";
-
- }
-
- printModal.style.display =
- "flex";
+printModal.style.display=
+"flex";
 
 }
 
 function closePrintModal(){
 
- printModal.style.display =
- "none";
+printModal.style.display=
+"none";
 
 }
 
 function printCurrentPhoto(){
 
- const win =
- window.open(
- "",
- "_blank"
- );
-
- win.document.write(`
-
- <html>
-
- <body style="
- margin:0;
- display:flex;
- justify-content:center;
- align-items:center;
- height:100vh;
- background:#fff;
- ">
-
- <div style="
- position:relative;
- width:4in;
- height:6in;
- overflow:hidden;
- ">
-
- <img
-
- src="${selectedPhoto}"
-
- style="
- position:absolute;
- inset:0;
- width:100%;
- height:100%;
- object-fit:cover;
- z-index:1;
- ">
-
- ${
- frameUrl
-
- ?
-
- `<img
-
- src="${frameUrl}"
-
- style="
- position:absolute;
- inset:0;
- width:100%;
- height:100%;
- object-fit:contain;
- z-index:5;
- ">
-
- `
-
- : ""
-
- }
-
- </div>
-
- </body>
-
- </html>
-
- `);
-
- win.document.close();
-
- setTimeout(()=>{
-
- win.print();
-
- win.close();
-
- },700);
+window.print();
 
 }
 
-/* ===================== */
+function showToast(t){
 
-let lastPhotoCount = 0;
+toast.innerText=t;
 
-async function pollUpdates(){
-
- try{
-
-  const oldCount =
-  lastPhotoCount;
-
-  await loadPhotos();
-
-  await loadRanking();
-
-  const cards =
-  document.querySelectorAll(
-   ".card"
-  );
-
-  lastPhotoCount =
-  cards.length;
-
-  if(
-   lastPhotoCount >
-   oldCount
-  ){
-
-   showToast(
-    "📸 Nueva foto subida"
-   );
-
-  }
-
- }
-
- catch(err){
-
-  console.error(
-   err
-  );
-
- }
-
-}
-
-setInterval(
- pollUpdates,
- 3000
+toast.classList.add(
+"show"
 );
+
+setTimeout(()=>{
+
+toast.classList.remove(
+"show"
+);
+
+},2500);
+
+}
+
+async function deletePhoto(id){
+
+await fetch(
+"/delete-photo/"+id,
+{
+method:"DELETE"
+}
+);
+
+loadPhotos();
+
+}
+
+setInterval(async()=>{
+
+const old=
+lastPhotoCount;
+
+await loadPhotos();
+
+await loadRanking();
+
+lastPhotoCount=
+document.querySelectorAll(
+".card"
+).length;
+
+if(
+lastPhotoCount >
+old
+){
+
+showToast(
+"📸 Nueva foto subida"
+);
+
+}
+
+},3000);
 
 init();
 
