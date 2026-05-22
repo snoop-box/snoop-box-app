@@ -460,61 +460,106 @@ async function capturePhoto(){
 
 async function loadPhotos(){
 
-const url =
-
-"/photos/" +
-
-encodeURIComponent(
-eventName
-);
-
-console.log(
-"FOTOS:",
-url
-);
-
-const res =
-await fetch(
-url
-);
-
-console.log(
-res.status
-);
-
-const data =
-await res.json();
-
-console.log(
-data
-);
-
- grid.innerHTML="";
-
- data.forEach(p=>{
+ try{
 
   const url =
-  p.url || p.image;
 
-  grid.innerHTML += `
-  <div class="card"
-  onclick="openPrintModal('${url}')">
+  "/event-photos/" +
+
+  encodeURIComponent(
+   eventName
+  );
+
+  console.log(
+   "FOTOS:",
+   url
+  );
+
+  const res =
+  await fetch(
+   url
+  );
+
+  const text =
+  await res.text();
+
+  console.log(
+   text
+  );
+
+  let data = [];
+
+try{
+
+ data =
+ JSON.parse(text);
+
+}
+
+catch(err){
+
+ console.error(
+ "Respuesta inválida",
+ text
+ );
+
+ return;
+
+}
+
+  grid.innerHTML="";
+
+  data.forEach(p=>{
+
+   const url =
+
+p.image_url ||
+
+p.photo_url ||
+
+p.url ||
+
+p.image ||
+
+"";
+
+   grid.innerHTML += `
+   <div class="card"
+   onclick="openPrintModal('${url}')">
 
     <img src="${url}">
 
     <div class="info">
+
       <div class="user">
-      ${p.user || "Invitado"}
+      ${p.guest_name || p.user || "Invitado"}
       </div>
+
       <div class="table">
-      Mesa ${p.table || "-"}
+      Mesa ${
+p.guest_table ||
+p.table ||
+"-"
+}
       </div>
+
     </div>
 
-  </div>
-  `;
+   </div>
+   `;
 
- });
+  });
+
+ }
+
+ catch(err){
+
+  console.error(
+   "ERROR FOTOS",
+   err
+  );
+
+ }
 
 }
 
