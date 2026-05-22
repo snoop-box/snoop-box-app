@@ -270,11 +270,11 @@ z-index:1;
 
 object-fit:cover;
 
-z-index:5;
+z-index:10;
 
 pointer-events:none;
 
-mix-blend-mode:normal;
+display:none;
 
 }
 
@@ -474,13 +474,20 @@ frameUrl
 function buildQR(){
 
  const link =
+
  location.origin +
- "/?event=" +
+
+ "/event/" +
+
  eventName;
 
  qrImg.src =
+
  "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" +
- encodeURIComponent(link);
+
+ encodeURIComponent(
+  link
+ );
 
 }
 
@@ -582,48 +589,16 @@ async function loadPhotos(){
 
  try{
 
-  const endpoint =
-
-  "/event-photos/" +
-
-  encodeURIComponent(
-   eventName
-  );
-
-  console.log(
-   "FOTOS:",
-   endpoint
-  );
-
   const res =
   await fetch(
-   endpoint
+   "/event-photos/" +
+   encodeURIComponent(
+    eventName
+   )
   );
 
-  const text =
-  await res.text();
-
-  let data = [];
-
-  try{
-
-   data =
-   JSON.parse(
-    text
-   );
-
-  }
-
-  catch(err){
-
-   console.error(
-    "JSON inválido",
-    text
-   );
-
-   return;
-
-  }
+  const data =
+  await res.json();
 
   grid.innerHTML="";
 
@@ -649,11 +624,11 @@ async function loadPhotos(){
 
    "-";
 
-   const user =
-
-   p.user ||
+   const usuario =
 
    p.guest_name ||
+
+   p.user ||
 
    "Invitado";
 
@@ -681,23 +656,23 @@ async function loadPhotos(){
     '${photoUrl}'
     )">
 
-      <img src="${photoUrl}">
+     <img src="${photoUrl}">
 
-      <div class="info">
+     <div class="info">
 
-        <div class="user">
+      <div class="user">
 
-        ${user}
-
-        </div>
-
-        <div class="table">
-
-        Mesa ${mesa}
-
-        </div>
+      ${usuario}
 
       </div>
+
+      <div class="table">
+
+      Mesa ${mesa}
+
+      </div>
+
+     </div>
 
     </div>
 
@@ -712,7 +687,6 @@ async function loadPhotos(){
  catch(err){
 
   console.error(
-   "ERROR FOTOS",
    err
   );
 
@@ -834,11 +808,6 @@ function openPrintModal(url){
 
   printFrameOverlay.style.display =
   "block";
-
-  console.log(
-   "FRAME:",
-   frameUrl
-  );
 
  }
 
