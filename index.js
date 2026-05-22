@@ -1025,7 +1025,7 @@ catch(renderErr){
 
 /* =========================================
    GALERIA 360
-   MOSTRAR RENDER FINAL
+   SOLO RENDER FINAL
 ========================================= */
 
 app.get(
@@ -1038,14 +1038,20 @@ res
 try{
 
 const eventSlug =
-req.params.event;
+String(
+req.params.event
+)
+.trim()
+.toLowerCase();
+
+console.log(
+`🎞 GALERIA ${eventSlug}`
+);
 
 const result =
 await cloudinary.search
 .expression(
-
 `folder:snoopbox/${eventSlug}/360/rendered`
-
 )
 
 .sort_by(
@@ -1060,7 +1066,13 @@ await cloudinary.search
 .execute();
 
 const videos =
-result.resources.map(
+(result.resources || [])
+.filter(
+v=>
+v.resource_type==="video"
+)
+
+.map(
 v=>({
 
 guest_name:
@@ -1069,10 +1081,23 @@ guest_name:
 video_url:
 v.secure_url,
 
+thumbnail:
+cloudinary.url(
+v.public_id,
+{
+resource_type:"video",
+format:"jpg"
+}
+),
+
 created_at:
 v.created_at
 
 })
+);
+
+console.log(
+`✅ ${videos.length} videos`
 );
 
 res.json(
