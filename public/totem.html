@@ -1,25 +1,36 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tótem Snoop Box</title>
+
+<meta name="viewport"
+content="
+width=device-width,
+initial-scale=1
+">
+
+<title>
+Tótem Snoop Box
+</title>
 
 <style>
 
 body{
 margin:0;
-font-family:Arial,sans-serif;
-background:radial-gradient(circle,#111,#000);
-color:#fff;
+font-family:Arial;
+background:#000;
+color:white;
 overflow-x:hidden;
 }
 
 header{
 padding:18px;
 text-align:center;
-background:rgba(255,255,255,.05);
-backdrop-filter:blur(10px);
+background:
+rgba(255,255,255,.05);
+backdrop-filter:blur(8px);
 }
 
 #eventTitle{
@@ -30,7 +41,13 @@ font-weight:bold;
 #grid{
 display:grid;
 grid-template-columns:
-repeat(auto-fill,minmax(260px,1fr));
+repeat(
+auto-fill,
+minmax(
+260px,
+1fr
+)
+);
 gap:14px;
 padding:18px;
 padding-right:270px;
@@ -38,12 +55,10 @@ padding-right:270px;
 
 .card{
 position:relative;
-background:#1a1a1a;
+background:#181818;
 border-radius:18px;
 overflow:hidden;
 cursor:pointer;
-box-shadow:
-0 10px 25px rgba(0,0,0,.35);
 }
 
 .card img{
@@ -76,8 +91,14 @@ display:flex;
 justify-content:center;
 align-items:center;
 border-radius:50%;
-background:rgba(0,0,0,.8);
-z-index:30;
+background:
+rgba(
+0,
+0,
+0,
+.8
+);
+z-index:20;
 cursor:pointer;
 }
 
@@ -89,93 +110,59 @@ width:250px;
 height:100%;
 padding:16px;
 box-sizing:border-box;
-background:rgba(0,0,0,.82);
-backdrop-filter:blur(10px);
+background:
+rgba(
+0,
+0,
+0,
+.85
+);
 overflow:auto;
-}
-
-#rankTitle{
-font-size:26px;
-font-weight:bold;
-text-align:center;
-margin-bottom:16px;
 }
 
 .rankRow{
 display:flex;
 justify-content:space-between;
-padding:12px;
+padding:10px;
 margin-bottom:10px;
-border-radius:14px;
-background:rgba(255,255,255,.06);
+border-radius:12px;
+background:
+rgba(
+255,
+255,
+255,
+.06
+);
 }
-
-.gold{border:1px solid gold;}
-.silver{border:1px solid silver;}
-.bronze{border:1px solid #cd7f32;}
 
 #qrBox{
 margin-top:20px;
-background:#fff;
-color:#000;
 padding:12px;
+background:white;
+color:black;
 border-radius:18px;
 text-align:center;
 }
 
 #qrImg{
-width:140px;
-}
-
-#cameraBtn{
-position:fixed;
-bottom:20px;
-right:20px;
-padding:18px 24px;
-border:none;
-border-radius:16px;
-background:#ff0055;
-color:#fff;
-font-size:20px;
-cursor:pointer;
-z-index:200;
-}
-
-#cameraModal{
-position:fixed;
-inset:0;
-display:none;
-justify-content:center;
-align-items:center;
-background:rgba(0,0,0,.9);
-z-index:500;
-}
-
-#video{
-width:70%;
-max-width:800px;
-border-radius:20px;
-transform:scaleX(-1);
-}
-
-#countdown{
-position:absolute;
-font-size:140px;
-font-weight:bold;
-}
-
-#canvas{
-display:none;
+width:150px;
 }
 
 #toast{
 position:fixed;
 top:20px;
 left:50%;
-transform:translateX(-50%);
-padding:16px 28px;
-border-radius:18px;
-background:rgba(20,20,30,.92);
+transform:
+translateX(-50%);
+padding:14px 24px;
+border-radius:16px;
+background:
+rgba(
+20,
+20,
+20,
+.92
+);
 opacity:0;
 transition:.3s;
 z-index:9999;
@@ -191,81 +178,193 @@ inset:0;
 display:none;
 justify-content:center;
 align-items:center;
-background:rgba(0,0,0,.88);
-z-index:900;
+background:
+rgba(
+0,
+0,
+0,
+.88
+);
+z-index:999;
 }
 
 #printInner{
+
 padding:24px;
+
 border-radius:24px;
-background:rgba(255,255,255,.55);
-backdrop-filter:blur(12px);
+
+background:
+rgba(
+255,
+255,
+255,
+.55
+);
+
+backdrop-filter:
+blur(
+12px
+);
+
+position:relative;
+
+overflow:visible;
+
 }
 
 #printFrame{
-position:relative;
-width:260px;
-height:390px;
-overflow:hidden;
-border-radius:18px;
-background:#000;
-}
 
-#printFrame img{
-position:absolute;
-inset:0;
-width:100%;
-height:100%;
+position:relative;
+
+width:260px;
+
+height:390px;
+
+overflow:hidden;
+
 }
 
 #printPhoto{
+
+position:absolute;
+
+inset:0;
+
+width:100%;
+
+height:100%;
+
 object-fit:cover;
+
 z-index:1;
+
 }
 
 #printFrameOverlay{
-object-fit:cover;
-z-index:10;
+
+position:absolute;
+
+inset:0;
+
+width:100%;
+
+height:100%;
+
+object-fit:fill;
+
+z-index:999;
+
 display:none;
+
 pointer-events:none;
+
 }
 
-.printBtn{
-margin-top:14px;
-padding:14px 18px;
+#cameraBtn{
+
+position:fixed;
+
+bottom:20px;
+
+right:20px;
+
+padding:18px;
+
 border:none;
-border-radius:12px;
-cursor:pointer;
-}
 
-.primary{
+border-radius:16px;
+
 background:#ff0055;
+
 color:white;
+
+font-size:22px;
+
+cursor:pointer;
+
+z-index:999;
+
 }
 
-.dark{
-background:#333;
-color:white;
+#cameraModal{
+
+position:fixed;
+
+inset:0;
+
+display:none;
+
+justify-content:center;
+
+align-items:center;
+
+background:
+rgba(
+0,
+0,
+0,
+.9
+);
+
+z-index:9999;
+
+}
+
+#video{
+
+width:80%;
+
+max-width:700px;
+
+border-radius:20px;
+
+transform:
+scaleX(-1);
+
+}
+
+#countdown{
+
+position:absolute;
+
+font-size:120px;
+
+font-weight:bold;
+
+}
+
+#canvas{
+
+display:none;
+
 }
 
 </style>
+
 </head>
 
 <body>
 
 <header>
+
 <div id="eventTitle">
+
 Cargando...
+
 </div>
+
 </header>
 
 <div id="grid"></div>
 
 <div id="side">
 
-<div id="rankTitle">
+<h2>
+
 🏆 Ranking
-</div>
+
+</h2>
 
 <div id="rankingBox"></div>
 
@@ -274,32 +373,52 @@ Cargando...
 <img id="qrImg">
 
 <div>
+
 Escaneá y participá
-</div>
 
 </div>
 
 </div>
+
+</div>
+
+<div id="toast"></div>
 
 <button id="cameraBtn">
+
 📸 Sacar Foto
+
 </button>
 
 <div id="cameraModal">
-<video id="video" autoplay playsinline></video>
-<div id="countdown"></div>
+
+<video
+id="video"
+autoplay
+playsinline>
+
+</video>
+
+<div id="countdown">
+
+3
+
 </div>
 
-<canvas id="canvas"></canvas>
+</div>
 
-<div id="toast"></div>
+<canvas id="canvas">
+
+</canvas>
 
 <div id="printModal">
 
 <div id="printInner">
 
-<h3 style="color:#111">
+<h3 style="color:black">
+
 Vista previa impresión
+
 </h3>
 
 <div id="printFrame">
@@ -310,17 +429,21 @@ Vista previa impresión
 
 </div>
 
-<button
-class="printBtn primary"
-onclick="printCurrentPhoto()">
+<br>
 
-🖨 Imprimir 10x15
+<button
+onclick="
+printCurrentPhoto()
+">
+
+🖨 Imprimir
 
 </button>
 
 <button
-class="printBtn dark"
-onclick="closePrintModal()">
+onclick="
+closePrintModal()
+">
 
 Cerrar
 
@@ -332,57 +455,266 @@ Cerrar
 
 <script>
 
-const eventName=
+const cameraBtn =
+document.getElementById(
+"cameraBtn"
+);
+
+const cameraModal =
+document.getElementById(
+"cameraModal"
+);
+
+const video =
+document.getElementById(
+"video"
+);
+
+const canvas =
+document.getElementById(
+"canvas"
+);
+
+const countdown =
+document.getElementById(
+"countdown"
+);
+
+cameraBtn.onclick =
+async()=>{
+
+try{
+
+cameraModal.style.display =
+"flex";
+
+const stream =
+await navigator
+.mediaDevices
+.getUserMedia({
+video:true
+});
+
+video.srcObject =
+stream;
+
+}catch(err){
+
+console.log(
+"CAMERA ERROR",
+err
+);
+
+}
+
+};
+
+/* ===================== */
+
+const qs =
 new URLSearchParams(
 location.search
-).get("event") || "";
+);
 
-let frameUrl="";
-let selectedPhoto="";
-let stream=null;
-let lastPhotoCount=0;
+const eventName =
+qs.get(
+"event"
+) || "";
+
+const eventTitle =
+document.getElementById(
+"eventTitle"
+);
+
+const grid =
+document.getElementById(
+"grid"
+);
+
+const rankingBox =
+document.getElementById(
+"rankingBox"
+);
+
+const qrImg =
+document.getElementById(
+"qrImg"
+);
+
+const toast =
+document.getElementById(
+"toast"
+);
+
+const printModal =
+document.getElementById(
+"printModal"
+);
+
+const printPhoto =
+document.getElementById(
+"printPhoto"
+);
+
+const printFrameOverlay =
+document.getElementById(
+"printFrameOverlay"
+);
+
+const API_BASE =
+"https://snoop-box-app-production.up.railway.app";
+
+/* ===================== */
+
+let frameUrl = "";
+
+let selectedPhoto = "";
+
+/* ===================== */
 
 async function init(){
 
-const r=
-await fetch(
-"/event/" +
-encodeURIComponent(
-eventName
-));
-
-const d=
-await r.json();
-
-eventTitle.innerText=
-
-d.event?.name ||
-
-eventName.toUpperCase();
-
-frameUrl=
-
-d.event?.frame_url ||
-
-"";
+try{
 
 buildQR();
 
-loadPhotos();
+let d = {};
 
-loadRanking();
+let eventData = {};
+
+const r =
+await fetch(
+
+API_BASE +
+
+"/event-config/" +
+
+encodeURIComponent(
+eventName
+)
+
+);
+
+if(!r.ok){
+
+throw new Error(
+"EVENT CONFIG FAIL"
+);
 
 }
+
+d =
+await r.json();
+
+console.log(
+"EVENT RAW:",
+d
+);
+
+eventData =
+
+d.event ||
+
+d.data ||
+
+d ||
+
+{};
+
+/* TITULO */
+
+eventTitle.innerText =
+
+eventData.name ||
+
+eventData.title ||
+
+eventName.toUpperCase();
+
+/* FRAME */
+
+frameUrl =
+
+eventData.frame_url ||
+
+eventData.frame ||
+
+eventData.frameUrl ||
+
+"";
+
+console.log(
+"FRAME:",
+frameUrl
+);
+
+/* PRELOAD FRAME */
+
+if(
+frameUrl &&
+printFrameOverlay
+){
+
+printFrameOverlay.src =
+
+frameUrl +
+
+"?t=" +
+
+Date.now();
+
+printFrameOverlay.onload = ()=>{
+
+console.log(
+"FRAME OK"
+);
+
+};
+
+printFrameOverlay.onerror = ()=>{
+
+console.log(
+"FRAME ERROR"
+);
+
+};
+
+}
+
+/* CARGAS */
+
+await loadPhotos();
+
+await loadRanking();
+
+}
+
+catch(err){
+
+console.log(
+"INIT ERROR",
+err
+);
+
+}
+
+}
+
+/* ===================== */
 
 function buildQR(){
 
 const link=
 
-location.origin+
+API_BASE+
 
 "/event/"+
 
 eventName;
+
+console.log(
+link
+);
 
 qrImg.src=
 
@@ -394,33 +726,80 @@ link
 
 }
 
+/* ===================== */
+
 async function loadPhotos(){
 
-const r=
+try{
+
+const r =
 await fetch(
-"/event-photos/"+eventName
+
+API_BASE +
+
+"/event-photos/" +
+
+encodeURIComponent(
+eventName
+)
+
 );
 
-const data=
+if(!r.ok){
+
+throw new Error(
+"PHOTOS FAIL"
+);
+
+}
+
+let data =
 await r.json();
+
+console.log(
+"PHOTOS:",
+data
+);
+
+if(
+!Array.isArray(
+data
+)
+){
+
+data =
+
+data.photos ||
+
+data.data ||
+
+[];
+
+}
 
 grid.innerHTML="";
 
 data.forEach(p=>{
 
-const img=
+const img =
 
 p.image_url ||
-p.photo_url ||
-p.url ||
-p.image;
 
-grid.innerHTML +=`
+p.photo_url ||
+
+p.url ||
+
+p.image ||
+
+"";
+
+grid.innerHTML += `
 
 <div class="card">
 
 <div
 class="deleteBtn"
+
 onclick="
 deletePhoto(
 '${p.id}'
@@ -445,14 +824,31 @@ openPrintModal(
 
 <div class="user">
 
-${p.guest_name || p.user || "Invitado"}
+${
+
+p.guest_name ||
+
+p.user ||
+
+"Invitado"
+
+}
 
 </div>
 
 <div class="table">
 
 Mesa
-${p.guest_table || p.table || "-"}
+
+${
+
+p.guest_table ||
+
+p.table ||
+
+"-"
+
+}
 
 </div>
 
@@ -466,22 +862,66 @@ ${p.guest_table || p.table || "-"}
 
 });
 
+}catch(e){
+
+console.log(
+"LOAD PHOTOS ERROR",
+e
+);
+
 }
+
+}
+
+/* ===================== */
 
 async function loadRanking(){
 
+try{
+
 const r=
 await fetch(
-"/ranking/"+eventName
+
+API_BASE+
+
+"/ranking/"+
+
+eventName
+
 );
 
-const data=
+if(
+!r.ok
+)return;
+
+let data=
 await r.json();
+
+if(
+!Array.isArray(
+data
+)
+){
+
+data =
+
+data.ranking ||
+
+data.data ||
+
+[];
+
+}
 
 rankingBox.innerHTML="";
 
 data
-.slice(0,5)
+
+.slice(
+0,
+5
+)
+
 .forEach((x,i)=>{
 
 rankingBox.innerHTML +=`
@@ -508,7 +948,17 @@ ${x.points || 0}
 
 });
 
+}catch(e){
+
+console.log(
+e
+);
+
 }
+
+}
+
+/* ===================== */
 
 function openPrintModal(url){
 
@@ -516,20 +966,58 @@ selectedPhoto=url;
 
 printPhoto.src=url;
 
-if(frameUrl){
+/* FRAME */
 
-printFrameOverlay.src=
-frameUrl;
+if(frameUrl){
 
 printFrameOverlay.style.display=
 "block";
 
+printFrameOverlay.src=
+
+frameUrl+
+
+"?t="+
+
+Date.now();
+
+}else{
+
+printFrameOverlay.style.display=
+"none";
+
 }
+
+/* ERRORES FRAME */
+
+printFrameOverlay.onload=()=>{
+
+console.log(
+"FRAME OK"
+);
+
+printFrameOverlay.style.display=
+"block";
+
+};
+
+printFrameOverlay.onerror=()=>{
+
+console.log(
+"FRAME ERROR"
+);
+
+printFrameOverlay.style.display=
+"none";
+
+};
 
 printModal.style.display=
 "flex";
 
 }
+
+/* ===================== */
 
 function closePrintModal(){
 
@@ -538,73 +1026,69 @@ printModal.style.display=
 
 }
 
+/* ===================== */
+
 function printCurrentPhoto(){
 
 window.print();
 
 }
 
-function showToast(t){
-
-toast.innerText=t;
-
-toast.classList.add(
-"show"
-);
-
-setTimeout(()=>{
-
-toast.classList.remove(
-"show"
-);
-
-},2500);
-
-}
+/* ===================== */
 
 async function deletePhoto(id){
 
 await fetch(
-"/delete-photo/"+id,
+
+API_BASE+
+
+"/delete-photo/"+
+
+id,
+
 {
 method:"DELETE"
 }
+
 );
 
-loadPhotos();
+await loadPhotos();
 
 }
 
-setInterval(async()=>{
+/* ===================== */
 
-const old=
-lastPhotoCount;
+setInterval(
+
+async()=>{
+
+try{
 
 await loadPhotos();
 
 await loadRanking();
 
-lastPhotoCount=
-document.querySelectorAll(
-".card"
-).length;
+}catch(e){
 
-if(
-lastPhotoCount >
-old
-){
-
-showToast(
-"📸 Nueva foto subida"
+console.log(
+"REFRESH ERROR",
+e
 );
 
 }
 
-},3000);
+},
+
+5000
+
+);
+
+/* ===================== */
 
 init();
 
 </script>
 
 </body>
+
 </html>
