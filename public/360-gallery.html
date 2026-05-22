@@ -451,101 +451,108 @@ async function loadEvent(){
 
 async function loadVideos(){
 
-  const gallery =
-  document.getElementById(
-    "gallery"
-  );
+const gallery =
+document.getElementById(
+"gallery"
+);
 
-  gallery.innerHTML =
+gallery.innerHTML =
 
-  `<div class="loader">
-  Cargando videos...
-  </div>`;
+`<div class="loader">
+Cargando videos...
+</div>`;
 
-  try{
+try{
 
-    const res =
-    await fetch(
-      "/360-videos/" +
-      eventSlug
-    );
+const res =
+await fetch(
+"/360-videos/" +
+eventSlug
+);
 
-    const videos =
-    await res.json();
+const videos =
+await res.json();
 
-    if(!videos.length){
+if(!videos.length){
 
-      gallery.innerHTML = `
+gallery.innerHTML = `
 
-      <div class="empty">
+<div class="empty">
 
-      🎬 Todavía no hay
-      videos 360 cargados
+🎬 Todavía no hay
+videos 360 cargados
 
-      </div>
+</div>
 
-      `;
+`;
 
-      return;
+return;
 
-    }
+}
 
-    gallery.innerHTML = "";
+gallery.innerHTML = "";
 
-    videos.forEach(video=>{
+videos.forEach(video=>{
 
-      gallery.innerHTML += `
+gallery.innerHTML += `
 
-      <div
-      class="card"
-      onclick='openModal(
-      "${video.video_url}",
-      "${video.guest_name}",
-      "${video.created_at}"
-      )'>
+<div
+class="card"
+onclick='openModal(
+"${video.video_url}",
+"${video.guest_name}",
+"${video.created_at}"
+)'>
 
-        <video
-        class="thumb"
-        muted
-        playsinline
-        preload="metadata">
+<img
+class="thumb"
+src="${video.thumbnail}"
+loading="lazy">
 
-          <source
-          src="${video.video_url}#t=2">
+<div class="info">
 
-        </video>
+<div class="name">
 
-        <div class="info">
+${video.guest_name}
 
-          <div class="name">
+</div>
 
-          ${video.guest_name}
+<div class="date">
 
-          </div>
+${formatDate(
+video.created_at
+)}
 
-          <div class="date">
+</div>
 
-          ${formatDate(
-            video.created_at
-          )}
+</div>
 
-          </div>
+</div>
 
-        </div>
+`;
 
-      </div>
+});
 
-      `;
+}
 
-    });
+catch(err){
 
-  }
+console.error(
+err
+);
 
-  catch(err){
+gallery.innerHTML = `
 
-    console.error(err);
+<div class="empty">
 
-  }
+❌ Error cargando
+videos
+
+</div>
+
+`;
+
+}
 
 }
 
