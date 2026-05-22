@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1">
+
+<title>Snoop 360 Wall</title>
+
+<link
+rel="stylesheet"
+href="./wall360.css">
+
+</head>
+
+<body>
+
+<div
+id="eventScreen"
+class="screen active">
+
+<div class="content">
+
+<h1>
+
+🎥 SNOOP<br>
+360 WALL
+
+</h1>
+
+<div class="subtitle">
+
+Seleccionar evento
+
+</div>
+
+<input
+
+id="eventInput"
+
+placeholder="Nombre del evento"
+
+class="eventInput">
+
+<button
+id="enterEventBtn">
+
+INGRESAR
+
+</button>
+
+</div>
+
+</div>
+
+<script>
+
+const eventInput =
+document.getElementById(
+"eventInput"
+);
+
+const enterBtn =
+document.getElementById(
+"enterEventBtn"
+);
+
+enterBtn.onclick =
+async()=>{
+
+const value =
+eventInput.value
+.trim()
+.toLowerCase();
+
+if(!value)return;
+
+try{
+
+const res =
+await fetch(
+"/events"
+);
+
+const events =
+await res.json();
+
+const ev =
+events.find(
+
+e=>
+e.slug
+.toLowerCase()
+=== value
+
+);
+
+if(!ev){
+
+alert(
+"Evento no encontrado"
+);
+
+return;
+
+}
+
+window.location.href =
+
+"/360-wall.html?event=" +
+
+ev.slug;
+
+}
+
+catch(err){
+
+console.error(
+err
+);
+
+alert(
+"Error cargando eventos"
+);
+
+}
+
+};
+
+</script>
+
+</body>
+</html>
