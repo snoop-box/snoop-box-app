@@ -336,8 +336,13 @@ async function init(){
  eventTitle.innerText =
  data.event.name;
 
- frameUrl =
- data.event.frame || "";
+frameUrl =
+
+data.event.frame_url ||
+
+data.event.frame ||
+
+"";
 
  buildQR();
 
@@ -455,12 +460,34 @@ async function capturePhoto(){
 
 async function loadPhotos(){
 
- const res =
- await fetch("/photos/" +
- encodeURIComponent(eventName));
+const url =
 
- const data =
- await res.json();
+"/photos/" +
+
+encodeURIComponent(
+eventName
+);
+
+console.log(
+"FOTOS:",
+url
+);
+
+const res =
+await fetch(
+url
+);
+
+console.log(
+res.status
+);
+
+const data =
+await res.json();
+
+console.log(
+data
+);
 
  grid.innerHTML="";
 
