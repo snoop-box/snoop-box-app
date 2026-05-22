@@ -81,6 +81,56 @@ header{
   margin-top:4px;
 }
 
+#toast{
+
+position:fixed;
+
+top:20px;
+
+left:50%;
+
+transform:
+translateX(-50%);
+
+padding:
+
+16px
+28px;
+
+border-radius:18px;
+
+background:
+
+rgba(
+20,
+20,
+30,
+.92
+);
+
+color:white;
+
+font-size:20px;
+
+backdrop-filter:
+blur(12px);
+
+opacity:0;
+
+transition:.35s;
+
+z-index:9999;
+
+pointer-events:none;
+
+}
+
+#toast.show{
+
+opacity:1;
+
+}
+
 /* SIDE PANEL */
 
 #side{
@@ -209,11 +259,23 @@ header{
 }
 
 #printPhoto{
-  object-fit:contain;
+
+object-fit:cover;
+
+z-index:1;
+
 }
 
 #printFrameOverlay{
-  object-fit:cover;
+
+object-fit:cover;
+
+z-index:5;
+
+pointer-events:none;
+
+mix-blend-mode:normal;
+
 }
 
 .printBtn{
@@ -234,6 +296,58 @@ header{
   background:#333;
   color:#fff;
 }
+
+.card{
+
+position:relative;
+
+}
+
+.deleteBtn{
+
+position:absolute;
+
+top:10px;
+
+right:10px;
+
+width:36px;
+
+height:36px;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+border-radius:50%;
+
+background:
+
+rgba(
+0,
+0,
+0,
+.82
+);
+
+color:white;
+
+cursor:pointer;
+
+z-index:50;
+
+font-size:18px;
+
+}
+
+.deleteBtn:hover{
+
+background:#ff0055;
+
+}
+
 </style>
 </head>
 <body>
@@ -272,6 +386,7 @@ Escaneá y participá
 
 <canvas id="canvas"></canvas>
 <div id="flash"></div>
+<div id="toast"></div>
 
 <div id="printModal">
 
@@ -343,6 +458,11 @@ data.event.frame_url ||
 data.event.frame ||
 
 "";
+
+console.log(
+"FRAME EVENTO:",
+frameUrl
+);
 
  buildQR();
 
@@ -462,7 +582,7 @@ async function loadPhotos(){
 
  try{
 
-  const url =
+  const endpoint =
 
   "/event-photos/" +
 
@@ -472,80 +592,117 @@ async function loadPhotos(){
 
   console.log(
    "FOTOS:",
-   url
+   endpoint
   );
 
   const res =
   await fetch(
-   url
+   endpoint
   );
 
   const text =
   await res.text();
 
-  console.log(
-   text
-  );
-
   let data = [];
 
-try{
+  try{
 
- data =
- JSON.parse(text);
+   data =
+   JSON.parse(
+    text
+   );
 
-}
+  }
 
-catch(err){
+  catch(err){
 
- console.error(
- "Respuesta inválida",
- text
- );
+   console.error(
+    "JSON inválido",
+    text
+   );
 
- return;
+   return;
 
-}
+  }
 
   grid.innerHTML="";
 
   data.forEach(p=>{
 
-   const url =
+   const photoUrl =
 
-p.image_url ||
+   p.image_url ||
 
-p.photo_url ||
+   p.photo_url ||
 
-p.url ||
+   p.url ||
 
-p.image ||
+   p.image ||
 
-"";
+   "";
+
+   const mesa =
+
+   p.guest_table ||
+
+   p.table ||
+
+   "-";
+
+   const user =
+
+   p.user ||
+
+   p.guest_name ||
+
+   "Invitado";
 
    grid.innerHTML += `
-   <div class="card"
-   onclick="openPrintModal('${url}')">
 
-    <img src="${url}">
+   <div class="card">
 
-    <div class="info">
+    <div
+    class="deleteBtn"
 
-      <div class="user">
-      ${p.guest_name || p.user || "Invitado"}
-      </div>
+    onclick="
+    deletePhoto(
+    '${p.id}'
+    );
+    event.stopPropagation();
+    ">
 
-      <div class="table">
-      Mesa ${
-p.guest_table ||
-p.table ||
-"-"
-}
+    ✖
+
+    </div>
+
+    <div
+    onclick="
+    openPrintModal(
+    '${photoUrl}'
+    )">
+
+      <img src="${photoUrl}">
+
+      <div class="info">
+
+        <div class="user">
+
+        ${user}
+
+        </div>
+
+        <div class="table">
+
+        Mesa ${mesa}
+
+        </div>
+
       </div>
 
     </div>
 
    </div>
+
    `;
 
   });
@@ -562,6 +719,7 @@ p.table ||
  }
 
 }
+
 
 /* ===================== */
 
@@ -597,23 +755,96 @@ async function loadRanking(){
 
 /* ===================== */
 
+function showToast(text){
+
+ toast.innerText =
+ text;
+
+ toast.classList.add(
+ "show"
+ );
+
+ setTimeout(()=>{
+
+ toast.classList.remove(
+ "show"
+ );
+
+ },2500);
+
+}
+
+async function deletePhoto(id){
+
+ if(
+ !confirm(
+ "Eliminar foto?"
+ )
+ ) return;
+
+ try{
+
+ await fetch(
+
+ "/delete-photo/" +
+
+ id,
+
+ {
+ method:"DELETE"
+ }
+
+ );
+
+ showToast(
+ "🗑 Foto eliminada"
+ );
+
+ loadPhotos();
+
+ }
+
+ catch(err){
+
+ console.error(
+ err
+ );
+
+ }
+
+}
+
 function openPrintModal(url){
 
  selectedPhoto = url;
 
- printPhoto.src = url;
+ printPhoto.src =
+ url;
 
- if(frameUrl){
+ printPhoto.style.objectFit =
+ "cover";
+
+ if(
+ frameUrl &&
+ frameUrl !== ""
+ ){
 
   printFrameOverlay.src =
   frameUrl;
 
-  printFrameOverlay.style.display=
+  printFrameOverlay.style.display =
   "block";
 
- }else{
+  console.log(
+   "FRAME:",
+   frameUrl
+  );
 
-  printFrameOverlay.style.display=
+ }
+
+ else{
+
+  printFrameOverlay.style.display =
   "none";
 
  }
@@ -633,38 +864,138 @@ function closePrintModal(){
 function printCurrentPhoto(){
 
  const win =
- window.open("","_blank");
+ window.open(
+ "",
+ "_blank"
+ );
 
  win.document.write(`
+
  <html>
- <body style="margin:0;display:flex;justify-content:center;align-items:center;height:100vh;">
- <div style="position:relative;width:4in;height:6in;">
- <img src="${selectedPhoto}" style="position:absolute;width:100%;height:100%;object-fit:contain;">
+
+ <body style="
+ margin:0;
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ height:100vh;
+ background:#fff;
+ ">
+
+ <div style="
+ position:relative;
+ width:4in;
+ height:6in;
+ overflow:hidden;
+ ">
+
+ <img
+
+ src="${selectedPhoto}"
+
+ style="
+ position:absolute;
+ inset:0;
+ width:100%;
+ height:100%;
+ object-fit:cover;
+ z-index:1;
+ ">
+
  ${
  frameUrl
- ? `<img src="${frameUrl}" style="position:absolute;width:100%;height:100%;">`
+
+ ?
+
+ `<img
+
+ src="${frameUrl}"
+
+ style="
+ position:absolute;
+ inset:0;
+ width:100%;
+ height:100%;
+ object-fit:contain;
+ z-index:5;
+ ">
+
+ `
+
  : ""
+
  }
+
  </div>
+
  </body>
+
  </html>
+
  `);
 
  win.document.close();
 
  setTimeout(()=>{
-  win.print();
-  win.close();
- },600);
+
+ win.print();
+
+ win.close();
+
+ },700);
 
 }
 
 /* ===================== */
 
-setInterval(()=>{
- loadPhotos();
- loadRanking();
-},5000);
+let lastPhotoCount = 0;
+
+async function pollUpdates(){
+
+ try{
+
+  const oldCount =
+  lastPhotoCount;
+
+  await loadPhotos();
+
+  await loadRanking();
+
+  const cards =
+  document.querySelectorAll(
+   ".card"
+  );
+
+  lastPhotoCount =
+  cards.length;
+
+  if(
+   lastPhotoCount >
+   oldCount
+  ){
+
+   showToast(
+    "📸 Nueva foto subida"
+   );
+
+  }
+
+ }
+
+ catch(err){
+
+  console.error(
+   err
+  );
+
+ }
+
+}
+
+setInterval(
+ pollUpdates,
+ 3000
+);
 
 init();
 
