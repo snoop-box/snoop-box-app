@@ -995,15 +995,7 @@ toast.classList.remove(
 }
 /* ===================== */
 
-let deferredPrompt;
-
 let eventName =
-
-localStorage.getItem(
-"snoop_totem_event"
-)
-
-||
 
 new URLSearchParams(
 location.search
@@ -1134,14 +1126,6 @@ if(!value)
 return;
 
 eventName = value;
-
-localStorage.setItem(
-
-"snoop_totem_event",
-
-value
-
-);
 
 loginScreen.style.display =
 "none";
