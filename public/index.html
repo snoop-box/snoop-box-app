@@ -301,6 +301,16 @@ onclick="open360()">
 
 </button>
 
+<button
+id="btnGallery"
+class="btn dark"
+style="display:none"
+onclick="openGallery()">
+
+📸 Ver Galería
+
+</button>
+
 </div>
 
 <!-- RANKING -->
@@ -467,6 +477,13 @@ window.location.href =
       "block";
 
     }
+
+    document
+.getElementById(
+"btnGallery"
+)
+.style.display =
+"block";
 
     if(ev.hastrivia){
 
@@ -702,6 +719,16 @@ function open360(){
 
   "/360-gallery.html?event=" +
   eventSlug;
+
+}
+
+function openGallery(){
+
+window.location.href =
+
+"/photo-gallery.html?event=" +
+
+eventSlug;
 
 }
 
