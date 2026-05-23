@@ -15,6 +15,21 @@ initial-scale=1
 Tótem Snoop Box
 </title>
 
+<link
+rel="manifest"
+href="/totem-manifest.json"
+/>
+
+<meta
+name="theme-color"
+content="#000000"
+/>
+
+<link
+rel="apple-touch-icon"
+href="/icons/totem-192.png"
+/>
+
 <style>
 
 body{
@@ -476,6 +491,109 @@ display:none;
 
 <body>
 
+<div
+id="loginScreen"
+
+style="
+display:none;
+min-height:100vh;
+justify-content:center;
+align-items:center;
+padding:24px;
+background:black;
+">
+
+<div
+style="
+width:100%;
+max-width:520px;
+padding:30px;
+border-radius:24px;
+background:
+rgba(255,255,255,.06);
+
+backdrop-filter:blur(12px);
+
+text-align:center;
+">
+
+<h1>
+
+SNOOP BOX TOTEM
+
+</h1>
+
+<div
+style="
+margin-top:12px;
+opacity:.7;
+">
+
+Ingresar evento
+
+</div>
+
+<input
+
+id="eventInput"
+
+placeholder="Nombre evento"
+
+style="
+margin-top:20px;
+width:100%;
+padding:16px;
+font-size:20px;
+border:none;
+border-radius:16px;
+box-sizing:border-box;
+text-align:center;
+">
+
+<button
+
+id="installBtn"
+
+style="
+display:none;
+margin-top:18px;
+width:100%;
+padding:16px;
+border:none;
+border-radius:16px;
+background:#111;
+color:white;
+font-size:18px;
+">
+
+📲 Instalar App
+
+</button>
+
+<button
+
+id="enterBtn"
+
+style="
+margin-top:18px;
+width:100%;
+padding:18px;
+border:none;
+border-radius:16px;
+background:#ff0055;
+color:white;
+font-size:20px;
+font-weight:bold;
+">
+
+INICIAR TÓTEM
+
+</button>
+
+</div>
+
+</div>    
+
 <header>
 
 <div id="eventTitle">
@@ -877,15 +995,25 @@ toast.classList.remove(
 }
 /* ===================== */
 
-const qs =
+let deferredPrompt;
+
+let eventName =
+
+localStorage.getItem(
+"snoop_totem_event"
+)
+
+||
+
 new URLSearchParams(
 location.search
-);
-
-const eventName =
-qs.get(
+).get(
 "event"
-) || "";
+)
+
+||
+
+"";
 
 const eventTitle =
 document.getElementById(
@@ -910,6 +1038,26 @@ document.getElementById(
 const toast =
 document.getElementById(
 "toast"
+);
+
+const loginScreen =
+document.getElementById(
+"loginScreen"
+);
+
+const eventInput =
+document.getElementById(
+"eventInput"
+);
+
+const enterBtn =
+document.getElementById(
+"enterBtn"
+);
+
+const installBtn =
+document.getElementById(
+"installBtn"
 );
 
 const printModal =
@@ -940,7 +1088,96 @@ let cameraBusy = false;
 
 /* ===================== */
 
+window.addEventListener(
+
+"beforeinstallprompt",
+
+(e)=>{
+
+e.preventDefault();
+
+deferredPrompt = e;
+
+installBtn.style.display =
+"block";
+
+}
+
+);
+
+installBtn.onclick =
+async()=>{
+
+if(
+!deferredPrompt
+)
+return;
+
+deferredPrompt.prompt();
+
+await deferredPrompt.userChoice;
+
+installBtn.style.display =
+"none";
+
+};
+
+enterBtn.onclick = ()=>{
+
+const value =
+
+eventInput.value
+.trim()
+.toLowerCase();
+
+if(!value)
+return;
+
+eventName = value;
+
+localStorage.setItem(
+
+"snoop_totem_event",
+
+value
+
+);
+
+loginScreen.style.display =
+"none";
+
+document.querySelector(
+"header"
+).style.display =
+"";
+
+init();
+
+};
+
 async function init(){
+
+if(!eventName){
+
+document.querySelector(
+"header"
+).style.display =
+"none";
+
+loginScreen.style.display =
+"flex";
+
+return;
+
+}
+
+loginScreen.style.display =
+"none";
+
+document.querySelector(
+"header"
+).style.display =
+"";
 
 try{
 
