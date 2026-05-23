@@ -1569,58 +1569,76 @@ e
 
 function openPrintModal(url){
 
-selectedPhoto=url;
+selectedPhoto = url;
 
-printPhoto.src=url;
+printPhoto.src = url;
+
+/* limpiar handlers viejos */
+
+printFrameOverlay.onload = null;
+printFrameOverlay.onerror = null;
 
 /* FRAME */
 
 if(frameUrl){
 
-printFrameOverlay.style.display=
+printFrameOverlay.style.display =
 "block";
 
-printFrameOverlay.src=
-
-frameUrl+
-
-"?t="+
-
+printFrameOverlay.src =
+frameUrl +
+"?t=" +
 Date.now();
 
 }else{
 
-printFrameOverlay.style.display=
+printFrameOverlay.style.display =
 "none";
 
 }
 
-/* ERRORES FRAME */
+/* eventos */
 
-printFrameOverlay.onload=()=>{
+printFrameOverlay.onload = ()=>{
 
 console.log(
 "FRAME OK"
 );
 
-printFrameOverlay.style.display=
+printFrameOverlay.style.display =
 "block";
 
 };
 
-printFrameOverlay.onerror=()=>{
+printFrameOverlay.onerror = ()=>{
 
 console.log(
 "FRAME ERROR"
 );
 
-printFrameOverlay.style.display=
+printFrameOverlay.style.display =
 "none";
 
 };
 
-printModal.style.display=
+printModal.style.display =
 "flex";
+
+}
+
+function closePrintModal(){
+
+printModal.style.display =
+"none";
+
+selectedPhoto = "";
+
+printPhoto.src = "";
+
+printFrameOverlay.src = "";
+
+printFrameOverlay.style.display =
+"none";
 
 }
 
@@ -1628,18 +1646,26 @@ printModal.style.display=
 
 function printCurrentPhoto(){
 
-const w =
-window.open(
+const w = window.open(
 "",
-"_blank"
+"_blank",
+"width=400,height=700"
 );
 
-const overlay = frameUrl
+if(!w){
 
+showToast(
+"Popup bloqueado"
+);
+
+return;
+
+}
+
+const overlay = frameUrl
 ? `
 <img
 src="${frameUrl}"
-
 style="
 position:absolute;
 inset:0;
@@ -1650,11 +1676,9 @@ z-index:2;
 pointer-events:none;
 ">
 `
-
 : "";
 
 w.document.write(`
-
 <html>
 
 <head>
@@ -1668,47 +1692,28 @@ margin:0;
 
 html,
 body{
-
 margin:0;
-
 padding:0;
-
 width:100mm;
-
 height:150mm;
-
 overflow:hidden;
-
 background:white;
-
 }
 
 #printArea{
-
 position:relative;
-
 width:100mm;
-
 height:150mm;
-
 overflow:hidden;
-
 }
 
 .photo{
-
 position:absolute;
-
 inset:0;
-
 width:100%;
-
 height:100%;
-
 object-fit:cover;
-
 z-index:1;
-
 }
 
 </style>
@@ -1728,29 +1733,26 @@ ${overlay}
 
 </div>
 
-<script>
-
-window.onload=()=>{
-
-window.print();
-
-setTimeout(()=>{
-
-window.close();
-
-},1000);
-
-};
-
-</script>
-
 </body>
 
 </html>
-
 `);
 
 w.document.close();
+
+setTimeout(()=>{
+
+w.focus();
+
+w.print();
+
+},500);
+
+setTimeout(()=>{
+
+w.close();
+
+},2000);
 
 }
 
