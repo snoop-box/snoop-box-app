@@ -1626,10 +1626,131 @@ printModal.style.display=
 
 /* ===================== */
 
-function closePrintModal(){
+function printCurrentPhoto(){
 
-printModal.style.display=
-"none";
+const w =
+window.open(
+"",
+"_blank"
+);
+
+const overlay = frameUrl
+
+? `
+<img
+src="${frameUrl}"
+
+style="
+position:absolute;
+inset:0;
+width:100%;
+height:100%;
+object-fit:fill;
+z-index:2;
+pointer-events:none;
+">
+`
+
+: "";
+
+w.document.write(`
+
+<html>
+
+<head>
+
+<style>
+
+@page{
+size:100mm 150mm;
+margin:0;
+}
+
+html,
+body{
+
+margin:0;
+
+padding:0;
+
+width:100mm;
+
+height:150mm;
+
+overflow:hidden;
+
+background:white;
+
+}
+
+#printArea{
+
+position:relative;
+
+width:100mm;
+
+height:150mm;
+
+overflow:hidden;
+
+}
+
+.photo{
+
+position:absolute;
+
+inset:0;
+
+width:100%;
+
+height:100%;
+
+object-fit:cover;
+
+z-index:1;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="printArea">
+
+<img
+class="photo"
+src="${selectedPhoto}"
+>
+
+${overlay}
+
+</div>
+
+<script>
+
+window.onload=()=>{
+
+window.print();
+
+setTimeout(()=>{
+
+window.close();
+
+},1000);
+
+};
+
+</script>
+
+</body>
+
+</html>
+
+`);
+
+w.document.close();
 
 }
 
