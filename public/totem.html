@@ -300,27 +300,157 @@ justify-content:center;
 align-items:center;
 
 background:
-rgba(
-0,
-0,
-0,
-.9
-);
+
+rgba(0,0,0,.82);
+
+backdrop-filter:blur(8px);
 
 z-index:9999;
 
 }
 
+#cameraFrame{
+
+position:relative;
+
+padding:18px;
+
+border-radius:28px;
+
+background:
+
+linear-gradient(
+180deg,
+rgba(255,255,255,.06),
+rgba(255,255,255,.02)
+);
+
+box-shadow:
+
+0 0 40px
+rgba(
+255,
+255,
+255,
+0.08
+);
+
+backdrop-filter:
+blur(8px);
+
+}
+
 #video{
 
-width:80%;
+border-radius:22px;
 
-max-width:700px;
+overflow:hidden;
 
-border-radius:20px;
+}
+
+#countdown{
+
+font-size:120px;
+
+font-weight:900;
+
+color:white;
+
+text-shadow:
+
+0 0 30px
+rgba(
+255,
+255,
+255,
+0.45
+);
+
+}
+
+.corner{
+
+position:absolute;
+
+width:60px;
+
+height:60px;
+
+border:4px solid white;
+
+opacity:.35;
+
+}
+
+.tl{
+top:10px;
+left:10px;
+border-right:none;
+border-bottom:none;
+}
+
+.tr{
+top:10px;
+right:10px;
+border-left:none;
+border-bottom:none;
+}
+
+.bl{
+bottom:10px;
+left:10px;
+border-right:none;
+border-top:none;
+}
+
+.br{
+bottom:10px;
+right:10px;
+border-left:none;
+border-top:none;
+}
+
+#countdown{
+
+position:absolute;
+
+top:50%;
+
+left:50%;
 
 transform:
-scaleX(-1);
+translate(
+-50%,
+-50%
+);
+
+font-size:120px;
+
+font-weight:bold;
+
+color:white;
+
+text-shadow:
+
+0 0 30px white;
+
+pointer-events:none;
+
+}
+
+/* MENSAJE */
+
+#cameraMessage{
+
+margin-top:20px;
+
+font-size:28px;
+
+font-weight:bold;
+
+opacity:.85;
+
+letter-spacing:1px;
 
 }
 
@@ -392,34 +522,36 @@ Escaneá y participá
 
 <div id="cameraModal">
 
+<div id="cameraFrame">
+
+<div class="corner tl"></div>
+<div class="corner tr"></div>
+<div class="corner bl"></div>
+<div class="corner br"></div>
+
 <video
 id="video"
 autoplay
 playsinline>
-
 </video>
 
 <div id="countdown">
-
 3
-
 </div>
 
 </div>
 
-<canvas id="canvas">
-
-</canvas>
+</div>
 
 <div id="printModal">
 
 <div id="printInner">
 
-<h3 style="color:black">
+<h2>
 
 Vista previa impresión
 
-</h3>
+</h2>
 
 <div id="printFrame">
 
@@ -453,11 +585,18 @@ Cerrar
 
 </div>
 
+<canvas id="canvas"></canvas>
+
 <script>
 
 const cameraBtn =
 document.getElementById(
 "cameraBtn"
+);
+
+const cameraFrame =
+document.getElementById(
+"cameraFrame"
 );
 
 const cameraModal =
@@ -483,32 +622,259 @@ document.getElementById(
 cameraBtn.onclick =
 async()=>{
 
+if(cameraBusy)
+return;
+
+cameraBusy = true;
+
 try{
 
-cameraModal.style.display =
+cameraModal.style.display=
 "flex";
 
-const stream =
+const stream=
+
 await navigator
 .mediaDevices
 .getUserMedia({
 video:true
 });
 
-video.srcObject =
+video.srcObject=
 stream;
 
-}catch(err){
+/* CUENTA */
+
+let n=3;
+
+countdown.innerText=
+n;
+
+countdown.style.display=
+"block";
+
+const timer=
+
+setInterval(
+async()=>{
+
+n--;
+
+if(n>0){
+
+countdown.innerText=
+n;
+
+return;
+
+}
+
+clearInterval(
+timer
+);
+
+/* FOTO */
+
+canvas.width=
+video.videoWidth;
+
+canvas.height=
+video.videoHeight;
+
+const ctx=
+canvas.getContext(
+"2d"
+);
+
+ctx.save();
+
+ctx.scale(
+-1,
+1
+);
+
+ctx.drawImage(
+
+video,
+
+-video.videoWidth,
+
+0,
+
+video.videoWidth,
+
+video.videoHeight
+
+);
+
+ctx.restore();
+
+const photo=
+
+canvas.toDataURL(
+"image/jpeg",
+0.95
+);
+
+/* DETENER CAMARA */
+
+stream
+.getTracks()
+.forEach(
+t=>t.stop()
+);
+
+/* OCULTAR VIDEO */
+
+video.style.visibility=
+"hidden";
+
+countdown.style.display=
+"none";
+
+/* FOTO CONGELADA SIMPLE */
+
+const oldFrozen =
+document.getElementById(
+"frozenPhoto"
+);
+
+if(oldFrozen){
+
+oldFrozen.remove();
+
+}
+
+const frozen =
+document.createElement(
+"img"
+);
+
+frozen.id =
+"frozenPhoto";
+
+frozen.src =
+photo;
+
+frozen.style.position =
+"absolute";
+
+frozen.style.top =
+"18px";
+
+frozen.style.left =
+"18px";
+
+frozen.style.right =
+"18px";
+
+frozen.style.bottom =
+"18px";
+
+frozen.style.objectFit =
+"cover";
+
+frozen.style.borderRadius =
+"22px";
+
+frozen.style.zIndex =
+"50";
+
+cameraFrame.appendChild(
+frozen
+);
+
+video.style.visibility =
+"hidden";
+
+/* PAUSA */
+
+await new Promise(
+r=>
+setTimeout(
+r,
+2000
+)
+);
+
+/* SUBIR */
+
+await uploadTotemPhoto(
+photo
+);
+
+/* REFRESCAR */
+
+await loadPhotos();
+
+/* LIMPIAR */
+
+if(frozen){
+
+frozen.remove();
+
+}
+
+video.style.visibility=
+"visible";
+
+countdown.style.display=
+"block";
+
+countdown.innerText=
+"3";
+
+cameraModal.style.display=
+"none";
+
+video.srcObject=
+null;
+
+cameraBusy=
+false;
+
+},
+
+1000
+);
+
+} // fin try
+
+catch(err){
+
+cameraBusy=false;
 
 console.log(
 "CAMERA ERROR",
 err
 );
 
+showToast(
+"Error cámara"
+);
+
 }
 
-};
+}; // fin cameraBtn.onclick
 
+function showToast(text){
+
+toast.innerText =
+text;
+
+toast.classList.add(
+"show"
+);
+
+setTimeout(()=>{
+
+toast.classList.remove(
+"show"
+);
+
+},2500);
+
+}
 /* ===================== */
 
 const qs =
@@ -569,6 +935,8 @@ const API_BASE =
 let frameUrl = "";
 
 let selectedPhoto = "";
+
+let cameraBusy = false;
 
 /* ===================== */
 
@@ -802,10 +1170,12 @@ class="deleteBtn"
 
 onclick="
 deletePhoto(
-'${p.id}'
+'${img}'
 );
+
 event.stopPropagation();
-">
+"
+>
 
 ✖
 
@@ -1036,23 +1406,163 @@ window.print();
 
 /* ===================== */
 
-async function deletePhoto(id){
+async function deletePhoto(url){
+
+if(!url){
+
+showToast(
+"Sin foto"
+);
+
+return;
+
+}
+
+try{
+
+const r=
 
 await fetch(
 
 API_BASE+
-
-"/delete-photo/"+
-
-id,
+"/photo",
 
 {
-method:"DELETE"
+
+method:"DELETE",
+
+headers:{
+"Content-Type":
+"application/json"
+},
+
+body:
+JSON.stringify({
+
+url:url
+
+})
+
 }
 
 );
 
+console.log(
+await r.text()
+);
+
+showToast(
+"Foto eliminada"
+);
+
 await loadPhotos();
+
+}
+catch(err){
+
+console.log(
+"DELETE ERROR",
+err
+);
+
+showToast(
+"Error borrando"
+);
+
+}
+
+}
+
+async function uploadTotemPhoto(base64){
+
+try{
+
+const payload={
+
+event:eventName,
+
+eventName:eventName,
+
+slug:eventName,
+
+guest_name:"Totem",
+
+guest_table:"Tótem",
+
+user:"Totem",
+
+table:"Tótem",
+
+image:base64,
+
+totem:true,
+
+excludeRanking:true,
+
+points:0
+
+};
+
+const r=
+
+await fetch(
+
+API_BASE+
+"/upload-photo",
+
+{
+
+method:"POST",
+
+headers:{
+"Content-Type":
+"application/json"
+},
+
+body:
+JSON.stringify(
+payload
+)
+
+}
+
+);
+
+if(!r.ok){
+
+throw new Error(
+"UPLOAD FAIL"
+);
+
+}
+
+const data=
+await r.json();
+
+console.log(
+"TOTEM RESPONSE:",
+data
+);
+
+showToast(
+"Foto tomada"
+);
+
+await loadPhotos();
+
+}
+catch(err){
+
+console.log(
+"TOTEM UPLOAD ERROR",
+err
+);
+
+showToast(
+"Error subiendo foto"
+);
+
+}
 
 }
 
@@ -1065,6 +1575,8 @@ async()=>{
 try{
 
 await loadPhotos();
+
+/* SOLO SI NO ES FOTO TOTEM */
 
 await loadRanking();
 
