@@ -16,15 +16,6 @@ const thanksScreen = document.getElementById("thanksScreen");
 const startBtn = document.getElementById("startBtn");
 
 const preview = document.getElementById("preview");
-const renderCanvas =
-document.createElement(
-"canvas"
-);
-
-const renderCtx =
-renderCanvas.getContext(
-"2d"
-);
 
 const countdown = document.getElementById("countdown");
 const timer = document.getElementById("timer");
