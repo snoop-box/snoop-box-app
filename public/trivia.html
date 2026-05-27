@@ -266,6 +266,49 @@ Cargando trivia...
 
 <script>
 
+ const cameraBtn=
+document.getElementById(
+"cameraBtn"
+);
+
+const cameraModal=
+document.getElementById(
+"cameraModal"
+);
+
+const video=
+document.getElementById(
+"video"
+);
+
+const canvas=
+document.getElementById(
+"canvas"
+);
+
+const countdown=
+document.getElementById(
+"countdown"
+);
+
+cameraBtn.onclick=
+async()=>{
+
+cameraModal.style.display=
+"flex";
+
+const stream=
+await navigator
+.mediaDevices
+.getUserMedia({
+video:true
+});
+
+video.srcObject=
+stream;
+
+};
+
 const session =
 JSON.parse(
 

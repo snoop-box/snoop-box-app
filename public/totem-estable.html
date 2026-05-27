@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="
+width=device-width,
+initial-scale=1
+">
+
+<title>
+Tótem Snoop Box
+</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#000;
+color:white;
+overflow-x:hidden;
+}
+
+header{
+padding:18px;
+text-align:center;
+background:
+rgba(255,255,255,.05);
+backdrop-filter:blur(8px);
+}
+
+#eventTitle{
+font-size:34px;
+font-weight:bold;
+}
+
+#grid{
+display:grid;
+grid-template-columns:
+repeat(
+auto-fill,
+minmax(
+260px,
+1fr
+)
+);
+gap:14px;
+padding:18px;
+padding-right:270px;
+}
+
+.card{
+position:relative;
+background:#181818;
+border-radius:18px;
+overflow:hidden;
+cursor:pointer;
+}
+
+.card img{
+width:100%;
+height:280px;
+object-fit:cover;
+}
+
+.info{
+padding:12px;
+}
+
+.user{
+font-size:22px;
+font-weight:bold;
+}
+
+.table{
+margin-top:4px;
+color:#ccc;
+}
+
+.deleteBtn{
+position:absolute;
+top:10px;
+right:10px;
+width:36px;
+height:36px;
+display:flex;
+justify-content:center;
+align-items:center;
+border-radius:50%;
+background:
+rgba(
+0,
+0,
+0,
+.8
+);
+z-index:20;
+cursor:pointer;
+}
+
+#side{
+position:fixed;
+top:0;
+right:0;
+width:250px;
+height:100%;
+padding:16px;
+box-sizing:border-box;
+background:
+rgba(
+0,
+0,
+0,
+.85
+);
+overflow:auto;
+}
+
+.rankRow{
+display:flex;
+justify-content:space-between;
+padding:10px;
+margin-bottom:10px;
+border-radius:12px;
+background:
+rgba(
+255,
+255,
+255,
+.06
+);
+}
+
+#qrBox{
+margin-top:20px;
+padding:12px;
+background:white;
+color:black;
+border-radius:18px;
+text-align:center;
+}
+
+#qrImg{
+width:150px;
+}
+
+#toast{
+position:fixed;
+top:20px;
+left:50%;
+transform:
+translateX(-50%);
+padding:14px 24px;
+border-radius:16px;
+background:
+rgba(
+20,
+20,
+20,
+.92
+);
+opacity:0;
+transition:.3s;
+z-index:9999;
+}
+
+#toast.show{
+opacity:1;
+}
+
+#printModal{
+position:fixed;
+inset:0;
+display:none;
+justify-content:center;
+align-items:center;
+background:
+rgba(
+0,
+0,
+0,
+.88
+);
+z-index:999;
+}
+
+#printInner{
+
+padding:24px;
+
+border-radius:24px;
+
+background:
+rgba(
+255,
+255,
+255,
+.55
+);
+
+backdrop-filter:
+blur(
+12px
+);
+
+position:relative;
+
+overflow:visible;
+
+}
+
+#printFrame{
+
+position:relative;
+
+width:260px;
+
+height:390px;
+
+overflow:hidden;
+
+}
+
+#printPhoto{
+
+position:absolute;
+
+inset:0;
+
+width:100%;
+
+height:100%;
+
+object-fit:cover;
+
+z-index:1;
+
+}
+
+#printFrameOverlay{
+
+position:absolute;
+
+inset:0;
+
+width:100%;
+
+height:100%;
+
+object-fit:fill;
+
+z-index:999;
+
+display:none;
+
+pointer-events:none;
+
+}
+
+#cameraBtn{
+
+position:fixed;
+
+bottom:20px;
+
+right:20px;
+
+padding:18px;
+
+border:none;
+
+border-radius:16px;
+
+background:#ff0055;
+
+color:white;
+
+font-size:22px;
+
+cursor:pointer;
+
+z-index:999;
+
+}
+
+#cameraModal{
+
+position:fixed;
+
+inset:0;
+
+display:none;
+
+justify-content:center;
+
+align-items:center;
+
+background:
+
+rgba(0,0,0,.82);
+
+backdrop-filter:blur(8px);
+
+z-index:9999;
+
+}
+
+#cameraFrame{
+
+position:relative;
+
+padding:18px;
+
+border-radius:28px;
+
+background:
+
+linear-gradient(
+180deg,
+rgba(255,255,255,.06),
+rgba(255,255,255,.02)
+);
+
+box-shadow:
+
+0 0 40px
+rgba(
+255,
+255,
+255,
+0.08
+);
+
+backdrop-filter:
+blur(8px);
+
+}
+
+#video{
+
+border-radius:22px;
+
+overflow:hidden;
+
+}
+
+#countdown{
+
+font-size:120px;
+
+font-weight:900;
+
+color:white;
+
+text-shadow:
+
+0 0 30px
+rgba(
+255,
+255,
+255,
+0.45
+);
+
+}
+
+.corner{
+
+position:absolute;
+
+width:60px;
+
+height:60px;
+
+border:4px solid white;
+
+opacity:.35;
+
+}
+
+.tl{
+top:10px;
+left:10px;
+border-right:none;
+border-bottom:none;
+}
+
+.tr{
+top:10px;
+right:10px;
+border-left:none;
+border-bottom:none;
+}
+
+.bl{
+bottom:10px;
+left:10px;
+border-right:none;
+border-top:none;
+}
+
+.br{
+bottom:10px;
+right:10px;
+border-left:none;
+border-top:none;
+}
+
+#countdown{
+
+position:absolute;
+
+top:50%;
+
+left:50%;
+
+transform:
+translate(
+-50%,
+-50%
+);
+
+font-size:120px;
+
+font-weight:bold;
+
+color:white;
+
+text-shadow:
+
+0 0 30px white;
+
+pointer-events:none;
+
+}
+
+/* MENSAJE */
+
+#cameraMessage{
+
+margin-top:20px;
+
+font-size:28px;
+
+font-weight:bold;
+
+opacity:.85;
+
+letter-spacing:1px;
+
+}
+
+#countdown{
+
+position:absolute;
+
+font-size:120px;
+
+font-weight:bold;
+
+}
+
+#canvas{
+
+display:none;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<div id="eventTitle">
+
+Cargando...
+
+</div>
+
+</header>
+
+<div id="grid"></div>
+
+<div id="side">
+
+<h2>
+
+🏆 Ranking
+
+</h2>
+
+<div id="rankingBox"></div>
+
+<div id="qrBox">
+
+<img id="qrImg">
+
+<div>
+
+Escaneá y participá
+
+</div>
+
+</div>
+
+</div>
+
+<div id="toast"></div>
+
+<button id="cameraBtn">
+
+📸 Sacar Foto
+
+</button>
+
+<div id="cameraModal">
+
+<div id="cameraFrame">
+
+<div class="corner tl"></div>
+<div class="corner tr"></div>
+<div class="corner bl"></div>
+<div class="corner br"></div>
+
+<video
+id="video"
+autoplay
+playsinline>
+</video>
+
+<div id="countdown">
+3
+</div>
+
+</div>
+
+</div>
+
+<div id="printModal">
+
+<div id="printInner">
+
+<h2>
+
+Vista previa impresión
+
+</h2>
+
+<div id="printFrame">
+
+<img id="printPhoto">
+
+<img id="printFrameOverlay">
+
+</div>
+
+<br>
+
+<button
+onclick="
+printCurrentPhoto()
+">
+
+🖨 Imprimir
+
+</button>
+
+<button
+onclick="
+closePrintModal()
+">
+
+Cerrar
+
+</button>
+
+</div>
+
+</div>
+
+<canvas id="canvas"></canvas>
+
+<script>
+
+const cameraBtn =
+document.getElementById(
+"cameraBtn"
+);
+
+const cameraFrame =
+document.getElementById(
+"cameraFrame"
+);
+
+const cameraModal =
+document.getElementById(
+"cameraModal"
+);
+
+const video =
+document.getElementById(
+"video"
+);
+
+const canvas =
+document.getElementById(
+"canvas"
+);
+
+const countdown =
+document.getElementById(
+"countdown"
+);
+
+cameraBtn.onclick =
+async()=>{
+
+if(cameraBusy)
+return;
+
+cameraBusy = true;
+
+try{
+
+cameraModal.style.display=
+"flex";
+
+const stream=
+
+await navigator
+.mediaDevices
+.getUserMedia({
+video:true
+});
+
+video.srcObject=
+stream;
+
+/* CUENTA */
+
+let n=3;
+
+countdown.innerText=
+n;
+
+countdown.style.display=
+"block";
+
+const timer=
+
+setInterval(
+async()=>{
+
+n--;
+
+if(n>0){
+
+countdown.innerText=
+n;
+
+return;
+
+}
+
+clearInterval(
+timer
+);
+
+/* FOTO */
+
+canvas.width=
+video.videoWidth;
+
+canvas.height=
+video.videoHeight;
+
+const ctx=
+canvas.getContext(
+"2d"
+);
+
+ctx.save();
+
+ctx.scale(
+-1,
+1
+);
+
+ctx.drawImage(
+
+video,
+
+-video.videoWidth,
+
+0,
+
+video.videoWidth,
+
+video.videoHeight
+
+);
+
+ctx.restore();
+
+const photo=
+
+canvas.toDataURL(
+"image/jpeg",
+0.95
+);
+
+/* DETENER CAMARA */
+
+stream
+.getTracks()
+.forEach(
+t=>t.stop()
+);
+
+/* OCULTAR VIDEO */
+
+video.style.visibility=
+"hidden";
+
+countdown.style.display=
+"none";
+
+/* FOTO CONGELADA SIMPLE */
+
+const oldFrozen =
+document.getElementById(
+"frozenPhoto"
+);
+
+if(oldFrozen){
+
+oldFrozen.remove();
+
+}
+
+const frozen =
+document.createElement(
+"img"
+);
+
+frozen.id =
+"frozenPhoto";
+
+frozen.src =
+photo;
+
+frozen.style.position =
+"absolute";
+
+frozen.style.top =
+"18px";
+
+frozen.style.left =
+"18px";
+
+frozen.style.right =
+"18px";
+
+frozen.style.bottom =
+"18px";
+
+frozen.style.objectFit =
+"cover";
+
+frozen.style.borderRadius =
+"22px";
+
+frozen.style.zIndex =
+"50";
+
+cameraFrame.appendChild(
+frozen
+);
+
+video.style.visibility =
+"hidden";
+
+/* PAUSA */
+
+await new Promise(
+r=>
+setTimeout(
+r,
+2000
+)
+);
+
+/* SUBIR */
+
+await uploadTotemPhoto(
+photo
+);
+
+/* REFRESCAR */
+
+await loadPhotos();
+
+/* LIMPIAR */
+
+if(frozen){
+
+frozen.remove();
+
+}
+
+video.style.visibility=
+"visible";
+
+countdown.style.display=
+"block";
+
+countdown.innerText=
+"3";
+
+cameraModal.style.display=
+"none";
+
+video.srcObject=
+null;
+
+cameraBusy=
+false;
+
+},
+
+1000
+);
+
+} // fin try
+
+catch(err){
+
+cameraBusy=false;
+
+console.log(
+"CAMERA ERROR",
+err
+);
+
+showToast(
+"Error cámara"
+);
+
+}
+
+}; // fin cameraBtn.onclick
+
+function showToast(text){
+
+toast.innerText =
+text;
+
+toast.classList.add(
+"show"
+);
+
+setTimeout(()=>{
+
+toast.classList.remove(
+"show"
+);
+
+},2500);
+
+}
+/* ===================== */
+
+const qs =
+new URLSearchParams(
+location.search
+);
+
+const eventName =
+qs.get(
+"event"
+) || "";
+
+const eventTitle =
+document.getElementById(
+"eventTitle"
+);
+
+const grid =
+document.getElementById(
+"grid"
+);
+
+const rankingBox =
+document.getElementById(
+"rankingBox"
+);
+
+const qrImg =
+document.getElementById(
+"qrImg"
+);
+
+const toast =
+document.getElementById(
+"toast"
+);
+
+const printModal =
+document.getElementById(
+"printModal"
+);
+
+const printPhoto =
+document.getElementById(
+"printPhoto"
+);
+
+const printFrameOverlay =
+document.getElementById(
+"printFrameOverlay"
+);
+
+const API_BASE =
+"https://snoop-box-app-production.up.railway.app";
+
+/* ===================== */
+
+let frameUrl = "";
+
+let selectedPhoto = "";
+
+let cameraBusy = false;
+
+/* ===================== */
+
+async function init(){
+
+try{
+
+buildQR();
+
+let d = {};
+
+let eventData = {};
+
+const r =
+await fetch(
+
+API_BASE +
+
+"/event-config/" +
+
+encodeURIComponent(
+eventName
+)
+
+);
+
+if(!r.ok){
+
+throw new Error(
+"EVENT CONFIG FAIL"
+);
+
+}
+
+d =
+await r.json();
+
+console.log(
+"EVENT RAW:",
+d
+);
+
+eventData =
+
+d.event ||
+
+d.data ||
+
+d ||
+
+{};
+
+/* TITULO */
+
+eventTitle.innerText =
+
+eventData.name ||
+
+eventData.title ||
+
+eventName.toUpperCase();
+
+/* FRAME */
+
+frameUrl =
+
+eventData.frame_url ||
+
+eventData.frame ||
+
+eventData.frameUrl ||
+
+"";
+
+console.log(
+"FRAME:",
+frameUrl
+);
+
+/* PRELOAD FRAME */
+
+if(
+frameUrl &&
+printFrameOverlay
+){
+
+printFrameOverlay.src =
+
+frameUrl +
+
+"?t=" +
+
+Date.now();
+
+printFrameOverlay.onload = ()=>{
+
+console.log(
+"FRAME OK"
+);
+
+};
+
+printFrameOverlay.onerror = ()=>{
+
+console.log(
+"FRAME ERROR"
+);
+
+};
+
+}
+
+/* CARGAS */
+
+await loadPhotos();
+
+await loadRanking();
+
+}
+
+catch(err){
+
+console.log(
+"INIT ERROR",
+err
+);
+
+}
+
+}
+
+/* ===================== */
+
+function buildQR(){
+
+const link=
+
+API_BASE+
+
+"/event/"+
+
+eventName;
+
+console.log(
+link
+);
+
+qrImg.src=
+
+"https://api.qrserver.com/v1/create-qr-code/?size=180x180&data="+
+
+encodeURIComponent(
+link
+);
+
+}
+
+/* ===================== */
+
+async function loadPhotos(){
+
+try{
+
+const r =
+await fetch(
+
+API_BASE +
+
+"/event-photos/" +
+
+encodeURIComponent(
+eventName
+)
+
+);
+
+if(!r.ok){
+
+throw new Error(
+"PHOTOS FAIL"
+);
+
+}
+
+let data =
+await r.json();
+
+console.log(
+"PHOTOS:",
+data
+);
+
+if(
+!Array.isArray(
+data
+)
+){
+
+data =
+
+data.photos ||
+
+data.data ||
+
+[];
+
+}
+
+grid.innerHTML="";
+
+data.forEach(p=>{
+
+const img =
+
+p.image_url ||
+
+p.photo_url ||
+
+p.url ||
+
+p.image ||
+
+"";
+
+grid.innerHTML += `
+
+<div class="card">
+
+<div
+class="deleteBtn"
+
+onclick="
+deletePhoto(
+'${img}'
+);
+
+event.stopPropagation();
+"
+>
+
+✖
+
+</div>
+
+<div
+onclick="
+openPrintModal(
+'${img}'
+)
+">
+
+<img src="${img}">
+
+<div class="info">
+
+<div class="user">
+
+${
+
+p.guest_name ||
+
+p.user ||
+
+"Invitado"
+
+}
+
+</div>
+
+<div class="table">
+
+Mesa
+
+${
+
+p.guest_table ||
+
+p.table ||
+
+"-"
+
+}
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+`;
+
+});
+
+}catch(e){
+
+console.log(
+"LOAD PHOTOS ERROR",
+e
+);
+
+}
+
+}
+
+/* ===================== */
+
+async function loadRanking(){
+
+try{
+
+const r=
+await fetch(
+
+API_BASE+
+
+"/ranking/"+
+
+eventName
+
+);
+
+if(
+!r.ok
+)return;
+
+let data=
+await r.json();
+
+if(
+!Array.isArray(
+data
+)
+){
+
+data =
+
+data.ranking ||
+
+data.data ||
+
+[];
+
+}
+
+rankingBox.innerHTML="";
+
+data
+
+.slice(
+0,
+5
+)
+
+.forEach((x,i)=>{
+
+rankingBox.innerHTML +=`
+
+<div class="rankRow">
+
+<div>
+
+${i+1}.
+Mesa
+${x.table}
+
+</div>
+
+<div>
+
+${x.points || 0}
+
+</div>
+
+</div>
+
+`;
+
+});
+
+}catch(e){
+
+console.log(
+e
+);
+
+}
+
+}
+
+/* ===================== */
+
+function openPrintModal(url){
+
+selectedPhoto=url;
+
+printPhoto.src=url;
+
+/* FRAME */
+
+if(frameUrl){
+
+printFrameOverlay.style.display=
+"block";
+
+printFrameOverlay.src=
+
+frameUrl+
+
+"?t="+
+
+Date.now();
+
+}else{
+
+printFrameOverlay.style.display=
+"none";
+
+}
+
+/* ERRORES FRAME */
+
+printFrameOverlay.onload=()=>{
+
+console.log(
+"FRAME OK"
+);
+
+printFrameOverlay.style.display=
+"block";
+
+};
+
+printFrameOverlay.onerror=()=>{
+
+console.log(
+"FRAME ERROR"
+);
+
+printFrameOverlay.style.display=
+"none";
+
+};
+
+printModal.style.display=
+"flex";
+
+}
+
+/* ===================== */
+
+function closePrintModal(){
+
+printModal.style.display=
+"none";
+
+}
+
+/* ===================== */
+
+function printCurrentPhoto(){
+
+window.print();
+
+}
+
+/* ===================== */
+
+async function deletePhoto(url){
+
+if(!url){
+
+showToast(
+"Sin foto"
+);
+
+return;
+
+}
+
+try{
+
+const r=
+
+await fetch(
+
+API_BASE+
+"/photo",
+
+{
+
+method:"DELETE",
+
+headers:{
+"Content-Type":
+"application/json"
+},
+
+body:
+JSON.stringify({
+
+url:url
+
+})
+
+}
+
+);
+
+console.log(
+await r.text()
+);
+
+showToast(
+"Foto eliminada"
+);
+
+await loadPhotos();
+
+}
+catch(err){
+
+console.log(
+"DELETE ERROR",
+err
+);
+
+showToast(
+"Error borrando"
+);
+
+}
+
+}
+
+async function uploadTotemPhoto(base64){
+
+try{
+
+const payload={
+
+event:eventName,
+
+eventName:eventName,
+
+slug:eventName,
+
+guest_name:"Totem",
+
+guest_table:"Tótem",
+
+user:"Totem",
+
+table:"Tótem",
+
+image:base64,
+
+totem:true,
+
+excludeRanking:true,
+
+points:0
+
+};
+
+const r=
+
+await fetch(
+
+API_BASE+
+"/upload-photo",
+
+{
+
+method:"POST",
+
+headers:{
+"Content-Type":
+"application/json"
+},
+
+body:
+JSON.stringify(
+payload
+)
+
+}
+
+);
+
+if(!r.ok){
+
+throw new Error(
+"UPLOAD FAIL"
+);
+
+}
+
+const data=
+await r.json();
+
+console.log(
+"TOTEM RESPONSE:",
+data
+);
+
+showToast(
+"Foto tomada"
+);
+
+await loadPhotos();
+
+}
+catch(err){
+
+console.log(
+"TOTEM UPLOAD ERROR",
+err
+);
+
+showToast(
+"Error subiendo foto"
+);
+
+}
+
+}
+
+/* ===================== */
+
+setInterval(
+
+async()=>{
+
+try{
+
+await loadPhotos();
+
+/* SOLO SI NO ES FOTO TOTEM */
+
+await loadRanking();
+
+}catch(e){
+
+console.log(
+"REFRESH ERROR",
+e
+);
+
+}
+
+},
+
+5000
+
+);
+
+/* ===================== */
+
+init();
+
+</script>
+
+</body>
+
+</html>
