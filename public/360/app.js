@@ -116,6 +116,44 @@ async()=>{
 let mediaRecorder;
 let recordedChunks = [];
 let stream;
+let overlayImage =
+new Image();
+
+/* EVENTO */
+
+const overlayEvent =
+
+`https://res.cloudinary.com/daxf4enjn/image/upload/v1779893898/360-${EVENT_ID}.png`;
+
+/* DEFAULT */
+
+const overlayDefault =
+
+"https://res.cloudinary.com/daxf4enjn/image/upload/v1779893898/360-1.png";
+
+/* PROBAR EVENTO */
+
+overlayImage.onload=()=>{
+
+console.log(
+"OVERLAY EVENTO"
+);
+
+};
+
+overlayImage.onerror=()=>{
+
+console.log(
+"OVERLAY DEFAULT"
+);
+
+overlayImage.src=
+overlayDefault;
+
+};
+
+overlayImage.src=
+overlayEvent;
 
 startBtn.addEventListener("click", async () => {
 
