@@ -16,6 +16,15 @@ const thanksScreen = document.getElementById("thanksScreen");
 const startBtn = document.getElementById("startBtn");
 
 const preview = document.getElementById("preview");
+const renderCanvas =
+document.createElement(
+"canvas"
+);
+
+const renderCtx =
+renderCanvas.getContext(
+"2d"
+);
 
 const countdown = document.getElementById("countdown");
 const timer = document.getElementById("timer");
@@ -217,7 +226,121 @@ function startRecording() {
 
   recordedChunks = [];
 
-  mediaRecorder = new MediaRecorder(stream);
+  /* MEDIDAS VIDEO */
+
+const vw =
+preview.videoWidth;
+
+const vh =
+preview.videoHeight;
+
+/* CANVAS */
+
+renderCanvas.width =
+vw;
+
+renderCanvas.height =
+vh;
+
+/* DIBUJO */
+
+function render(){
+
+renderCtx.clearRect(
+0,
+0,
+vw,
+vh
+);
+
+/* VIDEO */
+
+renderCtx.drawImage(
+
+preview,
+
+0,
+
+0,
+
+vw,
+
+vh
+
+);
+
+/* OVERLAY */
+
+if(
+overlayImage.complete &&
+overlayImage.width > 0
+){
+
+const overlayWidth =
+vw * 0.75;
+
+const scale =
+
+overlayWidth /
+
+overlayImage.width;
+
+const overlayHeight =
+
+overlayImage.height *
+scale;
+
+const x =
+
+(vw-overlayWidth)/2;
+
+const y =
+
+vh -
+overlayHeight -
+(vh*0.03);
+
+renderCtx.drawImage(
+
+overlayImage,
+
+x,
+
+y,
+
+overlayWidth,
+
+overlayHeight
+
+);
+
+}
+
+/* LOOP */
+
+requestAnimationFrame(
+render
+);
+
+}
+
+render();
+
+/* STREAM CANVAS */
+
+const canvasStream =
+
+renderCanvas.captureStream(
+30
+);
+
+/* NUEVA GRABACION */
+
+mediaRecorder =
+
+new MediaRecorder(
+canvasStream
+);
 
   mediaRecorder.ondataavailable = (event) => {
 
