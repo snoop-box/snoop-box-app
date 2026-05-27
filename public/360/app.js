@@ -224,138 +224,40 @@ async function startCountdown() {
 
 function startRecording() {
 
-  recordedChunks = [];
+recordedChunks = [];
 
-  /* MEDIDAS VIDEO */
-
-const vw =
-preview.videoWidth;
-
-const vh =
-preview.videoHeight;
-
-/* CANVAS */
-
-renderCanvas.width =
-vw;
-
-renderCanvas.height =
-vh;
-
-/* DIBUJO */
-
-function render(){
-
-renderCtx.clearRect(
-0,
-0,
-vw,
-vh
-);
-
-/* VIDEO */
-
-renderCtx.drawImage(
-
-preview,
-
-0,
-
-0,
-
-vw,
-
-vh
-
-);
-
-/* OVERLAY */
-
-if(
-overlayImage.complete &&
-overlayImage.width > 0
-){
-
-const overlayWidth =
-vw * 0.75;
-
-const scale =
-
-overlayWidth /
-
-overlayImage.width;
-
-const overlayHeight =
-
-overlayImage.height *
-scale;
-
-const x =
-
-(vw-overlayWidth)/2;
-
-const y =
-
-vh -
-overlayHeight -
-(vh*0.03);
-
-renderCtx.drawImage(
-
-overlayImage,
-
-x,
-
-y,
-
-overlayWidth,
-
-overlayHeight
-
-);
-
-}
-
-/* LOOP */
-
-requestAnimationFrame(
-render
-);
-
-}
-
-render();
-
-/* STREAM CANVAS */
-
-const canvasStream =
-
-renderCanvas.captureStream(
-30
-);
-
-/* NUEVA GRABACION */
+/* VOLVER A VERSION ESTABLE */
 
 mediaRecorder =
-
 new MediaRecorder(
-canvasStream
+stream
 );
 
-  mediaRecorder.ondataavailable = (event) => {
+mediaRecorder.ondataavailable = (event) => {
 
-    if (event.data.size > 0) {
-      recordedChunks.push(event.data);
-    }
-  };
+if(
+event.data.size > 0
+){
 
-  mediaRecorder.onstop = async () => {
+recordedChunks.push(
+event.data
+);
 
-    stopCamera();
+}
 
-    const blob = new Blob(recordedChunks, {
-      type: "video/mp4"
-    });
+};
+
+mediaRecorder.onstop = async () => {
+
+stopCamera();
+
+const blob =
+new Blob(
+recordedChunks,
+{
+type:"video/mp4"
+}
+);
 
     try {
 
