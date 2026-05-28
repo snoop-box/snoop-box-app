@@ -35,6 +35,8 @@ document.getElementById(
 );
 window.onload = ()=>{
 
+  activateWakeLock();
+  
  if(EVENT_ID){
 
   document.getElementById(
@@ -113,6 +115,8 @@ async()=>{
   }
 
 };
+let wakeLock = null;
+
 let mediaRecorder;
 let recordedChunks = [];
 let stream;
@@ -421,4 +425,29 @@ function showScreen(screen) {
 function wait(ms) {
 
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function activateWakeLock() {
+
+  try {
+
+    wakeLock =
+    await navigator.wakeLock.request(
+      "screen"
+    );
+
+    console.log(
+      "🔋 WAKE LOCK ACTIVADO"
+    );
+
+  }
+  catch(err){
+
+    console.log(
+      "WakeLock no soportado",
+      err
+    );
+
+  }
+
 }
