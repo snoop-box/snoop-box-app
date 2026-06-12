@@ -43,10 +43,22 @@ body{
   z-index:2;
 }
 
+#eventTitle{
+  position:absolute;
+  top:10px;
+  left:50%;
+  transform:translateX(-50%);
+
+  font-size:32px;
+  font-weight:bold;
+
+  z-index:10;
+}
+
 /* FOTO */
 #photoBox{
   position:absolute;
-  top:20px;
+  top:70px;
   left:50%;
   transform:translateX(-50%) scale(.9);
   border-radius:20px;
@@ -97,13 +109,20 @@ body{
 
 /* RANKING */
 #ranking{
-  position:absolute;
-  right:30px;
-  top:620px;
-  width:340px;
+  position:fixed;
+
+  right:20px;
+  bottom:20px;
+
+  width:280px;
+
   background:rgba(0,0,0,.45);
-  padding:20px;
+
+  padding:16px;
+
   border-radius:20px;
+
+  z-index:9999;
 }
 
 .rankTitle{font-size:26px;}
@@ -147,13 +166,27 @@ body{
 
 /* QR */
 #qrBox{
+
   position:fixed;
-  left:50%;
 
-transform:translateX(-50%);
+  left:20px;
 
-bottom:120px;
+  bottom:20px;
+
+  width:160px;
+
   z-index:9999;
+
+}
+
+#qrBox img{
+
+  width:100%;
+
+  height:auto;
+
+  border-radius:16px;
+
 }
 
 #qrBox canvas{
@@ -167,8 +200,9 @@ bottom:120px;
 /* SORTEO */
 #sortBtn{
   position:fixed;
-  right:30px;
-  bottom:30px;
+  left:50%;
+transform:translateX(-50%);
+bottom:280px;
   background:#ff0055;
   color:white;
   padding:10px 18px;
@@ -252,6 +286,8 @@ cursor:pointer;
 </div>
 
 <div id="app">
+
+  <div id="eventTitle"></div>
 
 <div id="photoBox">
   <img id="photoImg">
@@ -366,6 +402,9 @@ async function loginEvent(){
  if(!ev)return;
 
  selectedEvent=ev;
+
+ document.getElementById("eventTitle").innerText =
+ev.name || ev.slug.toUpperCase();
 
  document.getElementById("login").style.display="none";
  document.getElementById("app").style.display="block";
