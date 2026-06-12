@@ -114,15 +114,17 @@ body{
   right:20px;
   bottom:20px;
 
-  width:280px;
+  width:220px;
 
   background:rgba(0,0,0,.45);
 
-  padding:16px;
+  padding:12px;
 
   border-radius:20px;
 
   z-index:9999;
+
+  font-size:14px;
 }
 
 .rankTitle{font-size:26px;}
@@ -136,10 +138,12 @@ body{
 
 .card{
   flex:1;
-  border-radius:16px;
-  padding:12px;
+  border-radius:12px;
+  padding:6px;
   text-align:center;
   background:rgba(255,255,255,.08);
+
+  font-size:12px;
 }
 
 .gold{border:3px solid gold;}
@@ -202,7 +206,7 @@ body{
   position:fixed;
   left:50%;
 transform:translateX(-50%);
-bottom:280px;
+bottom:320px;
   background:#ff0055;
   color:white;
   padding:10px 18px;
@@ -550,7 +554,7 @@ async function loadRanking(){
  });
 
  html+="</div>";
-
+/*
  data.slice(3,6).forEach((g,i)=>{
    html+=`
    <div class="rankRest">
@@ -558,7 +562,7 @@ async function loadRanking(){
      <span>${g.points} pts</span>
    </div>`;
  });
-
+*/
  const leader=data[0];
 
  html+=`
