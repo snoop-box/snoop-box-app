@@ -44,10 +44,16 @@ body{
 }
 
 #eventTitle{
-  position:absolute;
-  top:10px;
-  left:50%;
-  transform:translateX(-50%);
+  #eventTitle{
+  position:fixed;
+  top:20px;
+  left:20px;
+
+  font-size:42px;
+  font-weight:bold;
+
+  z-index:10000;
+}
 
   font-size:32px;
   font-weight:bold;
@@ -127,8 +133,14 @@ body{
   font-size:14px;
 }
 
-.rankTitle{font-size:26px;}
-.rankSub{opacity:.7;}
+.rankTitle{
+  font-size:18px;
+  font-weight:bold;
+}
+.rankSub{
+  opacity:.7;
+  font-size:12px;
+}
 
 .top3{
   display:flex;
@@ -177,7 +189,7 @@ body{
 
   bottom:20px;
 
-  width:160px;
+  width:120px;
 
   z-index:9999;
 
@@ -204,18 +216,27 @@ body{
 /* SORTEO */
 #sortBtn{
   position:fixed;
-  left:50%;
-transform:translateX(-50%);
-bottom:320px;
+
+  top:20px;
+  right:20px;
+
+  bottom:auto;
+  left:auto;
+
+  transform:none;
+
   background:#ff0055;
   color:white;
-  padding:10px 18px;
-  font-size:16px;
+
+  padding:8px 14px;
+  font-size:14px;
+
   border:none;
   border-radius:12px;
+
   cursor:pointer;
-  z-index:9999;
-  box-shadow:0 0 20px rgba(255,0,100,0.6);
+
+  z-index:10000;
 }
 
 /* ALERT */
