@@ -46,7 +46,7 @@ body{
 /* FOTO */
 #photoBox{
   position:absolute;
-  top:110px;
+  top:20px;
   left:50%;
   transform:translateX(-50%) scale(.9);
   border-radius:20px;
@@ -99,7 +99,7 @@ body{
 #ranking{
   position:absolute;
   right:30px;
-  top:110px;
+  top:620px;
   width:340px;
   background:rgba(0,0,0,.45);
   padding:20px;
@@ -148,14 +148,17 @@ body{
 /* QR */
 #qrBox{
   position:fixed;
-  left:30px;
-  bottom:30px;
+  left:50%;
+
+transform:translateX(-50%);
+
+bottom:120px;
   z-index:9999;
 }
 
 #qrBox canvas{
-  width:120px;
-  height:120px;
+  width:90px;
+  height:90px;
   background:white;
   padding:6px;
   border-radius:10px;
@@ -168,8 +171,8 @@ body{
   bottom:30px;
   background:#ff0055;
   color:white;
-  padding:16px 24px;
-  font-size:20px;
+  padding:10px 18px;
+  font-size:16px;
   border:none;
   border-radius:12px;
   cursor:pointer;
@@ -437,14 +440,14 @@ function showPhoto(p){
    const ratio = img.naturalWidth / img.naturalHeight;
 
    if(ratio > 1.2){
-     box.style.width="50vw";
-     box.style.height="45vh";
+     box.style.width="85vw";
+     box.style.height="40vh";
    }else if(ratio < 0.8){
-     box.style.width="28vw";
-     box.style.height="60vh";
+     box.style.width="70vw";
+     box.style.height="55vh";
    }else{
-     box.style.width="38vw";
-     box.style.height="50vh";
+     box.style.width="75vw";
+     box.style.height="55vh";
    }
 
    box.style.display="block";
