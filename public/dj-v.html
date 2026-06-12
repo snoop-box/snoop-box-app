@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DJ Vertical</title>
+<link rel="manifest" href="/dj-v-manifest.json">
+
+<meta
+name="theme-color"
+content="#000000">
+
+<link
+rel="apple-touch-icon"
+href="/icons/djv-192.png">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  overflow:hidden;
+  background:#000;
+  color:white;
+}
+
+/* FONDO */
+#bgLogo{
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  max-width:80vw;
+  max-height:80vh;
+  object-fit:contain;
+  opacity:.25;
+  z-index:-1;
+}
+
+/* APP */
+#app{
+  display:none;
+  position:relative;
+  z-index:2;
+}
+
+/* FOTO */
+#photoBox{
+  position:absolute;
+  top:110px;
+  left:50%;
+  transform:translateX(-50%) scale(.9);
+  border-radius:20px;
+  overflow:hidden;
+  display:none;
+  background:rgba(255,255,255,.5);
+  backdrop-filter:blur(10px);
+
+  opacity:0;
+  transition:all .6s ease;
+}
+
+#photoBox.active{
+  opacity:1;
+  transform:translateX(-50%) scale(1);
+}
+
+#photoImg{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+
+#photoUser{
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+  background:rgba(0,0,0,.6);
+  padding:12px;
+  text-align:center;
+}
+
+/* DELETE */
+#deleteBtn{
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:rgba(0,0,0,.6);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+
+/* RANKING */
+#ranking{
+  position:absolute;
+  right:30px;
+  top:110px;
+  width:340px;
+  background:rgba(0,0,0,.45);
+  padding:20px;
+  border-radius:20px;
+}
+
+.rankTitle{font-size:26px;}
+.rankSub{opacity:.7;}
+
+.top3{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+}
+
+.card{
+  flex:1;
+  border-radius:16px;
+  padding:12px;
+  text-align:center;
+  background:rgba(255,255,255,.08);
+}
+
+.gold{border:3px solid gold;}
+.silver{border:3px solid #ccc;}
+.bronze{border:3px solid #cd7f32;}
+
+.rankRest{
+  margin-top:10px;
+  background:rgba(255,255,255,.08);
+  padding:10px;
+  border-radius:12px;
+  display:flex;
+  justify-content:space-between;
+}
+
+.rankMessage{
+  margin-top:10px;
+  background:#b3002d;
+  padding:14px;
+  border-radius:14px;
+  text-align:center;
+  font-weight:bold;
+}
+
+/* QR */
+#qrBox{
+  position:fixed;
+  left:30px;
+  bottom:30px;
+  z-index:9999;
+}
+
+#qrBox canvas{
+  width:120px;
+  height:120px;
+  background:white;
+  padding:6px;
+  border-radius:10px;
+}
+
+/* SORTEO */
+#sortBtn{
+  position:fixed;
+  right:30px;
+  bottom:30px;
+  background:#ff0055;
+  color:white;
+  padding:16px 24px;
+  font-size:20px;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+  z-index:9999;
+  box-shadow:0 0 20px rgba(255,0,100,0.6);
+}
+
+/* ALERT */
+#newPhotoAlert{
+  position:fixed;
+  top:30px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#ff0055;
+  padding:12px 24px;
+  border-radius:12px;
+  display:none;
+}
+
+/* GANADOR */
+#winnerOverlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+}
+
+#winnerText{
+  font-size:60px;
+}
+
+/* CONFETTI */
+.confetti{
+  position:fixed;
+  width:10px;
+  height:10px;
+  top:-10px;
+  animation:fall linear forwards;
+}
+
+@keyframes fall{
+  to{transform:translateY(100vh) rotate(720deg);}
+}
+</style>
+</head>
+
+<body>
+
+<img id="bgLogo">
+
+<div id="login">
+  <div style="text-align:center; margin-top:100px;">
+    <h2>Evento</h2>
+    <input id="eventInput">
+    <button
+id="installBtn"
+style="
+display:none;
+margin-top:12px;
+padding:12px 18px;
+border:none;
+border-radius:12px;
+background:#111;
+color:white;
+font-size:16px;
+cursor:pointer;
+">
+
+📲 Instalar App
+
+</button>
+    <button onclick="loginEvent()">Entrar</button>
+  </div>
+</div>
+
+<div id="app">
+
+<div id="photoBox">
+  <img id="photoImg">
+  <div id="photoUser"></div>
+  <div id="deleteBtn">✖</div>
+</div>
+
+<div id="ranking"></div>
+<div id="qrBox"><canvas id="qr"></canvas></div>
+<button id="sortBtn">🎁 Sorteo</button>
+
+<div id="winnerOverlay"><div id="winnerText"></div></div>
+<div id="newPhotoAlert"></div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+<script>
+
+  if(
+  "serviceWorker"
+  in navigator
+){
+
+  navigator
+  .serviceWorker
+  .register("/sw.js");
+
+}
+
+let selectedEvent=null;
+let photos=[];
+let photoIndex=0;
+let currentPhoto=null;
+let lastPhotoCount=0;
+
+let deferredPrompt;
+
+window.addEventListener(
+
+  "beforeinstallprompt",
+
+  (e)=>{
+
+    e.preventDefault();
+
+    deferredPrompt = e;
+
+    document
+    .getElementById(
+      "installBtn"
+    )
+    .style.display =
+    "inline-block";
+
+  }
+
+);
+
+/* 🔥 AUTO LOGIN DESDE HUB */
+
+document
+.getElementById(
+  "installBtn"
+)
+.onclick =
+async()=>{
+
+  if(!deferredPrompt)
+    return;
+
+  deferredPrompt.prompt();
+
+  await deferredPrompt.userChoice;
+
+  deferredPrompt = null;
+
+  document
+  .getElementById(
+    "installBtn"
+  )
+  .style.display =
+  "none";
+
+};
+
+window.onload = async ()=>{
+
+ const params =
+ new URLSearchParams(window.location.search);
+
+ const autoEvent =
+ params.get("event");
+
+ if(autoEvent){
+
+   document.getElementById("eventInput").value =
+   autoEvent;
+
+   await loginEvent();
+
+ }
+
+};
+
+async function loginEvent(){
+ const name=document.getElementById("eventInput").value.toLowerCase();
+ const res=await fetch("/events");
+ const events=await res.json();
+ const ev=events.find(e=>e.slug.toLowerCase()===name);
+ if(!ev)return;
+
+ selectedEvent=ev;
+
+ document.getElementById("login").style.display="none";
+ document.getElementById("app").style.display="block";
+
+ if(ev.background_url){
+  document.getElementById("bgLogo").src = ev.background_url;
+ }
+
+ QRCode.toCanvas(
+   document.getElementById("qr"),
+   window.location.origin + "/login.html?event=" + ev.slug
+ );
+
+ loadPhotos();
+ loadRanking();
+
+ setInterval(loadPhotos,4000);
+ setInterval(rotatePhotos,5000);
+ setInterval(loadRanking,5000);
+}
+
+async function loadPhotos(){
+ const res =
+await fetch(
+"/event-photos/" +
+selectedEvent.slug
+);
+ const data=await res.json();
+
+ if(data.length > lastPhotoCount){
+
+  const newPhoto =
+  data[0];
+
+  showNewPhotoAlert(
+    newPhoto
+  );
+
+  showPhoto(
+    newPhoto
+  );
+
+}
+
+ lastPhotoCount=data.length;
+ photos=data;
+}
+
+function showNewPhotoAlert(p){
+ const box=document.getElementById("newPhotoAlert");
+ box.innerText="📸 Nueva foto Mesa "+p.guest_table;
+ box.style.display="block";
+ setTimeout(()=>box.style.display="none",2000);
+}
+
+function rotatePhotos(){
+ if(!photos.length)return;
+ if(photoIndex>=photos.length)photoIndex=0;
+ showPhoto(photos[photoIndex]);
+ photoIndex++;
+}
+
+function showPhoto(p){
+ currentPhoto=p;
+
+ const img=document.getElementById("photoImg");
+ const box=document.getElementById("photoBox");
+
+ box.classList.remove("active");
+
+ img.onload=()=>{
+   const ratio = img.naturalWidth / img.naturalHeight;
+
+   if(ratio > 1.2){
+     box.style.width="50vw";
+     box.style.height="45vh";
+   }else if(ratio < 0.8){
+     box.style.width="28vw";
+     box.style.height="60vh";
+   }else{
+     box.style.width="38vw";
+     box.style.height="50vh";
+   }
+
+   box.style.display="block";
+
+   setTimeout(()=>{
+     box.classList.add("active");
+   },50);
+ };
+
+ img.src=p.image_url;
+
+ document.getElementById("photoUser").innerText=
+   p.guest_name+
+" • Mesa "+
+p.guest_table;
+}
+
+document.getElementById("deleteBtn").onclick=async()=>{
+ if(!currentPhoto)return;
+
+ await fetch("/photo",{
+  method:"DELETE",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({
+url:currentPhoto.image_url
+})
+ });
+
+ photos=photos.filter(
+
+p=>
+p.image_url
+!== currentPhoto.image_url
+
+);
+ currentPhoto=null;
+ photoIndex=0;
+};
+
+async function loadRanking(){
+ const res=await fetch("/ranking/"+selectedEvent.slug);
+ const data=await res.json();
+ if(!data.length)return;
+
+ let html=`
+ <div class="rankTitle">🏆 Ranking en Vivo</div>
+ <div class="rankSub">Cada foto suma puntos</div>
+ <div class="top3">
+ `;
+
+ const medals=["🥇","🥈","🥉"];
+ const classes=["gold","silver","bronze"];
+
+ data.slice(0,3).forEach((g,i)=>{
+   html+=`
+   <div class="card ${classes[i]}">
+     ${medals[i]}<br>
+     Mesa ${g.table}<br>
+     ${g.points} pts
+   </div>`;
+ });
+
+ html+="</div>";
+
+ data.slice(3,6).forEach((g,i)=>{
+   html+=`
+   <div class="rankRest">
+     ${i+4}. Mesa ${g.table}
+     <span>${g.points} pts</span>
+   </div>`;
+ });
+
+ const leader=data[0];
+
+ html+=`
+ <div class="rankMessage">
+   Mesa ${leader.table} va 1° 🔥 ¡Van primeros!
+ </div>`;
+
+ document.getElementById("ranking").innerHTML=html;
+}
+
+document.getElementById("sortBtn").onclick=()=>{
+ if(!photos.length)return;
+
+ let cycles=0;
+
+ const interval=setInterval(()=>{
+   const r=photos[Math.floor(Math.random()*photos.length)];
+   showPhoto(r);
+
+   cycles++;
+
+   if(cycles>30){
+     clearInterval(interval);
+
+     const winner=photos[Math.floor(Math.random()*photos.length)];
+     showPhoto(winner);
+     showWinner(winner);
+     confetti();
+   }
+
+ },80);
+};
+
+function showWinner(w){
+ const overlay=document.getElementById("winnerOverlay");
+ overlay.style.display="flex";
+
+ document.getElementById("winnerText").innerHTML=
+ `🎉 ${w.guest_name}<br>Mesa ${w.guest_table}`;
+
+ setTimeout(()=>overlay.style.display="none",4000);
+}
+
+function confetti(){
+ for(let i=0;i<80;i++){
+   const d=document.createElement("div");
+   d.className="confetti";
+   d.style.left=Math.random()*100+"vw";
+   d.style.background=`hsl(${Math.random()*360},100%,50%)`;
+   d.style.animationDuration=(Math.random()*2+2)+"s";
+   document.body.appendChild(d);
+   setTimeout(()=>d.remove(),4000);
+ }
+}
+</script>
+
+</body>
+</html>
